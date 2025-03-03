@@ -1,175 +1,209 @@
-# WARP P2P Hosting Patches Configuration
+# P2P Hosting Support Patch for WARP Client
 
-name: P2P-Hosting-Extension
-version: 1.0.0
-description: Enables P2P hosting capabilities in Ragexe client
-author: rAthena
-target_client: 2022-04-06_Ragexe
-min_warp_version: 2.0.0
+# File patches to enable P2P hosting support
+patches:
+  # Core network handling modifications
+  - file: Core/Network/NetworkManager.cpp
+    changes:
+      - operation: add
+        before: "class NetworkManager {"
+        content: |
+          // P2P networking support
+          #include "P2PNetwork.hpp"
+          #include "P2PSession.hpp"
+          
+      - operation: add
+        after: "private:"
+        content: |
+          std::unique_ptr<P2PNetwork> p2p_network_;
+          std::unordered_map<uint32_t, std::shared_ptr<P2PSession>> p2p_sessions_;
+          
+      - operation: add
+        after: "public:"
+        content: |
+          // P2P network handling
+          bool connect_to_p2p_host(const std::string& address, uint16_t port);
+          void disconnect_from_p2p_host(uint32_t host_id);
+          void handle_p2p_packet(const NetworkPacket& packet);
+          void update_p2p_connections();
 
-dependencies:
-  - OpenSSL: 1.1.1
-  - zlib: 1.2.11
-
-# Security settings for P2P functionality
-security_config:
-  encryption:
-    algorithm: AES-256-GCM
-    key_length: 32
-    iv_length: 16
-  authentication:
-    token_length: 64
-    refresh_interval: 3600
-  integrity:
-    hash_algorithm: SHA-256
-    verify_interval: 5000
-
-# Network protocol modifications
-network_patches:
-  - id: p2p_protocol_extension
-    type: structure_injection
-    target: PacketStructs.h
-    data: |
-      struct P2P_HOST_INFO {
-          uint32 host_id;
-          uint32 performance_score;
-          uint16 max_players;
-          uint16 current_players;
-          uint32 uptime;
-          uint8 host_type;
-      }
+  # P2P Network implementation
+  - file: Core/Network/P2PNetwork.hpp
+    create: true
+    content: |
+      #pragma once
+      #include <string>
+      #include <memory>
+      #include "NetworkTypes.hpp"
       
-      struct P2P_MAP_SERVER {
-          uint32 map_id;
-          P2P_HOST_INFO host;
-          uint32 connection_token;
-          uint8 encryption_key[32];
-      }
+      class P2PNetwork {
+      public:
+          bool initialize();
+          bool connect(const std::string& address, uint16_t port);
+          void disconnect();
+          bool send_packet(const NetworkPacket& packet);
+          void update();
+          
+          // Connection state
+          bool is_connected() const { return connected_; }
+          uint32_t get_latency() const { return latency_; }
+          
+      private:
+          bool connected_ = false;
+          uint32_t latency_ = 0;
+          
+          // Network sockets and buffers
+          // Implementation details
+      };
 
-# System requirement checking
-system_patches:
-  - id: host_eligibility
-    type: function_hook
-    target: ClientInfo::Initialize
-    code: |
-      bool check_p2p_host_eligibility() {
-          SystemInfo sys;
-          NetworkInfo net;
-          return (
-              sys.cpu_cores >= 4 &&
-              sys.available_ram >= 8589934592 &&
-              net.upload_speed >= 10485760 &&
-              net.latency < 100
-          );
-      }
+  # P2P Session management
+  - file: Core/Network/P2PSession.hpp
+    create: true
+    content: |
+      #pragma once
+      #include <chrono>
+      #include "NetworkTypes.hpp"
+      #include "../Crypto/Encryption.hpp"
+      
+      class P2PSession {
+      public:
+          P2PSession(uint32_t host_id);
+          
+          // Session management
+          bool initialize(const std::string& auth_token);
+          void update();
+          bool is_active() const;
+          
+          // Packet handling
+          bool send_packet(const NetworkPacket& packet);
+          void handle_packet(const NetworkPacket& packet);
+          
+          // Security
+          bool verify_packet(const NetworkPacket& packet);
+          void rotate_keys();
+          
+      private:
+          uint32_t host_id_;
+          std::string auth_token_;
+          EncryptionContext encryption_;
+          std::chrono::system_clock::time_point last_activity_;
+      };
 
-# P2P hosting functionality
-hosting_patches:
-  - id: map_server_implementation
-    type: class_injection
-    target: CGameMode
-    code: |
-      class P2PMapServer {
-          private:
-              std::vector<SessionData> player_sessions;
-              MapData current_map;
-          public:
-              void initialize_map(uint32 map_id);
-              void handle_player_updates();
-              void process_movement();
-              void sync_state();
-      }
+  # Map system modifications
+  - file: Core/Game/MapSystem.cpp
+    changes:
+      - operation: add
+        after: "void MapSystem::load_map("
+        content: |
+          // Check if map is P2P hosted
+          if (is_p2p_map(map_id)) {
+              auto host = get_p2p_host(map_id);
+              if (!host) {
+                  throw std::runtime_error("Failed to get P2P host for map");
+              }
+              
+              // Connect to P2P host
+              if (!connect_to_p2p_host(host->address, host->port)) {
+                  throw std::runtime_error("Failed to connect to P2P host");
+              }
+              
+              // Initialize P2P map session
+              initialize_p2p_map_session(map_id, host->id);
+          }
 
-# Performance monitoring
-monitoring_patches:
-  - id: performance_metrics
-    type: timer_hook
-    interval: 5000
-    code: |
-      void update_host_metrics() {
-          P2P_HOST_METRICS metrics;
-          metrics.cpu_usage = get_cpu_usage();
-          metrics.memory_usage = get_memory_usage();
-          metrics.network_latency = measure_latency();
-          metrics.player_count = count_active_players();
-          send_to_coordinator(PACKET_P2P_METRICS, &metrics);
-      }
+  # Packet handling modifications
+  - file: Core/Network/PacketHandler.cpp
+    changes:
+      - operation: add
+        after: "void PacketHandler::register_handlers()"
+        content: |
+          // P2P packet handlers
+          register_handler(PACKET_P2P_AUTH, &PacketHandler::handle_p2p_auth);
+          register_handler(PACKET_P2P_MAP_DATA, &PacketHandler::handle_p2p_map_data);
+          register_handler(PACKET_P2P_ENTITY_UPDATE, &PacketHandler::handle_p2p_entity_update);
+          register_handler(PACKET_P2P_PLAYER_ACTION, &PacketHandler::handle_p2p_player_action);
 
-# Failover handling
-failover_patches:
-  - id: connection_failover
-    type: event_hook
-    target: CConnection::OnDisconnect
-    code: |
-      void handle_host_failure() {
-          GameState state;
-          serialize_state(&state);
-          send_to_coordinator(PACKET_P2P_HOST_REQUEST, current_map_id);
-          wait_for_new_host_and_restore(state);
-      }
+# Configuration file updates
+  - file: Data/config.ini
+    changes:
+      - operation: add
+        at: end
+        content: |
+          [P2P]
+          ; P2P hosting configuration
+          EnableP2P=1
+          MaxConnections=5
+          UpdateInterval=50
+          ; Security settings
+          EnableEncryption=1
+          KeyRotationInterval=3600
+          ; Performance settings
+          CompressionThreshold=1024
+          MaxLatency=200
 
-# Custom packets
-packet_definitions:
-  - id: PACKET_P2P_HOST_REGISTER
-    type: outgoing
-    structure: P2P_HOST_INFO
-    
-  - id: PACKET_P2P_HOST_ASSIGNED
-    type: incoming
-    structure: P2P_MAP_SERVER
-    
-  - id: PACKET_P2P_METRICS
-    type: outgoing
-    structure: P2P_HOST_METRICS
-    
-  - id: PACKET_P2P_HOST_REQUEST
-    type: outgoing
-    structure: uint32  # map_id
+# Resource updates
+  - file: Data/resourceinfo.ini
+    changes:
+      - operation: add
+        after: "[CONNECTION]"
+        content: |
+          [P2P_HOSTS]
+          0=coordinator.example.com:5121
+          1=backup-coordinator.example.com:5121
 
-# Memory protection
-protection_patches:
-  - id: anti_cheat_protection
-    type: memory_guard
-    regions:
-      - name: map_data
-        protection: read_only
-      - name: player_stats
-        protection: read_only
-      - name: item_database
-        protection: read_only
+# New files
+files:
+  - path: Core/Network/P2PNetwork.cpp
+    content: |
+      #include "P2PNetwork.hpp"
+      // Implementation of P2P networking functionality
+      
+  - path: Core/Network/P2PSession.cpp
+    content: |
+      #include "P2PSession.hpp"
+      // Implementation of P2P session management
+      
+  - path: Core/Game/P2PMapSession.hpp
+    content: |
+      #pragma once
+      #include "MapTypes.hpp"
+      // P2P map session header
+      
+  - path: Core/Game/P2PMapSession.cpp
+    content: |
+      #include "P2PMapSession.hpp"
+      // Implementation of P2P map session management
 
-# Configuration settings
-settings:
-  coordinator_server:
-    default_ip: "coordinator.yourserver.com"
-    default_port: 5121
-  performance:
-    metrics_interval: 5000
-    sync_interval: 1000
-    failover_timeout: 5000
-  network:
-    max_players: 100
-    packet_compression: true
-    encryption_enabled: true
-  debug:
-    log_level: info
-    enable_metrics: true
-    save_crash_dumps: true
-
-# Build configuration
 build:
-  compiler_flags:
-    - -O2
-    - -DNDEBUG
-    - -DP2P_ENABLED
-  linker_flags:
-    - -lssl
-    - -lcrypto
-    - -lz
-  include_paths:
-    - src/p2p
-    - src/network
-    - src/security
-  output:
-    filename: p2p_hosting.dll
-    type: dynamic_library
+  # Additional build system modifications
+  cmake:
+    - target: Client
+      sources:
+        - Core/Network/P2PNetwork.cpp
+        - Core/Network/P2PSession.cpp
+        - Core/Game/P2PMapSession.cpp
+      definitions:
+        - ENABLE_P2P_SUPPORT
+
+  # Linker settings
+  linker:
+    libraries:
+      - ssl
+      - crypto
+      - z
+
+# Dependencies
+dependencies:
+  - OpenSSL >= 1.1.1
+  - zlib >= 1.2.11
+
+# Documentation
+docs:
+  - title: P2P Client Implementation
+    file: doc/p2p_client.md
+    sections:
+      - Overview
+      - Network Protocol
+      - Security Measures
+      - Configuration
+      - Troubleshooting
