@@ -1,0 +1,175 @@
+# WARP P2P Hosting Patches Configuration
+
+name: P2P-Hosting-Extension
+version: 1.0.0
+description: Enables P2P hosting capabilities in Ragexe client
+author: rAthena
+target_client: 2022-04-06_Ragexe
+min_warp_version: 2.0.0
+
+dependencies:
+  - OpenSSL: 1.1.1
+  - zlib: 1.2.11
+
+# Security settings for P2P functionality
+security_config:
+  encryption:
+    algorithm: AES-256-GCM
+    key_length: 32
+    iv_length: 16
+  authentication:
+    token_length: 64
+    refresh_interval: 3600
+  integrity:
+    hash_algorithm: SHA-256
+    verify_interval: 5000
+
+# Network protocol modifications
+network_patches:
+  - id: p2p_protocol_extension
+    type: structure_injection
+    target: PacketStructs.h
+    data: |
+      struct P2P_HOST_INFO {
+          uint32 host_id;
+          uint32 performance_score;
+          uint16 max_players;
+          uint16 current_players;
+          uint32 uptime;
+          uint8 host_type;
+      }
+      
+      struct P2P_MAP_SERVER {
+          uint32 map_id;
+          P2P_HOST_INFO host;
+          uint32 connection_token;
+          uint8 encryption_key[32];
+      }
+
+# System requirement checking
+system_patches:
+  - id: host_eligibility
+    type: function_hook
+    target: ClientInfo::Initialize
+    code: |
+      bool check_p2p_host_eligibility() {
+          SystemInfo sys;
+          NetworkInfo net;
+          return (
+              sys.cpu_cores >= 4 &&
+              sys.available_ram >= 8589934592 &&
+              net.upload_speed >= 10485760 &&
+              net.latency < 100
+          );
+      }
+
+# P2P hosting functionality
+hosting_patches:
+  - id: map_server_implementation
+    type: class_injection
+    target: CGameMode
+    code: |
+      class P2PMapServer {
+          private:
+              std::vector<SessionData> player_sessions;
+              MapData current_map;
+          public:
+              void initialize_map(uint32 map_id);
+              void handle_player_updates();
+              void process_movement();
+              void sync_state();
+      }
+
+# Performance monitoring
+monitoring_patches:
+  - id: performance_metrics
+    type: timer_hook
+    interval: 5000
+    code: |
+      void update_host_metrics() {
+          P2P_HOST_METRICS metrics;
+          metrics.cpu_usage = get_cpu_usage();
+          metrics.memory_usage = get_memory_usage();
+          metrics.network_latency = measure_latency();
+          metrics.player_count = count_active_players();
+          send_to_coordinator(PACKET_P2P_METRICS, &metrics);
+      }
+
+# Failover handling
+failover_patches:
+  - id: connection_failover
+    type: event_hook
+    target: CConnection::OnDisconnect
+    code: |
+      void handle_host_failure() {
+          GameState state;
+          serialize_state(&state);
+          send_to_coordinator(PACKET_P2P_HOST_REQUEST, current_map_id);
+          wait_for_new_host_and_restore(state);
+      }
+
+# Custom packets
+packet_definitions:
+  - id: PACKET_P2P_HOST_REGISTER
+    type: outgoing
+    structure: P2P_HOST_INFO
+    
+  - id: PACKET_P2P_HOST_ASSIGNED
+    type: incoming
+    structure: P2P_MAP_SERVER
+    
+  - id: PACKET_P2P_METRICS
+    type: outgoing
+    structure: P2P_HOST_METRICS
+    
+  - id: PACKET_P2P_HOST_REQUEST
+    type: outgoing
+    structure: uint32  # map_id
+
+# Memory protection
+protection_patches:
+  - id: anti_cheat_protection
+    type: memory_guard
+    regions:
+      - name: map_data
+        protection: read_only
+      - name: player_stats
+        protection: read_only
+      - name: item_database
+        protection: read_only
+
+# Configuration settings
+settings:
+  coordinator_server:
+    default_ip: "coordinator.yourserver.com"
+    default_port: 5121
+  performance:
+    metrics_interval: 5000
+    sync_interval: 1000
+    failover_timeout: 5000
+  network:
+    max_players: 100
+    packet_compression: true
+    encryption_enabled: true
+  debug:
+    log_level: info
+    enable_metrics: true
+    save_crash_dumps: true
+
+# Build configuration
+build:
+  compiler_flags:
+    - -O2
+    - -DNDEBUG
+    - -DP2P_ENABLED
+  linker_flags:
+    - -lssl
+    - -lcrypto
+    - -lz
+  include_paths:
+    - src/p2p
+    - src/network
+    - src/security
+  output:
+    filename: p2p_hosting.dll
+    type: dynamic_library
