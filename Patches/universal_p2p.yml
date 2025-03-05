@@ -1,0 +1,195 @@
+# Universal P2P Integration Patch
+# Enables both client and host functionality automatically
+name: universal_p2p
+description: Built-in P2P functionality with automatic role selection
+version: 1.0.0
+
+# Core functionality
+components:
+  network_monitor:
+    type: built_in
+    priority: high
+    auto_start: true
+
+  host_capabilities:
+    type: built_in
+    auto_enable: true
+    dynamic: true
+
+# Runtime patches
+patches:
+  # Add universal P2P capabilities
+  - target: "Client::Initialize"
+    offset: 0x1A4000
+    type: inject
+    code: |
+      push ebp
+      mov ebp, esp
+      call InitUniversalP2P   ; Initialize P2P system
+      test eax, eax
+      jz regular_mode
+      
+      ; Check system capabilities
+      call CheckHostCapability
+      test eax, eax
+      jz client_only_mode
+      
+      ; System can host - enable full functionality
+      push HOST_AND_CLIENT
+      call EnableP2PModes
+      jmp done
+      
+      client_only_mode:
+      push CLIENT_ONLY
+      call EnableP2PModes
+      jmp done
+      
+      regular_mode:
+      push REGULAR_MODE
+      call EnableP2PModes
+      
+      done:
+      pop ebp
+      ret
+
+  # Add automatic network quality monitoring
+  - target: "Network::Process"
+    offset: 0x1A5F00
+    type: append
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Monitor network metrics
+      call UpdateNetworkMetrics
+      
+      ; Check if we can upgrade to host
+      call CheckHostEligibility
+      test eax, eax
+      jz check_downgrade
+      
+      ; Enable host mode if not active
+      call IsHostMode
+      test eax, eax
+      jnz done_check
+      call EnableHostMode
+      jmp done_check
+      
+      check_downgrade:
+      ; Disable host mode if active
+      call IsHostMode
+      test eax, eax
+      jz done_check
+      call DisableHostMode
+      
+      done_check:
+      pop ebp
+      ret
+
+# Built-in network monitoring
+functions:
+  CheckHostCapability:
+    type: internal
+    code: |
+      ; Check system requirements
+      call CheckCPUCapability
+      test eax, eax
+      jz not_capable
+      
+      call CheckMemoryAvailable
+      test eax, eax
+      jz not_capable
+      
+      call CheckNetworkCapability
+      test eax, eax
+      jz not_capable
+      
+      mov eax, 1
+      ret
+      
+      not_capable:
+      xor eax, eax
+      ret
+
+  UpdateNetworkMetrics:
+    type: internal
+    code: |
+      ; Measure network quality
+      call MeasureLatency
+      mov [network_metrics.latency], eax
+      
+      call MeasureBandwidth
+      mov [network_metrics.bandwidth], eax
+      
+      call MeasurePacketLoss
+      mov [network_metrics.packet_loss], eax
+      
+      call UpdateNetworkStatus
+      ret
+
+# Configuration
+settings:
+  thresholds:
+    host_requirements:
+      min_cpu_score: 1000
+      min_memory_mb: 1024
+      min_bandwidth_mbps: 10
+      max_latency_ms: 100
+      max_packet_loss: 1.0
+    
+    client_requirements:
+      min_bandwidth_mbps: 2
+      max_latency_ms: 200
+      max_packet_loss: 5.0
+
+  monitoring:
+    check_interval_ms: 1000
+    metrics_window: 60
+    auto_adjust: true
+
+  modes:
+    instant_switch: false
+    grace_period_sec: 30
+    require_stable: true
+
+# Status reporting
+ui:
+  status_indicator:
+    enabled: true
+    position: "top_right"
+    show:
+      mode: true
+      metrics: true
+      role: true
+
+  notifications:
+    mode_changes: true
+    performance_warnings: true
+    role_changes: true
+
+# Security
+security:
+  encryption: true
+  authentication: true
+  integrity_check: true
+  secure_handshake: true
+
+# Performance
+performance:
+  adaptive_quality: true
+  dynamic_scaling: true
+  resource_management: true
+  
+# Error handling
+error_handling:
+  auto_recovery: true
+  fallback_mode: true
+  error_reporting: true
+  
+# Logging
+logging:
+  level: "info"
+  metrics_enabled: true
+  performance_tracking: true
+  rotate: true
+  max_size: "10MB"

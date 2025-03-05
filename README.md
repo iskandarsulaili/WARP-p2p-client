@@ -1,120 +1,146 @@
-# Win App Revamp Package - P2P Client
+# WARP P2P System
 
-<p align="center">
-    <img src="Images/logo.png?raw=true" alt="Warp logo" width=128 height=128>
-</p>
+A universal P2P system that automatically enables peer-to-peer functionality for all players based on their system capabilities.
 
-![License](https://img.shields.io/github/license/Neo-Mind/WARP)
-![RepoSize](https://img.shields.io/github/repo-size/Neo-Mind/WARP)
-![Commit](https://img.shields.io/github/last-commit/Neo-Mind/WARP)
+## Overview
 
-WARP P2P Client extension for enabling P2P hosting features in the Ragnarok Online client. Designed to work seamlessly with [rAthena AI World](https://github.com/iskandarsulaili/rathena-AI-world) P2P hosting system and [FluxCP P2P Hosting](https://github.com/iskandarsulaili/FluxCP-AI-world-p2p-hosting) control panel.
+This system seamlessly integrates P2P functionality into the WARP client:
+- Automatic capability detection
+- Dynamic role switching
+- Built-in performance monitoring
+- No manual configuration required
 
-## P2P Features
+## How It Works
 
-### Host Node Integration
-* Automatic host discovery via rAthena coordinator
-* Connection management with failover support
-* AI-powered host selection optimization
-* Real-time performance monitoring
-* Network metrics collection for FluxCP dashboard
-* Integration with rAthena's AI system for optimal host selection
+The client automatically:
+1. Monitors your system performance
+2. Evaluates network quality
+3. Enables appropriate P2P features
+4. Adjusts roles dynamically
+
+### System Requirements
+
+Minimum (all users):
+- Basic internet connection
+- 2+ Mbps bandwidth
+- <200ms latency
+
+P2P Host capabilities automatically enabled when available:
+- 10+ Mbps upload bandwidth
+- <100ms stable latency
+- 1GB+ available RAM
+- Stable network connection
+
+## Features
+
+### Automatic Mode Selection
+- Regular client mode
+- P2P client mode
+- P2P host mode
+- Dynamic switching based on performance
+
+### Built-in Monitoring
+- Network quality
+- System resources
+- Connection stability
+- Performance metrics
+
+### Security
+- Automatic encryption
+- Secure handshakes
+- Data integrity checks
+- DDoS protection
+
+### Status Indicators
+The status icon shows your current mode:
+- 🔵 Regular client mode
+- 🟢 P2P client mode
+- 🟡 P2P host mode available
+- 🟣 P2P host mode active
+
+## Usage
+
+1. Just run the client normally
+2. P2P features activate automatically
+3. System adjusts based on performance
+4. Status icon shows current mode
+
+No configuration or setup needed!
+
+## Performance Optimization
+
+The system automatically:
+- Monitors network quality
+- Adjusts roles based on performance
+- Manages system resources
+- Handles mode transitions
+
+### Automatic Role Changes
+
+Your role changes automatically based on:
+- Network quality
+- System performance
+- Resource availability
+- Connection stability
+
+## Technical Details
+
+### Network Monitoring
+- Continuous latency checks
+- Bandwidth measurement
+- Packet loss detection
+- Connection stability analysis
+
+### Mode Switching
+Seamless transitions between:
+- Regular client
+- P2P client
+- P2P host
+Based on real-time performance metrics
 
 ### Security Features
-* Host verification through rAthena coordinator
-* Secure communication with P2P network
-* Performance validation
-* Network integrity checks
-* Host reliability scoring system
-* Integration with FluxCP security policies
+- End-to-end encryption
+- Secure peer discovery
+- Authentication system
+- Integrity verification
 
-### Client Optimizations
-* Connection pooling
-* Resource caching
-* Network latency reduction
-* Bandwidth optimization
-* Memory management
-* Adaptive performance tuning
+## Troubleshooting
 
-## Installation
+If you experience issues:
+1. Check your internet connection
+2. Look at the status indicator
+3. Wait for automatic adjustment
+4. Restart client if needed
 
-1. Copy patch files:
-```
-Patches/
-└── p2p_hosting.yml    # P2P hosting configuration
-```
+The system will automatically:
+- Detect problems
+- Adjust settings
+- Switch modes if necessary
+- Recover from errors
 
-2. Configure P2P settings in `p2p_hosting.yml`:
-```yaml
-p2p_client:
-  enabled: true
-  connection:
-    timeout: 5000
-    retry_attempts: 3
-  monitoring:
-    enabled: true
-    update_interval: 60
-  security:
-    verify_hosts: true
-    encryption: true
-  rathena:
-    coordinator_port: 5121
-    metrics_enabled: true
-  fluxcp:
-    monitoring_enabled: true
-    metrics_port: 8080
-```
+## FAQ
 
-## Integration
+Q: Do I need to set anything up?
+A: No! Everything is automatic.
 
-### rAthena AI World
-- Connects to rAthena's P2P coordinator service
-- Supports AI-driven host selection
-- Provides performance metrics for AI optimization
-- Automatic failover to VPS when needed
+Q: Will this affect my gameplay?
+A: No, the system only enables features when performance allows.
 
-### FluxCP Control Panel
-- Real-time metrics reporting to FluxCP dashboard
-- Security status monitoring
-- Performance data visualization
-- Host reliability reporting
+Q: What if my connection gets worse?
+A: The system automatically adjusts and switches modes.
 
-## Documentation
-* [P2P Client Patches](doc/p2p_client_patches.md)
-* [Security Implementation](doc/security.md)
-* [Network Optimization](doc/network.md)
-* [rAthena Integration](doc/rathena_integration.md)
-* [FluxCP Integration](doc/fluxcp_integration.md)
+Q: Do I need extra software?
+A: No, everything is built into the client.
 
-## Project Structure
-```text
-WARP/
-├── README.md
-├── LICENSE
-├── Patches/
-│   └── p2p_hosting.yml
-├── Scripts/
-│   ├── Support/
-│   └── Patches/
-└── doc/
-    ├── p2p_client_patches.md
-    ├── rathena_integration.md
-    └── fluxcp_integration.md
-```
+Q: Can I disable P2P features?
+A: Yes, through the client settings menu.
 
-## Requirements
-* Windows client
-* DirectX 9.0c+
-* .NET Framework 4.5+
-* rAthena AI World server (for P2P features)
-* FluxCP Control Panel (for monitoring)
+## Support
 
-## Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+For any issues:
+1. Check the status indicator
+2. Review your connection
+3. Use regular game support
+4. Report bugs normally
 
-## License
-GNU General Public License v3.0
-
-## Related Projects
-- [rAthena AI World](https://github.com/iskandarsulaili/rathena-AI-world) - The main server implementation with P2P hosting and AI features
-- [FluxCP P2P Hosting](https://github.com/iskandarsulaili/FluxCP-AI-world-p2p-hosting) - Control panel with P2P monitoring and management
+The system handles everything automatically - no special support process needed!
