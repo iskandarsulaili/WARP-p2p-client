@@ -114,15 +114,25 @@ functions:
   UpdateNetworkMetrics:
     type: internal
     code: |
-      ; Measure network quality
+      ; Monitor all network metrics
+      call MeasureJitter
+      mov [network_metrics.jitter], eax
+      
       call MeasureLatency
       mov [network_metrics.latency], eax
       
-      call MeasureBandwidth
-      mov [network_metrics.bandwidth], eax
+      call MeasureBandwidthIn
+      mov [network_metrics.bandwidth_in], eax
+      
+      call MeasureBandwidthOut
+      mov [network_metrics.bandwidth_out], eax
       
       call MeasurePacketLoss
       mov [network_metrics.packet_loss], eax
+      
+      call CheckDDoSPatterns
+      mov [network_metrics.under_attack], eax
+      test eax, eax
       
       call UpdateNetworkStatus
       ret
@@ -130,17 +140,15 @@ functions:
 # Configuration
 settings:
   thresholds:
-    host_requirements:
+    map_host_requirements:     # Requirements for players who want to host maps
+      description: "System and network requirements for hosting game maps"
       min_cpu_score: 1000
       min_memory_mb: 1024
-      min_bandwidth_mbps: 10
-      max_latency_ms: 100
-      max_packet_loss: 1.0
-    
-    client_requirements:
-      min_bandwidth_mbps: 2
-      max_latency_ms: 200
-      max_packet_loss: 5.0
+      min_bandwidth_in_mbps: 50  # Must have 100Mbps download
+      min_bandwidth_out_mbps: 25   # Must have 50Mbps upload  
+      max_latency_ms: 50          # Must have <50ms latency
+      max_jitter_ms: 20          # Must have stable connection
+      max_packet_loss: 1.0       # Maximum acceptable packet loss percentage
 
   monitoring:
     check_interval_ms: 1000
@@ -151,6 +159,22 @@ settings:
     instant_switch: false
     grace_period_sec: 30
     require_stable: true
+    
+    round_robin:
+      description: "Controls how map hosting duties are distributed"
+      enabled: true              # Enable round-robin restoration
+      check_interval_sec: 30     # Check interval
+      min_stable_time_sec: 300   # Minimum time before role change
+    
+    ddos_protection:
+      description: "DDoS attack detection and mitigation settings"
+      enabled: true
+      detection_window_sec: 10   # DDoS detection window 
+      blacklist_duration_sec: 3600
+      attack_thresholds: {
+        max_connections_per_sec: 500  # Alert if exceeded
+        max_packets_per_sec: 10000    # Alert if exceeded
+      }
 
 # Status reporting
 ui:
@@ -167,18 +191,24 @@ ui:
     performance_warnings: true
     role_changes: true
 
-# Security
+# Security  
 security:
   encryption: true
   authentication: true
   integrity_check: true
   secure_handshake: true
+  ddos_protection: true
 
 # Performance
 performance:
   adaptive_quality: true
   dynamic_scaling: true
   resource_management: true
+  
+  network_quality:
+    measure_jitter: true
+    bandwidth_monitoring: true
+    connection_tracking: true
   
 # Error handling
 error_handling:
