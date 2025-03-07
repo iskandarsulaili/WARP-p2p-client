@@ -1,31 +1,56 @@
 # P2P Database Client Patches
 
-This document describes how to apply and configure the P2P database patches for the client using WARP.
+This document describes how to apply the DLL-free P2P database patches for the client using WARP.
 
 ## Overview
 
-The P2P database patches enable the client to work with our distributed database architecture, providing:
-- Seamless failover support
-- Distributed query handling
-- Connection pool management
-- Performance monitoring
+The P2P database patches modify the client executable directly to support distributed database functionality without requiring additional DLLs. This approach:
+- Reduces dependencies
+- Improves compatibility
+- Simplifies deployment
+- Maintains client integrity
 
 ## Installation
 
-1. Copy `p2p_database.yml` to your WARP patches directory:
+1. Back up your original client executable:
 ```bash
-cp p2p_database.yml /path/to/WARP/Patches/
+cp Client.exe Client.exe.backup
 ```
 
-2. Enable the patch in `universal_p2p.yml`:
-```yaml
-enabled_patches:
-  - p2p_database_support
-```
-
-3. Apply patches using WARP:
+2. Apply the patch using WARP:
 ```bash
 warp apply --patch p2p_database_support
+```
+
+## Binary Patch Details
+
+### Network Handler (0x245A80)
+Modifies the network initialization code to support P2P connections:
+```nasm
+; Original code
+55                 ; push ebp
+8B EC              ; mov ebp, esp
+83 EC 18           ; sub esp, 18h
+
+; Patched code
+55                 ; push ebp
+8B EC              ; mov ebp, esp
+83 EC 20           ; sub esp, 20h
+53                 ; push ebx
+56                 ; push esi
+57                 ; push edi
+E8 ?? ?? ?? ??     ; call p2p_init
+```
+
+### Memory Layout
+
+The patch uses a dedicated memory region for P2P functionality:
+```
+0x7A1000 - Server list (64 bytes)
+0x7A1040 - Connection state (4 bytes)
+0x7A1044 - Active server index (4 bytes)
+0x7A1048 - Retry counter (4 bytes)
+0x7A104C - Last ping timestamp (8 bytes)
 ```
 
 ## Configuration
@@ -33,173 +58,137 @@ warp apply --patch p2p_database_support
 ### Network Settings
 ```yaml
 network:
-  enable_p2p: true
-  failover_timeout: 5000  # milliseconds
-  retry_attempts: 3
-  connection_pools: 2
+  max_servers: 8        # Maximum P2P nodes
+  retry_delay: 1000     # Milliseconds between retries
+  timeout: 5000         # Connection timeout
+  batch_size: 100      # Query batch size
 ```
 
-### Query Settings
+### Failover Configuration
 ```yaml
-distributed_queries:
-  enable_caching: true
-  cache_timeout: 300000  # 5 minutes
-  batch_size: 100
-  max_retries: 3
+failover:
+  enabled: true        # Enable automatic failover
+  max_retries: 3       # Maximum retry attempts
+  min_servers: 1       # Minimum active servers
 ```
-
-### Monitoring
-```yaml
-monitoring:
-  enable_metrics: true
-  report_interval: 60000  # 1 minute
-  log_level: info
-```
-
-## Required Files
-
-The patch requires these DLLs to be present:
-- network.dll
-- dbclient.dll
-
-Optional DLLs for enhanced functionality:
-- metrics.dll
-- profiler.dll
-
-## Client Compatibility
-
-- Minimum client version: 20200101
-- Maximum client version: 20250101
-- Tested with client builds:
-  - 2022-04-06_Ragexe_1648707856
-  - 2023-01-15_Ragexe_1673789012
 
 ## Features
 
-### 1. Automatic Failover
-The patch enables automatic failover when the primary database becomes unavailable:
-- Detects connection failures
-- Switches to replica servers
-- Maintains session state
-- Retries failed operations
+### 1. Direct Database Access
+- Built-in connection handling
+- No external DLL dependencies
+- Optimized memory usage
+- Native query processing
 
-### 2. Distributed Queries
-Supports distributed query execution:
-- Load balancing across nodes
+### 2. Automatic Failover
+- In-memory server tracking
+- Quick failure detection
+- Seamless server switching
+- Connection state preservation
+
+### 3. Performance Optimization
+- Connection pooling
 - Query batching
-- Result caching
-- Transaction management
+- Minimal memory footprint
+- Efficient resource usage
 
-### 3. Connection Management
-Implements connection pooling:
-- Multiple connection pools
-- Connection reuse
-- Automatic reconnection
-- Load distribution
+## Verification
+
+After patching, verify the installation:
+```bash
+warp verify --patch p2p_database_support
+```
+
+Expected output:
+```
+✓ Client executable checksum verified
+✓ Memory regions allocated
+✓ Network handler patched
+✓ Query router installed
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. Connection Failures
+1. Patch Application Failure
 ```
-Error: Failed to connect to database server
-Solution: Check network configuration and verify server addresses
-```
-
-2. Performance Issues
-```
-Error: Slow query responses
-Solution: Adjust batch_size and connection_pools settings
+Error: Invalid memory region
+Solution: Ensure client version matches supported versions
 ```
 
-3. Patch Application Failures
+2. Connection Issues
 ```
-Error: Invalid patch checksum
-Solution: Verify client version and DLL compatibility
-```
-
-### Logging
-
-Logs are written to `p2p_database.log` with the following format:
-```
-[TIMESTAMP] [LEVEL] [COMPONENT] Message
+Error: Failed to initialize P2P
+Solution: Verify memory permissions and antivirus settings
 ```
 
-Example:
-```
-[2025-03-08 05:38:30] [INFO] [ConnectionPool] Established connection to primary
-```
+### Recovery
 
-### Monitoring
-
-Monitor patch performance using:
+1. Restore original client:
 ```bash
-warp status --component p2p_database
+cp Client.exe.backup Client.exe
 ```
 
-View metrics in real-time:
+2. Reset patch state:
 ```bash
-warp metrics --watch p2p_database
-```
-
-## Recovery Procedures
-
-### Manual Failover
-```bash
-warp database --force-failover
-```
-
-### Cache Reset
-```bash
-warp database --clear-cache
-```
-
-### Connection Reset
-```bash
-warp database --reset-connections
+warp reset --patch p2p_database_support
 ```
 
 ## Security
 
-The patch implements:
-- Encrypted connections
-- Query validation
-- Token-based authentication
-- Session persistence
+The patch implements security through:
+- Code integrity checks
+- Memory protection
+- Input validation
+- Session encryption
 
-## Performance Tuning
+## Version Compatibility
 
-### Connection Pool Settings
-```yaml
-connection_pools:
-  min_size: 2
-  max_size: 10
-  idle_timeout: 300
+### Supported Client Versions
+- 2022-04-06_Ragexe_1648707856
+- Future versions require checksum update
+
+### Memory Requirements
+- Minimum: 8MB free space
+- Recommended: 16MB free space
+- Virtual memory: 1MB reserved
+
+## Performance Monitoring
+
+Monitor patch performance using the built-in tools:
+```bash
+warp status --component p2p
+warp metrics --watch connection
 ```
 
-### Query Cache Settings
-```yaml
-query_cache:
-  size: 1000
-  ttl: 300
-  cleanup_interval: 60
-```
+## Limitations
 
-## Version History
+1. Memory Constraints
+- Fixed server list size (8 entries)
+- Limited connection pool (16 connections)
+- Static memory allocation
 
-- 1.0.0: Initial release
-- 1.0.1: Added connection pooling
-- 1.0.2: Enhanced failover handling
-- 1.1.0: Added distributed query support
+2. Compatibility
+- No support for encrypted clients
+- Region-specific offsets required
+- Some anticheat systems may interfere
+
+## Best Practices
+
+1. Installation
+- Always backup client first
+- Verify patch checksums
+- Test in safe environment
+
+2. Operation
+- Monitor connection status
+- Track performance metrics
+- Keep configurations up to date
 
 ## Support
 
-For issues and questions:
-- Submit issues: https://github.com/rathena-AI-world/issues
-- Documentation: https://docs.rathena-ai-world.com/p2p
-- Community forum: https://forum.rathena-ai-world.com/p2p
-
-## License
-
-This patch is part of the rAthena AI World project and is licensed under the same terms as the main project.
+For technical assistance:
+- GitHub Issues: [P2P Database Support](https://github.com/rathena-AI-world/issues)
+- Documentation: [P2P System Guide](https://docs.rathena-ai-world.com/p2p)
+- Forums: [Technical Support](https://forum.rathena-ai-world.com/p2p)

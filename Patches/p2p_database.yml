@@ -2,125 +2,110 @@
 ---
 name: p2p_database_support
 description: |
-  Adds support for P2P database connectivity and distributed map server handling
-  to the client without requiring recompilation.
+  Implements P2P database connectivity and distributed map server handling
+  directly in the client executable without additional DLL dependencies.
 
 patches:
-  - name: database_connection_handler
-    description: Modify client connection handler to support P2P database nodes
+  # Network connection handler modifications
+  - name: connection_handler
     type: binary
-    opcodes:
-      - original: [0x83, 0xC4, 0x0C, 0x8B, 0x4D, 0xF4]  # Original connection code
-        modified: [0xE8, 0x??, 0x??, 0x??, 0x??]         # Call to new handler
-    target_files:
-      - Client.exe
-      - DataLoader.dll
-
-  - name: map_server_failover
-    description: Add support for seamless map server failover
-    type: function
-    address: 0x00861A40
+    target: Client.exe
+    locations:
+      - offset: 0x245A80  # Network initialization
+        original: [0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x18]  # Original prolog
+        patched: |
+          55                # push ebp
+          8B EC            # mov ebp, esp
+          83 EC 20         # sub esp, 20h
+          53               # push ebx
+          56               # push esi
+          57               # push edi
+          E8 ?? ?? ?? ??   # call p2p_init
+  
+  # Query handling and routing
+  - name: query_router
+    type: code_cave
+    target: Client.exe
     code: |
-      push ebp
-      mov ebp, esp
-      sub esp, 0x20
-      push esi
+      ; Save registers
+      push eax
+      push ebx
+      push ecx
       
-      # Check connection status
-      call check_connection_status
-      test eax, eax
-      jz handle_failover
+      ; Check server availability
+      call check_server_status
+      test al, al
+      jz try_failover
       
-      # Normal operation
-      pop esi
-      mov esp, ebp
-      pop ebp
+      ; Normal query path
+      pop ecx
+      pop ebx
+      pop eax
+      jmp original_query_handler
+      
+      try_failover:
+      call handle_server_failover
       ret
-      
-      handle_failover:
-      push retry_connection
-      call initiate_failover
-      add esp, 4
-      jmp continue_execution
-
-  - name: distributed_query_support
-    description: Add support for distributed database queries
-    type: hook
-    address: 0x00872B30
+    
+  # Connection pool management
+  - name: connection_pool
+    type: inline
+    target: Client.exe
+    at: 0x246F10
     code: |
-      # Save registers
-      pushad
+      ; Initialize connection tracking
+      xor eax, eax
+      mov [connection_count], eax
+      mov [active_server], eax
       
-      # Check if query needs distributed handling
-      call check_distributed_query
-      test eax, eax
-      jz original_handler
-      
-      # Handle distributed query
-      push distributed_query_handler
-      call route_query
-      add esp, 4
-      
-      popad
+      ; Setup retry counter
+      mov ecx, 3
+      mov [retry_count], ecx
       ret
-      
-      original_handler:
-      popad
-      jmp dword ptr [original_query_handler]
 
-configuration:
+  # Server status tracking
+  - name: server_status
+    type: data
+    target: Client.exe
+    data:
+      - address: 0x7A1000
+        content: |
+          server_list:      times 8 db 0  # Server addresses
+          connection_count: dd 0          # Active connections
+          active_server:    dd 0          # Current server index
+          retry_count:      dd 3          # Retry attempts
+          last_ping:       dq 0          # Last heartbeat time
+
+# Configuration block
+config:
   network:
-    enable_p2p: true
-    failover_timeout: 5000
-    retry_attempts: 3
-    connection_pools: 2
-
-  distributed_queries:
-    enable_caching: true
-    cache_timeout: 300000
+    max_servers: 8
+    retry_delay: 1000
+    timeout: 5000
     batch_size: 100
+
+  failover:
+    enabled: true
     max_retries: 3
+    min_servers: 1
 
-  monitoring:
-    enable_metrics: true
-    report_interval: 60000
-    log_level: info
+# Validation
+compatibility:
+  client_exe:
+    min_size: 8388608  # 8MB
+    max_size: 16777216 # 16MB
+    checksums:
+      - "sha256:e8a5612108f6de0387d2f7632437c31ab7c9dd395249714834"
+      - "sha256:f19b7227153461a4b25089f2c46f235ab76b1a8264026c3ab"
 
-initialize:
-  - check_p2p_compatibility
-  - setup_connection_pools
-  - init_query_handlers
-  - register_failover_handlers
+# Initialization sequence
+init:
+  - validate_client
+  - setup_memory_regions
+  - install_patches
+  - verify_patches
 
 cleanup:
-  - close_connections
-  - flush_caches
-  - cleanup_handlers
-
-compatibility:
-  min_client: 20200101
-  max_client: 20250101
-  required_dlls:
-    - network.dll
-    - dbclient.dll
-  optional_dlls:
-    - metrics.dll
-    - profiler.dll
-
-validation:
-  checksums:
-    client.exe: auto
-    network.dll: auto
-    dbclient.dll: auto
-
-error_handling:
-  - connection_lost: retry_with_backoff
-  - query_timeout: failover_to_replica
-  - sync_failed: reconnect_primary
-
-logging:
-  file: p2p_database.log
-  level: info
-  rotation:
-    max_size: 10mb
-    max_files: 5
+  - restore_original_code
+  - clear_memory
+  - reset_state
