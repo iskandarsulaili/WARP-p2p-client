@@ -1,0 +1,126 @@
+# P2P Database Integration Patches
+---
+name: p2p_database_support
+description: |
+  Adds support for P2P database connectivity and distributed map server handling
+  to the client without requiring recompilation.
+
+patches:
+  - name: database_connection_handler
+    description: Modify client connection handler to support P2P database nodes
+    type: binary
+    opcodes:
+      - original: [0x83, 0xC4, 0x0C, 0x8B, 0x4D, 0xF4]  # Original connection code
+        modified: [0xE8, 0x??, 0x??, 0x??, 0x??]         # Call to new handler
+    target_files:
+      - Client.exe
+      - DataLoader.dll
+
+  - name: map_server_failover
+    description: Add support for seamless map server failover
+    type: function
+    address: 0x00861A40
+    code: |
+      push ebp
+      mov ebp, esp
+      sub esp, 0x20
+      push esi
+      
+      # Check connection status
+      call check_connection_status
+      test eax, eax
+      jz handle_failover
+      
+      # Normal operation
+      pop esi
+      mov esp, ebp
+      pop ebp
+      ret
+      
+      handle_failover:
+      push retry_connection
+      call initiate_failover
+      add esp, 4
+      jmp continue_execution
+
+  - name: distributed_query_support
+    description: Add support for distributed database queries
+    type: hook
+    address: 0x00872B30
+    code: |
+      # Save registers
+      pushad
+      
+      # Check if query needs distributed handling
+      call check_distributed_query
+      test eax, eax
+      jz original_handler
+      
+      # Handle distributed query
+      push distributed_query_handler
+      call route_query
+      add esp, 4
+      
+      popad
+      ret
+      
+      original_handler:
+      popad
+      jmp dword ptr [original_query_handler]
+
+configuration:
+  network:
+    enable_p2p: true
+    failover_timeout: 5000
+    retry_attempts: 3
+    connection_pools: 2
+
+  distributed_queries:
+    enable_caching: true
+    cache_timeout: 300000
+    batch_size: 100
+    max_retries: 3
+
+  monitoring:
+    enable_metrics: true
+    report_interval: 60000
+    log_level: info
+
+initialize:
+  - check_p2p_compatibility
+  - setup_connection_pools
+  - init_query_handlers
+  - register_failover_handlers
+
+cleanup:
+  - close_connections
+  - flush_caches
+  - cleanup_handlers
+
+compatibility:
+  min_client: 20200101
+  max_client: 20250101
+  required_dlls:
+    - network.dll
+    - dbclient.dll
+  optional_dlls:
+    - metrics.dll
+    - profiler.dll
+
+validation:
+  checksums:
+    client.exe: auto
+    network.dll: auto
+    dbclient.dll: auto
+
+error_handling:
+  - connection_lost: retry_with_backoff
+  - query_timeout: failover_to_replica
+  - sync_failed: reconnect_primary
+
+logging:
+  file: p2p_database.log
+  level: info
+  rotation:
+    max_size: 10mb
+    max_files: 5
