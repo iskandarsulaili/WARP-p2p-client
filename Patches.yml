@@ -22,11 +22,12 @@
 #                                                                          #
 #   Author(s)     : Neo-Mind                                               #
 #   Created Date  : 2020-11-06                                             #
-#   Last Modified : 2022-09-07                                             #
+#   Last Modified : 2025-03-08                                             #
 #                                                                          #
 ############################################################################
 
 include:
+    # Core Patches
     - Patches/Character.yml
     - Patches/Client.yml
     - Patches/Data.yml
@@ -38,3 +39,9 @@ include:
     - Patches/UI.yml
     - Patches/Window.yml
     - Patches/Premium.yml
+
+    # P2P Integration Patches
+    - Patches/universal_p2p.yml         # Base P2P functionality
+    - Patches/p2p_map_instance.yml      # Map instance handling
+    - Patches/p2p_secure_sync.yml       # Secure database sync
+    - Patches/p2p_config_manager.yml    # Configuration management

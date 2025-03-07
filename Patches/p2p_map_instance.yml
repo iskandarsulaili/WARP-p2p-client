@@ -1,0 +1,116 @@
+# Map Instance P2P Integration Patch
+name: p2p_map_instance
+description: Enables P2P map instance handling and synchronization
+version: 1.0.0
+depends_on: universal_p2p
+
+# Core functionality
+components:
+  map_instance_handler:
+    type: built_in
+    priority: high
+    auto_start: true
+
+# Runtime patches
+patches:
+  # Add map instance initialization
+  - target: "MapInstance::Initialize"
+    offset: 0x1B4000
+    type: inject
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Initialize map instance
+      call InitP2PMapInstance
+      test eax, eax
+      jz fail_init
+      
+      ; Set up P2P sync handlers
+      push MAP_SYNC_HANDLERS
+      call RegisterMapSyncHandlers
+      test eax, eax
+      jz fail_handlers
+      
+      ; Enable map instance features
+      call EnableMapFeatures
+      mov eax, 1
+      jmp done
+      
+      fail_handlers:
+      call CleanupMapInstance
+      
+      fail_init:
+      xor eax, eax
+      
+      done:
+      pop ebp
+      ret
+
+  # Add map sync handler
+  - target: "MapSync::ProcessPacket"
+    offset: 0x1B5F00
+    type: append
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Process map sync packet
+      call ProcessMapSyncPacket
+      test eax, eax
+      jz sync_error
+      
+      ; Update map state
+      push MAPSTATE_UPDATE
+      call UpdateMapState
+      
+      sync_error:
+      pop ebp
+      ret
+
+functions:
+  ProcessMapSyncPacket:
+    type: internal
+    code: |
+      ; Validate packet
+      call ValidateMapPacket
+      test eax, eax
+      jz invalid_packet
+      
+      ; Process state update
+      call ProcessStateUpdate
+      test eax, eax
+      jz state_error
+      
+      ; Sync with peers
+      call SyncMapState
+      mov eax, 1
+      ret
+      
+      invalid_packet:
+      state_error:
+      xor eax, eax
+      ret
+
+settings:
+  map_sync:
+    sync_interval_ms: 100
+    state_buffer_size: 1024
+    max_peers: 16
+    
+  validation:
+    check_bounds: true
+    verify_states: true
+    
+  optimization:
+    compress_updates: true
+    batch_updates: true
+    
+  recovery:
+    auto_recover: true
+    max_retries: 3
+    
+logging:
+  map_events: true
+  sync_errors: true
+  performance: true
