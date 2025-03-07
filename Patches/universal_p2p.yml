@@ -160,12 +160,24 @@ settings:
     grace_period_sec: 30
     require_stable: true
     
-    round_robin:
-      description: "Controls how map hosting duties are distributed"
-      enabled: true              # Enable round-robin restoration
-      check_interval_sec: 30     # Check interval
-      min_stable_time_sec: 300   # Minimum time before role change
-    
+    socks5_load_balancing:
+      description: "Controls map hosting distribution using SOCKS5 load balancing"
+      enabled: true
+      dynamic_routing: true
+      
+      performance_scoring:
+        latency_weight: 0.4
+        packet_loss_weight: 0.4
+        load_weight: 0.2
+      
+      thresholds:
+        max_latency_ms: 200
+        max_packet_loss: 0.02
+      
+      update_intervals:
+        score_update_ms: 5000
+        route_update_ms: 10000
+      
     ddos_protection:
       description: "DDoS attack detection and mitigation settings"
       enabled: true
@@ -209,6 +221,10 @@ performance:
     measure_jitter: true
     bandwidth_monitoring: true
     connection_tracking: true
+    performance_tracking:
+      latency: true
+      packet_loss: true
+      bandwidth: true
   
 # Error handling
 error_handling:
