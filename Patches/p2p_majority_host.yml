@@ -1,0 +1,127 @@
+# P2P Majority-based Host Selection Patch
+name: p2p_majority_host
+description: Implements dynamic host selection based on majority group latencies
+version: 1.0.0
+depends_on: 
+  - universal_p2p
+  - p2p_config_manager
+
+components:
+  majority_host_manager:
+    type: built_in
+    priority: high
+    auto_start: true
+
+patches:
+  # Add majority-based host selection logic
+  - target: "Network::Process"
+    offset: 0x1A6F00
+    type: append
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Check if feature is enabled
+      call IsMajorityHostEnabled
+      test eax, eax
+      jz skip_majority_check
+      
+      ; Calculate group latencies
+      call UpdateGroupLatencies
+      
+      ; Find majority groups
+      push TOP_GROUPS_COUNT
+      call FindMajorityGroups
+      
+      ; Check if host switch needed
+      call CheckHostSwitchNeeded
+      test eax, eax
+      jz no_switch_needed
+      
+      ; Perform seamless host switch
+      push SWITCH_SEAMLESS
+      call PerformHostSwitch
+      
+      no_switch_needed:
+      skip_majority_check:
+      pop ebp
+      ret
+
+functions:
+  UpdateGroupLatencies:
+    type: internal
+    code: |
+      ; Get current latency metrics for all connected players
+      call GetPlayerLatencies
+      
+      ; Group players by network region
+      call GroupPlayersByRegion
+      
+      ; Calculate average latencies for each group
+      call CalculateGroupAverages
+      
+      ; Sort groups by size (majority first)
+      push GROUP_SORT_SIZE
+      call SortGroups
+      ret
+
+  FindMajorityGroups:
+    type: internal
+    code: |
+      ; Get top 2 largest groups
+      call GetTopGroups
+      
+      ; Calculate ideal host location
+      push IDEAL_HOST_CALC
+      call CalculateIdealHost
+      
+      ; Find best host candidate
+      push CANDIDATE_SEARCH
+      call FindBestHostCandidate
+      ret
+
+  CheckHostSwitchNeeded:
+    type: internal
+    code: |
+      ; Compare current vs ideal host latencies
+      call CompareHostLatencies
+      
+      ; Check if switch would improve performance
+      push IMPROVEMENT_THRESHOLD
+      call CalculateImprovement
+      
+      ; Ensure stable conditions
+      call CheckNetworkStability
+      ret
+
+settings:
+  majority_host:
+    enabled: true
+    description: "Enable/disable majority-based host selection"
+    admin_controlled: true
+    command: "/togglemajorityhost"
+    
+    thresholds:
+      min_group_size: 3  # Minimum players to consider as a group
+      latency_threshold_ms: 300  # Maximum acceptable latency
+      improvement_threshold_ms: 50  # Required improvement to trigger switch
+      
+    switching:
+      check_interval_ms: 30000  # Check every 30 seconds
+      stabilization_time_ms: 10000  # Wait for network to stabilize
+      seamless_transition: true  # Enable seamless host switching
+      
+    groups:
+      max_groups: 5  # Maximum number of groups to track
+      top_groups_considered: 2  # Number of majority groups to consider
+
+  notifications:
+    host_changes: true
+    latency_warnings: true
+    group_updates: true
+
+logging:
+  majority_events: true
+  host_switches: true
+  group_metrics: true
+  latency_tracking: true

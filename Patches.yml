@@ -45,3 +45,7 @@ include:
     - Patches/p2p_map_instance.yml      # Map instance handling
     - Patches/p2p_secure_sync.yml       # Secure database sync
     - Patches/p2p_config_manager.yml    # Configuration management
+    - Patches/p2p_majority_host.yml     # Majority-based host selection
+    
+    # rAthena Integration Patches
+    - Patches/rathena_features.yml      # rAthena functionality support

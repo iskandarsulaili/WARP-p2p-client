@@ -1,0 +1,141 @@
+# rAthena Features Integration Patch
+name: rathena_features
+description: Implements rAthena-specific functionality for WARP client
+version: 1.0.0
+depends_on:
+  - universal_p2p
+  - p2p_config_manager
+
+components:
+  rathena_handler:
+    type: built_in
+    priority: high
+    auto_start: true
+
+patches:
+  # Add rAthena packet handling
+  - target: "Network::ProcessPacket"
+    offset: 0x1B4000
+    type: inject
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Check if it's a rAthena packet
+      call IsRathenaPacket
+      test eax, eax
+      jz regular_packet
+      
+      ; Process rAthena specific packet
+      push PACKET_BUFFER
+      call ProcessRathenaPacket
+      test eax, eax
+      jz packet_error
+      
+      mov eax, 1
+      jmp done
+      
+      regular_packet:
+      call ProcessRegularPacket
+      
+      packet_error:
+      xor eax, eax
+      
+      done:
+      pop ebp
+      ret
+
+  # Add rAthena custom features support
+  - target: "Client::Features"
+    offset: 0x1B5000
+    type: append
+    code: |
+      push ebp
+      mov ebp, esp
+      
+      ; Initialize rAthena features
+      call InitRathenaFeatures
+      
+      ; Setup custom packets
+      call SetupCustomPackets
+      
+      ; Enable extended functionality
+      push EXTENDED_FEATURES
+      call EnableRathenaExtensions
+      
+      pop ebp
+      ret
+
+functions:
+  ProcessRathenaPacket:
+    type: internal
+    code: |
+      ; Handle custom packets
+      call ParsePacketHeader
+      call ValidatePacketStructure
+      call ProcessPacketData
+      ret
+
+  InitRathenaFeatures:
+    type: internal
+    code: |
+      ; Initialize all rAthena specific features
+      call InitCustomStats
+      call InitExtendedClasses
+      call InitCustomItems
+      call InitMapFeatures
+      ret
+
+settings:
+  rathena:
+    features:
+      extended_classes: true
+      custom_stats: true
+      dynamic_items: true
+      map_effects: true
+      custom_npcs: true
+      custom_quests: true
+      
+    packets:
+      validate_structure: true
+      custom_encryption: true
+      compression: true
+      
+    compatibility:
+      packet_version: "auto"
+      fallback_mode: true
+      legacy_support: true
+      
+    extensions:
+      homunculus: true
+      mercenary: true
+      pet_evolution: true
+      custom_jobs: true
+      extended_storage: true
+      achievement_system: true
+      
+    optimization:
+      packet_compression: true
+      batch_updates: true
+      delta_encoding: true
+
+  security:
+    packet_validation: true
+    encryption_layer: true
+    integrity_check: true
+    
+  performance:
+    packet_batching: true
+    compression_level: "adaptive"
+    cache_custom_data: true
+    
+  debugging:
+    log_packets: false
+    trace_features: false
+    debug_mode: false
+
+logging:
+  feature_usage: true
+  packet_errors: true
+  compatibility_issues: true
+  performance_metrics: true
