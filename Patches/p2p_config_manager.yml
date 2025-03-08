@@ -102,8 +102,8 @@ settings:
     
   sync:
     auto_sync: true
-    sync_interval_ms: 5000
-    retry_attempts: 3
+    sync_interval_ms: 1000     # Reduced for faster config updates
+    retry_attempts: 5          # Increased to match other components
     
   validation:
     verify_integrity: true
@@ -123,9 +123,11 @@ settings:
 logging:
   config_events: true
   sync_errors: true
+  performance_metrics: true    # Added performance monitoring
   changes: true
   
 security:
   verify_signatures: true
   encrypt_sensitive: true
   access_control: true
+  rate_limiting: true         # Added rate limiting protection

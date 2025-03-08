@@ -144,8 +144,8 @@ settings:
       description: "System and network requirements for hosting game maps"
       min_cpu_score: 1000
       min_memory_mb: 1024
-      min_bandwidth_in_mbps: 50  # Must have 100Mbps download
-      min_bandwidth_out_mbps: 25   # Must have 50Mbps upload  
+      min_bandwidth_in_mbps: 25  # Reduced requirement for better accessibility
+      min_bandwidth_out_mbps: 10  # Reduced requirement for better accessibility
       max_latency_ms: 50          # Must have <50ms latency
       max_jitter_ms: 20          # Must have stable connection
       max_packet_loss: 1.0       # Maximum acceptable packet loss percentage

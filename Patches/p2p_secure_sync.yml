@@ -127,9 +127,9 @@ settings:
     check_permissions: true
     
   synchronization:
-    sync_interval_ms: 1000
+    sync_interval_ms: 200      # Reduced for better responsiveness
     batch_size: 100
-    max_retries: 3
+    max_retries: 5            # Increased for better reliability
     
   security:
     rate_limiting: true
@@ -140,3 +140,4 @@ logging:
   query_events: true
   sync_errors: true
   security_events: true
+  performance_metrics: true    # Added performance tracking
