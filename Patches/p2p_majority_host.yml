@@ -1,10 +1,11 @@
 # P2P Majority-based Host Selection Patch
 name: p2p_majority_host
-description: Implements dynamic host selection based on majority group latencies
-version: 1.0.0
+description: Implements dynamic host selection based on country-based majority groups with mesh networking
+version: 2.0.0
 depends_on: 
   - universal_p2p
   - p2p_config_manager
+  - rathena_features
 
 components:
   majority_host_manager:
@@ -13,7 +14,7 @@ components:
     auto_start: true
 
 patches:
-  # Add majority-based host selection logic
+  # Add country-based majority host selection logic
   - target: "Network::Process"
     offset: 0x1A6F00
     type: append
@@ -26,21 +27,31 @@ patches:
       test eax, eax
       jz skip_majority_check
       
-      ; Calculate group latencies
-      call UpdateGroupLatencies
+      ; Get player distribution by country
+      call GetPlayerCountryDistribution
       
-      ; Find majority groups
+      ; Find top 2 majority groups by country
       push TOP_GROUPS_COUNT
-      call FindMajorityGroups
+      call FindMajorityCountryGroups
+      
+      ; Calculate ideal host position
+      push LATENCY_OPTIMIZATION
+      call CalculateOptimalHost
       
       ; Check if host switch needed
       call CheckHostSwitchNeeded
       test eax, eax
       jz no_switch_needed
       
+      ; Initialize mesh networking for seamless transition
+      call InitializeMeshNetwork
+      
       ; Perform seamless host switch
       push SWITCH_SEAMLESS
       call PerformHostSwitch
+      
+      ; Monitor switch progress
+      call MonitorHostSwitchProgress
       
       no_switch_needed:
       skip_majority_check:
@@ -48,61 +59,89 @@ patches:
       ret
 
 functions:
-  UpdateGroupLatencies:
+  GetPlayerCountryDistribution:
     type: internal
     code: |
-      ; Get current latency metrics for all connected players
-      call GetPlayerLatencies
+      ; Get connected players' country info
+      call GetPlayerGeoData
       
-      ; Group players by network region
-      call GroupPlayersByRegion
+      ; Count players per country
+      call CountryDistribution
       
-      ; Calculate average latencies for each group
-      call CalculateGroupAverages
-      
-      ; Sort groups by size (majority first)
-      push GROUP_SORT_SIZE
-      call SortGroups
+      ; Sort countries by player count
+      push SORT_BY_COUNT
+      call SortCountries
       ret
 
-  FindMajorityGroups:
+  FindMajorityCountryGroups:
     type: internal
     code: |
-      ; Get top 2 largest groups
-      call GetTopGroups
+      ; Get top 2 countries by player count
+      call GetTopCountries
       
-      ; Calculate ideal host location
-      push IDEAL_HOST_CALC
-      call CalculateIdealHost
+      ; Analyze latencies between groups
+      push LATENCY_ANALYSIS
+      call AnalyzeInterGroupLatencies
       
-      ; Find best host candidate
+      ; Find optimal hosting candidates
       push CANDIDATE_SEARCH
-      call FindBestHostCandidate
+      call FindOptimalHostCandidates
       ret
 
-  CheckHostSwitchNeeded:
+  CalculateOptimalHost:
     type: internal
     code: |
-      ; Compare current vs ideal host latencies
-      call CompareHostLatencies
+      ; Calculate network centroid for top groups
+      call CalculateNetworkCentroid
       
-      ; Check if switch would improve performance
-      push IMPROVEMENT_THRESHOLD
-      call CalculateImprovement
+      ; Find hosts near centroid
+      push PROXIMITY_SEARCH
+      call FindNearbyHosts
       
-      ; Ensure stable conditions
-      call CheckNetworkStability
+      ; Score candidates by performance metrics
+      push PERFORMANCE_SCORING
+      call ScoreHostCandidates
+      ret
+
+  InitializeMeshNetwork:
+    type: internal
+    code: |
+      ; Set up mesh network connections
+      call SetupMeshNetwork
+      
+      ; Initialize state transfer channels
+      push STATE_TRANSFER_INIT
+      call InitStateTransfer
+      
+      ; Prepare backup routes
+      push BACKUP_ROUTES
+      call PrepareBackupRoutes
+      ret
+
+  MonitorHostSwitchProgress:
+    type: internal
+    code: |
+      ; Track state transfer progress
+      call TrackStateTransfer
+      
+      ; Monitor network stability
+      push STABILITY_CHECK
+      call MonitorNetworkStability
+      
+      ; Handle any transfer issues
+      push ERROR_HANDLING
+      call HandleTransferIssues
       ret
 
 settings:
   majority_host:
     enabled: true
-    description: "Enable/disable majority-based host selection"
+    description: "Enable/disable country-based majority host selection with mesh networking"
     admin_controlled: true
     command: "/togglemajorityhost"
     
     thresholds:
-      min_group_size: 3  # Minimum players to consider as a group
+      min_country_size: 3  # Minimum players from a country to consider
       latency_threshold_ms: 300  # Maximum acceptable latency
       improvement_threshold_ms: 50  # Required improvement to trigger switch
       
@@ -110,18 +149,35 @@ settings:
       check_interval_ms: 30000  # Check every 30 seconds
       stabilization_time_ms: 10000  # Wait for network to stabilize
       seamless_transition: true  # Enable seamless host switching
+      mesh_networking: true  # Enable mesh networking for transitions
       
     groups:
-      max_groups: 5  # Maximum number of groups to track
-      top_groups_considered: 2  # Number of majority groups to consider
+      max_countries: 10  # Maximum number of countries to track
+      top_countries_considered: 2  # Number of majority groups to consider
 
-  notifications:
-    host_changes: true
-    latency_warnings: true
-    group_updates: true
+  mesh_networking:
+    enabled: true
+    max_mesh_nodes: 5  # Maximum number of nodes in mesh network
+    backup_routes: 2  # Number of backup routes to maintain
+    state_sync_interval_ms: 1000  # State synchronization interval
+
+  rathena_integration:
+    enabled: true
+    coordinator_sync: true  # Sync with rAthena coordinator
+    map_state_transfer: true  # Enable map state transfer
+    player_data_sync: true  # Enable player data synchronization
+
+notifications:
+  host_changes: true
+  latency_warnings: true
+  group_updates: true
+  mesh_status: true
+  transfer_progress: true
 
 logging:
   majority_events: true
   host_switches: true
-  group_metrics: true
+  country_metrics: true
   latency_tracking: true
+  mesh_network_status: true
+  state_transfer: true

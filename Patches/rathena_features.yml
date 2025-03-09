@@ -1,10 +1,11 @@
 # rAthena Features Integration Patch
 name: rathena_features
-description: Implements rAthena-specific functionality for WARP client
-version: 1.0.0
+description: Implements rAthena-specific functionality with P2P mesh networking for WARP client
+version: 2.0.0
 depends_on:
   - universal_p2p
   - p2p_config_manager
+  - p2p_majority_host
 
 components:
   rathena_handler:
@@ -21,7 +22,20 @@ patches:
       push ebp
       mov ebp, esp
       
-      ; Check if it's a rAthena packet
+      ; Check if it's a rAthena P2P packet
+      call IsRathenaP2PPacket
+      test eax, eax
+      jz check_regular_rathena
+      
+      ; Process P2P specific packet
+      push PACKET_BUFFER
+      call ProcessP2PPacket
+      test eax, eax
+      jz packet_error
+      jmp done
+      
+      check_regular_rathena:
+      ; Check if it's a regular rAthena packet
       call IsRathenaPacket
       test eax, eax
       jz regular_packet
@@ -56,6 +70,9 @@ patches:
       ; Initialize rAthena features
       call InitRathenaFeatures
       
+      ; Initialize P2P networking
+      call InitP2PNetworking
+      
       ; Setup custom packets
       call SetupCustomPackets
       
@@ -67,6 +84,15 @@ patches:
       ret
 
 functions:
+  ProcessP2PPacket:
+    type: internal
+    code: |
+      ; Handle P2P specific packets
+      call ParseP2PHeader
+      call ValidateP2PStructure
+      call ProcessP2PData
+      ret
+
   ProcessRathenaPacket:
     type: internal
     code: |
@@ -74,6 +100,16 @@ functions:
       call ParsePacketHeader
       call ValidatePacketStructure
       call ProcessPacketData
+      ret
+
+  InitP2PNetworking:
+    type: internal
+    code: |
+      ; Initialize P2P networking components
+      call InitMeshNetworking
+      call InitHostTracking
+      call InitStateTransfer
+      call InitLatencyMonitoring
       ret
 
   InitRathenaFeatures:
@@ -96,10 +132,18 @@ settings:
       custom_npcs: true
       custom_quests: true
       
+    p2p_networking:
+      enabled: true
+      mesh_networking: true
+      host_switching: true
+      state_transfer: true
+      country_based_grouping: true
+      
     packets:
       validate_structure: true
       custom_encryption: true
       compression: true
+      p2p_protocol: true
       
     compatibility:
       packet_version: "auto"
@@ -118,24 +162,46 @@ settings:
       packet_compression: true
       batch_updates: true
       delta_encoding: true
+      mesh_optimization: true
 
+  p2p:
+    coordinator_sync: true
+    host_selection:
+      country_based: true
+      latency_optimized: true
+      mesh_enabled: true
+    state_transfer:
+      chunked: true
+      delta_sync: true
+      verification: true
+    mesh_network:
+      max_nodes: 5
+      backup_routes: 2
+      route_optimization: true
+      
   security:
     packet_validation: true
     encryption_layer: true
     integrity_check: true
+    p2p_authentication: true
     
   performance:
     packet_batching: true
     compression_level: "adaptive"
     cache_custom_data: true
+    mesh_routing: "optimized"
     
   debugging:
     log_packets: false
     trace_features: false
     debug_mode: false
+    p2p_monitoring: false
 
 logging:
   feature_usage: true
   packet_errors: true
   compatibility_issues: true
   performance_metrics: true
+  p2p_events: true
+  mesh_status: true
+  host_switches: true
