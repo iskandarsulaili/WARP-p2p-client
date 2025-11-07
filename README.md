@@ -80,9 +80,10 @@ The **[rathena-AI-world](https://github.com/iskandarsulaili/rathena-AI-world)** 
 ---
 
 ## Documentation
-* [P2P Client Patches](doc/p2p_client_patches.md)
-* [Security Implementation](doc/security.md)
-* [Network Optimization](doc/network.md)
+* [P2P Client Patches](doc/p2p_client_patches.md) - Patch configuration and implementation
+* [Implementation Guide](IMPLEMENTATION_GUIDE.md) - Complete implementation guide
+* [Integration Test Guide](INTEGRATION_TEST_GUIDE.md) - Testing procedures
+* [Production Deployment Guide](PRODUCTION_DEPLOYMENT_GUIDE.md) - Production deployment
 * [Integration Analysis](../P2P_INTEGRATION_ANALYSIS.md) - Compatibility with rathena-AI-world coordinator
 
 ## Project Structure
@@ -105,7 +106,7 @@ WARP/
 * .NET Framework 4.5+
 
 ## Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please ensure all code follows the existing style and includes appropriate tests.
 
 ## License
 GNU General Public License v3.0

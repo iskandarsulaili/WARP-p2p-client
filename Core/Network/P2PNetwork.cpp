@@ -16,7 +16,7 @@ P2PNetwork::P2PNetwork() : connected_(false) {
     
     // Set TLS init handler for WSS support
     ws_client_.set_tls_init_handler([](connection_hdl) {
-        return websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::tlsv12);
+        return websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
     });
 }
 
@@ -167,9 +167,10 @@ void P2PNetwork::poll() {
 // Private methods
 
 void P2PNetwork::on_open(connection_hdl hdl) {
+    (void)hdl; // Unused parameter
     connected_ = true;
     log_info("WebSocket connection opened");
-    
+
     // Auto-join session if session_id was provided
     if (!session_id_.empty()) {
         join_session(session_id_);
@@ -177,12 +178,14 @@ void P2PNetwork::on_open(connection_hdl hdl) {
 }
 
 void P2PNetwork::on_close(connection_hdl hdl) {
+    (void)hdl; // Unused parameter
     connected_ = false;
     connected_peers_.clear();
     log_info("WebSocket connection closed");
 }
 
 void P2PNetwork::on_fail(connection_hdl hdl) {
+    (void)hdl; // Unused parameter
     connected_ = false;
     log_error("WebSocket connection failed");
 
@@ -192,6 +195,7 @@ void P2PNetwork::on_fail(connection_hdl hdl) {
 }
 
 void P2PNetwork::on_message(connection_hdl hdl, MessagePtr msg) {
+    (void)hdl; // Unused parameter
     try {
         std::string payload = msg->get_payload();
         json message = json::parse(payload);
