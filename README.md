@@ -56,10 +56,34 @@ p2p_client:
     encryption: true
 ```
 
+## Related Projects
+
+### rAthena AI World
+
+The **[rathena-AI-world](https://github.com/iskandarsulaili/rathena-AI-world)** is an enhanced rAthena MMORPG server with AI-driven autonomous NPCs and a P2P coordinator service. This WARP P2P client connects to the rathena-AI-world P2P coordinator to enable hybrid P2P architecture.
+
+**Key Features**:
+- AI-driven NPCs with personality-based behavior (Big Five model)
+- Multi-agent AI system using CrewAI framework
+- Dynamic quest generation and economic simulation
+- P2P coordinator service for WebRTC signaling
+- Long-term memory management with Memori SDK
+
+**Integration**: This WARP client connects to the P2P coordinator service at `ws://localhost:8001/api/signaling/ws` (development) or `wss://coordinator.yourdomain.com/api/signaling/ws` (production). The coordinator handles WebRTC signaling, session management, and host selection.
+
+**Architecture**: Hybrid P2P model where:
+- **Centralized (rathena-AI-world)**: AI NPCs, authentication, anti-cheat, critical game logic
+- **P2P (WARP client)**: Zone-based player interactions hosted by qualified players
+
+**Integration Guide**: See the [P2P Integration Analysis](../P2P_INTEGRATION_ANALYSIS.md) for detailed compatibility assessment and required modifications.
+
+---
+
 ## Documentation
 * [P2P Client Patches](doc/p2p_client_patches.md)
 * [Security Implementation](doc/security.md)
 * [Network Optimization](doc/network.md)
+* [Integration Analysis](../P2P_INTEGRATION_ANALYSIS.md) - Compatibility with rathena-AI-world coordinator
 
 ## Project Structure
 ```text

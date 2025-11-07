@@ -175,6 +175,13 @@ patches:
           PreferP2PHosting=1
           MainServerFallback=1
 
+          ; Coordinator connection (WebSocket-based signaling)
+          CoordinatorURL=ws://localhost:8001/api/signaling/ws
+          CoordinatorPort=8001
+          ConnectionTimeout=5000
+          ReconnectDelay=1000
+          MaxRetries=3
+
           ; Host Requirements
           MinCPUCores=4
           MinCPUFrequency=3000
@@ -198,8 +205,14 @@ patches:
         after: "[CONNECTION]"
         content: |
           [P2P_HOSTS]
-          0=coordinator.example.com:5121
-          1=backup-coordinator.example.com:5121
+          # Primary P2P coordinator (development)
+          0=ws://localhost:8001/api/signaling/ws
+
+          # Production P2P coordinator (update when deployed)
+          # 0=wss://coordinator.yourdomain.com/api/signaling/ws
+
+          # Backup coordinator (optional)
+          # 1=wss://backup-coordinator.yourdomain.com/api/signaling/ws
 
 # New files
 files:
@@ -293,21 +306,27 @@ build:
         - Core/Network/P2PNetwork.cpp
         - Core/Network/P2PSession.cpp
         - Core/Game/P2PMapSession.cpp
-          - Core/Game/MapSystem_P2P.cpp
+        - Core/Game/MapSystem_P2P.cpp
       definitions:
         - ENABLE_P2P_SUPPORT
+      include_dirs:
+        - ${WEBSOCKETPP_INCLUDE_DIR}
+        - ${JSON_INCLUDE_DIR}
+        - ${ASIO_INCLUDE_DIR}
 
   # Linker settings
   linker:
     libraries:
       - ssl
       - crypto
-      - z
+      - pthread
 
 # Dependencies
 dependencies:
   - OpenSSL >= 1.1.1
-  - zlib >= 1.2.11
+  - WebSocket++ >= 0.8.2 (header-only)
+  - nlohmann/json >= 3.10.0 (header-only)
+  - Asio >= 1.18.0 (header-only)
 
 # Documentation
 docs:
