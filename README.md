@@ -10,6 +10,20 @@
 
 WARP P2P Client extension for enabling P2P hosting features in the Ragnarok Online client.
 
+## 📚 Quick Start Guide
+
+**[Windows Client Setup Guide](WINDOWS_CLIENT_SETUP_GUIDE.md)** - Complete beginner-friendly guide for:
+- Installing prerequisites on Windows 10/11
+- Downloading and configuring WARP P2P client
+- Patching your Ragnarok Online client with P2P features
+- Connecting to the rAthena AI World server
+- Troubleshooting common issues
+- Performance optimization
+
+**[Server Deployment Guide](../rathena-AI-world/UBUNTU_SERVER_DEPLOYMENT_GUIDE.md)** - For server administrators deploying the backend on Ubuntu Server 24.04.
+
+---
+
 ## P2P Features
 
 ### Host Node Integration
