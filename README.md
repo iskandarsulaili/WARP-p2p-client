@@ -1,126 +1,57 @@
-# Win App Revamp Package - P2P Client
+Discord [![Discord](https://img.shields.io/discord/724239709966041128)](https://discord.com/invite/ByEQHDf)
 
-<p align="center">
-    <img src="Images/logo.png?raw=true" alt="Warp logo" width=128 height=128>
-</p>
+# Nemo - rag*ok client patcher.
 
-![License](https://img.shields.io/github/license/Neo-Mind/WARP)
-![RepoSize](https://img.shields.io/github/repo-size/Neo-Mind/WARP)
-![Commit](https://img.shields.io/github/last-commit/Neo-Mind/WARP)
+This is fork of @MStr3am project [Nemo](https://github.com/MStr3am/NEMO)
 
-WARP P2P Client extension for enabling P2P hosting features in the Ragnarok Online client.
+# Usage
 
-## 📚 Quick Start Guide
+This program can be used for patch closed source clients for using with [Hercules](https://github.com/herculesws/hercules/) or other Rag*rok emulators.
 
-**[Windows Client Setup Guide](WINDOWS_CLIENT_SETUP_GUIDE.md)** - Complete beginner-friendly guide for:
-- Installing prerequisites on Windows 10/11
-- Downloading and configuring WARP P2P client
-- Patching your Ragnarok Online client with P2P features
-- Connecting to the rAthena AI World server
-- Troubleshooting common issues
-- Performance optimization
+# Docs
 
-**[Server Deployment Guide](../rathena-AI-world/UBUNTU_SERVER_DEPLOYMENT_GUIDE.md)** - For server administrators deploying the backend on Ubuntu Server 24.04.
+Basic docs located in [Docs](Docs) directory.
 
----
+## Profiles
 
-## P2P Features
+Predefined minimal profile for zero clients. See in [profiles](profiles) directory.
 
-### Host Node Integration
-* Automatic host discovery
-* Connection management
-* Host selection optimization
-* Performance monitoring
-* Network metrics collection
+## Configs
 
-### Security Features
-* Host verification
-* Secure communication
-* Performance validation
-* Network integrity checks
-* Host reliability scoring
+Working config for [zero client](configs/zero/)
 
-### Client Optimizations
-* Connection pooling
-* Resource caching
-* Network latency reduction
-* Bandwidth optimization
-* Memory management
+# Patch reports
 
-## Installation
+Reports for all patches and all clients http://nemo.herc.ws/
 
-1. Copy patch files:
-```
-Patches/
-└── p2p_hosting.yml    # P2P hosting configuration
-```
+# Support
 
-2. Configure P2P settings in `p2p_hosting.yml`:
-```yaml
-p2p_client:
-  enabled: true
-  connection:
-    timeout: 5000
-    retry_attempts: 3
-  monitoring:
-    enabled: true
-    update_interval: 60
-  security:
-    verify_hosts: true
-    encryption: true
-```
+Forum topic: http://herc.ws/board/topic/15523-another-nemo-patcher-fork/
 
-## Related Projects
+Discord server: https://discord.com/invite/ByEQHDf
 
-### rAthena AI World
+You can create bug reports here: https://gitlab.com/4144/Nemo/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=
 
-The **[rathena-AI-world](https://github.com/iskandarsulaili/rathena-AI-world)** is an enhanced rAthena MMORPG server with AI-driven autonomous NPCs and a P2P coordinator service. This WARP P2P client connects to the rathena-AI-world P2P coordinator to enable hybrid P2P architecture.
+or vote on any existing issue here: https://gitlab.com/4144/Nemo/issues
 
-**Key Features**:
-- AI-driven NPCs with personality-based behavior (Big Five model)
-- Multi-agent AI system using CrewAI framework
-- Dynamic quest generation and economic simulation
-- P2P coordinator service for WebRTC signaling
-- Long-term memory management with Memori SDK
+# Game guard files
 
-**Integration**: This WARP client connects to the P2P coordinator service at `ws://localhost:8001/api/signaling/ws` (development) or `wss://coordinator.yourdomain.com/api/signaling/ws` (production). The coordinator handles WebRTC signaling, session management, and host selection.
+For disable game guard Cheat Defender need:
 
-**Architecture**: Hybrid P2P model where:
-- **Centralized (rathena-AI-world)**: AI NPCs, authentication, anti-cheat, critical game logic
-- **P2P (WARP client)**: Zone-based player interactions hosted by qualified players
+1. get dropin replacment file [CDClient.dll](Input/CDClient.dll) and save into client directory.
 
-**Integration Guide**: See the [P2P Integration Analysis](../P2P_INTEGRATION_ANALYSIS.md) for detailed compatibility assessment and required modifications.
+2. Enable patch "Disable Cheat Defender Game Guard".
 
----
+# License
 
-## Documentation
-* [P2P Client Patches](doc/p2p_client_patches.md) - Patch configuration and implementation
-* [Implementation Guide](IMPLEMENTATION_GUIDE.md) - Complete implementation guide
-* [Integration Test Guide](INTEGRATION_TEST_GUIDE.md) - Testing procedures
-* [Production Deployment Guide](PRODUCTION_DEPLOYMENT_GUIDE.md) - Production deployment
-* [Integration Analysis](../P2P_INTEGRATION_ANALYSIS.md) - Compatibility with rathena-AI-world coordinator
+Original code and binary files licensed under unknown free use license.
 
-## Project Structure
-```text
-WARP/
-├── README.md
-├── LICENSE
-├── Patches/
-│   └── p2p_hosting.yml
-├── Scripts/
-│   ├── Support/
-│   └── Patches/
-└── doc/
-    └── p2p_client_patches.md
-```
+Asm files licensed under CC-NC-ND,
 
-## Requirements
-* Windows client
-* DirectX 9.0c+
-* .NET Framework 4.5+
+All additional changes licensed under GPL3.
 
-## Contributing
-Contributions are welcome! Please ensure all code follows the existing style and includes appropriate tests.
+# Donation
 
-## License
-GNU General Public License v3.0
+Bitcoin - ``1Gi24vFaa92f5gLyoHwhiz8A5EYFexv9gn``
+
+Litecoin - ``MPt5Ke7wD63F3YnbG32kCAUJ7KpCD9EWi7``
