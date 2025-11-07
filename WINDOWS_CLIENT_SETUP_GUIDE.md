@@ -20,6 +20,7 @@
 9. [Step 6: Connecting to the Server](#step-6-connecting-to-the-server)
 10. [Troubleshooting](#troubleshooting)
 11. [Advanced Configuration](#advanced-configuration)
+12. [Building WARP from Source (Advanced)](#building-warp-from-source-advanced)
 
 ---
 
@@ -862,6 +863,438 @@ Add exceptions for:
 3. **Keep WARP Updated**:
    - Regularly check for updates
    - Download from official sources only
+
+---
+
+## Building WARP from Source (Advanced)
+
+**⚠️ Note**: This section is for advanced users and developers who want to build WARP from source. Most users should use the pre-built executables in the `win32/` directory (see Step 3 above).
+
+### When to Build from Source
+
+Build from source if you:
+- Want to contribute to WARP development
+- Need to modify P2P networking features
+- Want to debug issues in the WARP codebase
+- Are developing custom patches or extensions
+
+### Build Prerequisites
+
+#### System Requirements
+
+- **Operating System**: Windows 10 (64-bit) or Windows 11
+- **RAM**: Minimum 8GB (16GB recommended for faster builds)
+- **Disk Space**: At least 10GB free space for build tools and dependencies
+- **Internet Connection**: Required for downloading dependencies
+
+#### Required Knowledge
+
+- Basic command-line usage
+- Understanding of C++ compilation process (helpful but not required)
+
+---
+
+### Build Tools Installation
+
+#### 1. Install Visual Studio 2019 or 2022
+
+WARP requires Visual Studio with C++ development tools.
+
+**Option A: Visual Studio Community (Free)**
+
+1. Download Visual Studio Community from: https://visualstudio.microsoft.com/downloads/
+2. Run the installer
+3. Select **"Desktop development with C++"** workload
+4. Under "Individual components", ensure these are selected:
+   - MSVC v142 - VS 2019 C++ x64/x86 build tools (or v143 for VS 2022)
+   - Windows 10 SDK (10.0.19041.0 or later)
+   - C++ CMake tools for Windows
+   - C++ ATL for latest build tools
+5. Click "Install" (this may take 30-60 minutes)
+
+**Option B: Build Tools for Visual Studio (Minimal)**
+
+If you don't want the full Visual Studio IDE:
+
+1. Download "Build Tools for Visual Studio" from the same page
+2. Select the same components as above
+3. Install
+
+#### 2. Install Qt Framework
+
+WARP uses Qt 5.15.x for its GUI and core functionality.
+
+**Download Qt:**
+
+1. Visit: https://www.qt.io/download-qt-installer
+2. Download "Qt Online Installer for Windows"
+3. Run the installer and create a Qt account (free)
+4. Select Qt 5.15.2 (or latest 5.15.x version)
+5. Under Qt 5.15.2, select:
+   - **MSVC 2019 64-bit** (or MSVC 2022 64-bit)
+   - **Qt WebEngine**
+   - **Qt Network Authorization**
+6. Install location: `C:\Qt\5.15.2` (default is fine)
+
+**Add Qt to PATH:**
+
+```cmd
+setx PATH "%PATH%;C:\Qt\5.15.2\msvc2019_64\bin"
+```
+
+#### 3. Install CMake
+
+CMake is required for building the P2P components.
+
+1. Download CMake from: https://cmake.org/download/
+2. Choose "Windows x64 Installer"
+3. During installation, select **"Add CMake to system PATH for all users"**
+4. Verify installation:
+   ```cmd
+   cmake --version
+   ```
+
+#### 4. Install Git for Windows
+
+1. Download from: https://git-scm.com/download/win
+2. Install with default options
+3. Verify:
+   ```cmd
+   git --version
+   ```
+
+---
+
+### Build Dependencies
+
+#### 1. Clone the Repository
+
+```cmd
+cd C:\
+git clone https://github.com/iskandarsulaili/WARP-p2p-client.git
+cd WARP-p2p-client
+```
+
+#### 2. Install P2P Dependencies
+
+The P2P features require additional libraries:
+
+**WebSocket++ (Header-only)**
+
+```cmd
+cd C:\
+git clone https://github.com/zaphoyd/websocketpp.git
+```
+
+**Asio (Header-only)**
+
+```cmd
+cd C:\
+git clone https://github.com/chriskohlhoff/asio.git
+```
+
+**nlohmann/json (Header-only)**
+
+```cmd
+cd C:\
+git clone https://github.com/nlohmann/json.git
+```
+
+**OpenSSL**
+
+1. Download pre-built OpenSSL from: https://slproweb.com/products/Win32OpenSSL.html
+2. Choose "Win64 OpenSSL v3.x.x" (not the "Light" version)
+3. Install to `C:\OpenSSL-Win64`
+4. Add to PATH:
+   ```cmd
+   setx PATH "%PATH%;C:\OpenSSL-Win64\bin"
+   ```
+
+---
+
+### Building WARP P2P Client
+
+#### Method 1: Using Pre-built Executables (Recommended)
+
+The repository includes pre-built executables in the `win32/` directory:
+
+```cmd
+cd C:\WARP-p2p-client\win32
+dir
+```
+
+You should see:
+- `WARP.exe` - Main GUI application
+- `WARP_console.exe` - Console version
+- `WARP_bench.exe` - Benchmarking tool
+- Various Qt DLL files
+
+**Skip to verification if using pre-built executables.**
+
+#### Method 2: Building from Source (For Developers)
+
+**Note**: The original WARP patcher is primarily JavaScript-based and doesn't require compilation. However, the P2P extensions require building C++ components.
+
+**Step 1: Build P2P Network Components**
+
+```cmd
+cd C:\WARP-p2p-client
+mkdir build
+cd build
+```
+
+**Step 2: Configure with CMake**
+
+```cmd
+cmake .. -G "Visual Studio 16 2019" -A x64 ^
+  -DENABLE_P2P=ON ^
+  -DQt5_DIR=C:\Qt\5.15.2\msvc2019_64\lib\cmake\Qt5 ^
+  -DWEBSOCKETPP_INCLUDE_DIR=C:\websocketpp ^
+  -DJSON_INCLUDE_DIR=C:\json\include ^
+  -DASIO_INCLUDE_DIR=C:\asio\asio\include ^
+  -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win64
+```
+
+**For Visual Studio 2022:**
+
+```cmd
+cmake .. -G "Visual Studio 17 2022" -A x64 ^
+  -DENABLE_P2P=ON ^
+  -DQt5_DIR=C:\Qt\5.15.2\msvc2022_64\lib\cmake\Qt5 ^
+  -DWEBSOCKETPP_INCLUDE_DIR=C:\websocketpp ^
+  -DJSON_INCLUDE_DIR=C:\json\include ^
+  -DASIO_INCLUDE_DIR=C:\asio\asio\include ^
+  -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win64
+```
+
+**Step 3: Build the Project**
+
+```cmd
+cmake --build . --config Release
+```
+
+This will compile the P2P network components. The build process may take 5-15 minutes depending on your system.
+
+**Step 4: Copy Built Files**
+
+After successful build:
+
+```cmd
+copy Release\*.dll ..\win32\
+copy Release\*.exe ..\win32\
+```
+
+---
+
+### Build Troubleshooting
+
+#### Common Build Errors
+
+**Error: "Qt5 not found"**
+
+Solution:
+- Verify Qt installation path
+- Ensure you installed the correct MSVC version (2019 or 2022)
+- Update the `-DQt5_DIR` path in CMake command
+
+**Error: "OpenSSL not found"**
+
+Solution:
+```cmd
+setx OPENSSL_ROOT_DIR "C:\OpenSSL-Win64"
+setx OPENSSL_INCLUDE_DIR "C:\OpenSSL-Win64\include"
+setx OPENSSL_LIBRARIES "C:\OpenSSL-Win64\lib"
+```
+
+Restart your command prompt and try again.
+
+**Error: "WebSocket++ headers not found"**
+
+Solution:
+- Verify the clone location: `C:\websocketpp`
+- Check that `C:\websocketpp\websocketpp\config\asio_client.hpp` exists
+- Update the `-DWEBSOCKETPP_INCLUDE_DIR` path in CMake command
+
+**Error: "MSVC compiler not found"**
+
+Solution:
+- Open "Developer Command Prompt for VS 2019" (or VS 2022) from Start Menu
+- Run the CMake commands from this special command prompt
+- Alternatively, run this before CMake:
+  ```cmd
+  "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+  ```
+
+**Error: "LNK1104: cannot open file 'Qt5Core.lib'"**
+
+Solution:
+- Ensure Qt bin directory is in PATH
+- Try building from Qt Creator instead:
+  1. Open Qt Creator
+  2. File → Open File or Project
+  3. Select `CMakeLists.txt`
+  4. Configure with MSVC kit
+  5. Build → Build All
+
+#### Build Performance Issues
+
+**Slow compilation:**
+- Use `/MP` flag for parallel compilation:
+  ```cmd
+  cmake --build . --config Release -- /m
+  ```
+- Close other applications to free up RAM
+- Use SSD for build directory
+
+**Out of memory errors:**
+- Reduce parallel jobs:
+  ```cmd
+  cmake --build . --config Release -- /m:2
+  ```
+
+#### Runtime Errors
+
+**"VCRUNTIME140.dll not found"**
+
+Solution:
+- Install Visual C++ Redistributable:
+  - Download from: https://aka.ms/vs/17/release/vc_redist.x64.exe
+  - Run and install
+
+**"Qt5Core.dll not found"**
+
+Solution:
+- Copy Qt DLLs to the same directory as WARP.exe:
+  ```cmd
+  cd C:\WARP-p2p-client\win32
+  windeployqt WARP.exe
+  ```
+
+**"The application failed to start because its side-by-side configuration is incorrect"**
+
+Solution:
+- Rebuild with matching Visual Studio version
+- Ensure all dependencies are 64-bit (not 32-bit)
+
+---
+
+### Build Verification
+
+#### 1. Verify Pre-built Executables
+
+```cmd
+cd C:\WARP-p2p-client\win32
+WARP.exe --version
+```
+
+Expected output:
+```
+WARP P2P Client v1.0.0
+```
+
+#### 2. Test WARP GUI
+
+```cmd
+WARP.exe
+```
+
+The WARP GUI should open. You should see:
+- Main window with patch selection interface
+- P2P settings tab (if P2P support is enabled)
+- No error messages in the console
+
+#### 3. Verify P2P Components
+
+```cmd
+WARP_console.exe --test-p2p
+```
+
+Expected output:
+```
+P2P WebSocket support: Enabled
+P2P Coordinator: Not connected (expected)
+```
+
+#### 4. Check Dependencies
+
+```cmd
+cd C:\WARP-p2p-client\win32
+dir *.dll
+```
+
+Required DLLs:
+- `Qt5Core.dll`
+- `Qt5Gui.dll`
+- `Qt5Network.dll`
+- `Qt5Qml.dll`
+- `Qt5Quick.dll`
+- `YAML.dll`
+- `GATE.dll`
+- `libEGL.dll`
+- `libGLESv2.dll`
+- `msvcp140.dll`
+- `vcruntime140.dll`
+
+---
+
+### Build Configuration Options
+
+#### CMake Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `ENABLE_P2P` | `ON` | Enable P2P hosting support |
+| `CMAKE_BUILD_TYPE` | `Release` | Build type (Release/Debug) |
+| `Qt5_DIR` | Auto-detect | Path to Qt5 CMake files |
+| `WEBSOCKETPP_INCLUDE_DIR` | Auto-detect | WebSocket++ headers path |
+| `JSON_INCLUDE_DIR` | Auto-detect | nlohmann/json headers path |
+| `ASIO_INCLUDE_DIR` | Auto-detect | Asio headers path |
+| `OPENSSL_ROOT_DIR` | Auto-detect | OpenSSL installation path |
+
+#### Debug Build
+
+For development and debugging:
+
+```cmd
+cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Debug
+cmake --build . --config Debug
+```
+
+Debug builds include:
+- Symbol information for debugging
+- Additional runtime checks
+- Verbose logging
+- Larger executable size
+
+#### Clean Build
+
+To start fresh:
+
+```cmd
+cd C:\WARP-p2p-client
+rmdir /s /q build
+mkdir build
+cd build
+```
+
+Then repeat the CMake configuration and build steps.
+
+---
+
+### Build Resources
+
+**Official Documentation:**
+- **WARP Wiki**: https://github.com/Neo-Mind/WARP/wiki
+- **Qt Documentation**: https://doc.qt.io/qt-5/
+- **CMake Documentation**: https://cmake.org/documentation/
+
+**Development Tools:**
+- **Qt Creator**: Recommended IDE for Qt development
+  - Download: https://www.qt.io/download-qt-installer
+  - Includes visual designer and debugger
+- **Visual Studio Code**: Alternative lightweight editor
+  - Install C++ extension
+  - Install CMake Tools extension
 
 ---
 
