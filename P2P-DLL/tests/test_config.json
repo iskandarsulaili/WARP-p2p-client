@@ -1,0 +1,63 @@
+{
+  "coordinator": {
+    "rest_api_url": "http://test-coordinator:8001/api/v1",
+    "websocket_url": "ws://test-coordinator:8001/api/v1/signaling/ws",
+    "timeout_seconds": 10,
+    "reconnect_max_attempts": 3,
+    "reconnect_backoff_ms": 500
+  },
+  "webrtc": {
+    "stun_servers": ["stun:test.stun.server:19302"],
+    "turn_servers": [],
+    "ice_transport_policy": "all",
+    "bundle_policy": "balanced",
+    "rtcp_mux_policy": "require",
+    "enable_dtls": true,
+    "enable_rtp_data_channels": false
+  },
+  "p2p": {
+    "enabled": true,
+    "max_peers": 10,
+    "max_packet_size_bytes": 32768,
+    "max_bandwidth_mbps": 50,
+    "target_bitrate_kbps": 2500,
+    "enable_congestion_control": true,
+    "packet_queue_size": 500
+  },
+  "security": {
+    "enable_encryption": true,
+    "enable_authentication": true,
+    "api_key": "test-api-key",
+    "jwt_token": "test-jwt-token",
+    "certificate_validation": false,
+    "tls_version": "1.3"
+  },
+  "logging": {
+    "level": "debug",
+    "file": "test_p2p.log",
+    "max_file_size_mb": 5,
+    "max_files": 3,
+    "console_output": true,
+    "async_logging": false
+  },
+  "zones": {
+    "p2p_enabled_zones": ["test_zone_1", "test_zone_2"],
+    "fallback_on_failure": true,
+    "zone_transition_timeout_ms": 3000
+  },
+  "performance": {
+    "worker_threads": 2,
+    "io_thread_pool_size": 1,
+    "enable_packet_batching": true,
+    "packet_batch_size": 5,
+    "packet_batch_timeout_ms": 10
+  },
+  "host": {
+    "enable_hosting": false,
+    "max_players": 20,
+    "max_zones": 2,
+    "heartbeat_interval_seconds": 15,
+    "quality_report_interval_seconds": 30
+  }
+}
+

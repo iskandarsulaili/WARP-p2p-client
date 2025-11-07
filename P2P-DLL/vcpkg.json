@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "p2p-network-dll",
+  "version": "1.0.0",
+  "description": "P2P Network DLL for Ragnarok Online",
+  "homepage": "https://github.com/your-org/p2p-network-dll",
+  "dependencies": [
+    "nlohmann-json",
+    "spdlog",
+    "openssl",
+    "websocketpp",
+    "cpp-httplib",
+    {
+      "name": "gtest",
+      "host": true
+    },
+    "detours"
+  ],
+  "builtin-baseline": "latest"
+}
+
