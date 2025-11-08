@@ -26,16 +26,23 @@ endif()
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(websocketpp CONFIG REQUIRED)
+# Find Boost components needed by Boost.Beast (each is a separate vcpkg package)
+find_package(boost_system CONFIG REQUIRED)
+find_package(boost_regex CONFIG REQUIRED)
+find_package(boost_asio CONFIG REQUIRED)
+find_package(boost_chrono CONFIG REQUIRED)
+find_package(boost_random CONFIG REQUIRED)
+# Boost.Beast is header-only, included with Boost.Asio
 find_package(httplib CONFIG REQUIRED)
 
-# Note: libwebrtc requires manual integration (see docs/WEBRTC_INTEGRATION.md)
-# find_package(webrtc REQUIRED)
+# WebRTC library
+find_package(LibDataChannel CONFIG REQUIRED)
 
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${Boost_INCLUDE_DIRS}
 )
 
 # Source files
@@ -77,9 +84,13 @@ target_link_libraries(p2p_network PRIVATE
     spdlog::spdlog
     OpenSSL::SSL
     OpenSSL::Crypto
-    websocketpp::websocketpp
     httplib::httplib
-    # webrtc::webrtc  # Add when libwebrtc is integrated
+    Boost::system
+    Boost::regex
+    Boost::asio
+    Boost::chrono
+    # Boost.Beast is header-only, no linking needed
+    LibDataChannel::LibDataChannel
 )
 
 # Compiler options

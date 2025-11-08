@@ -24,7 +24,7 @@ namespace {
  * 
  * Called when the DLL is loaded/unloaded by the process.
  */
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpReserved */) {
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             // DLL is being loaded
@@ -68,15 +68,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
                 LOG_INFO("DLL Path: " + std::string(dll_path));
                 LOG_INFO("Config Path: " + config_path.string());
 
-                // Initialize NetworkManager
-                auto& net_mgr = P2P::NetworkManager::GetInstance();
-                if (!net_mgr.Initialize()) {
-                    g_last_error = "Failed to initialize NetworkManager";
-                    LOG_ERROR(g_last_error);
-                    return FALSE;
-                }
-
-                LOG_INFO("NetworkManager initialized successfully");
+                // NetworkManager will be initialized when P2P is started
+                LOG_INFO("P2P Network DLL loaded successfully");
 
                 // Check if P2P is enabled in config
                 if (config_mgr.IsP2PEnabled()) {
@@ -240,7 +233,16 @@ extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const cha
         LOG_INFO("User ID: " + std::string(user_id));
 
         auto& net_mgr = P2P::NetworkManager::GetInstance();
-        if (!net_mgr.Start(player_id, user_id)) {
+
+        // Initialize with player_id as peer_id
+        if (!net_mgr.Initialize(player_id)) {
+            g_last_error = "NetworkManager failed to initialize";
+            LOG_ERROR(g_last_error);
+            return false;
+        }
+
+        // Start networking
+        if (!net_mgr.Start()) {
             g_last_error = "NetworkManager failed to start";
             LOG_ERROR(g_last_error);
             return false;

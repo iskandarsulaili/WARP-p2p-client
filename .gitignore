@@ -1,3 +1,6 @@
+################################################################################
+# NEMO Patcher Specific
+################################################################################
 /Output/selftest
 .ci/files.txt
 .ci/index.txt
@@ -19,3 +22,298 @@ FailedTranslations.txt
 
 # exception
 !/Output/dummy.txt
+
+################################################################################
+# C++ Build Artifacts (P2P-DLL)
+################################################################################
+
+# Build directories
+P2P-DLL/build/
+P2P-DLL/bin/
+P2P-DLL/lib/
+P2P-DLL/obj/
+P2P-DLL/out/
+P2P-DLL/.cmake/
+P2P-DLL/CMakeFiles/
+P2P-DLL/cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+install_manifest.txt
+compile_commands.json
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# Build outputs
+*.dll
+*.exe
+*.lib
+*.a
+*.so
+*.dylib
+*.pdb
+*.ilk
+*.exp
+*.obj
+*.o
+*.lo
+*.la
+*.slo
+
+# Precompiled headers
+*.gch
+*.pch
+
+################################################################################
+# vcpkg Package Manager
+################################################################################
+
+# vcpkg installed packages (should be installed via vcpkg.json)
+P2P-DLL/vcpkg_installed/
+vcpkg_installed/
+.vcpkg-root
+
+# vcpkg binary cache
+.vcpkg/
+
+# Don't ignore vcpkg manifest files
+!vcpkg.json
+!vcpkg-configuration.json
+
+################################################################################
+# Visual Studio / MSBuild
+################################################################################
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+*.vcxproj.filters
+
+# Visual Studio directories
+.vs/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/.ropeproject
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Visual Studio Trace Files
+*.e2e
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+################################################################################
+# IDE Specific (CLion, VS Code, etc.)
+################################################################################
+
+# CLion
+cmake-build-*/
+.idea/
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/c_cpp_properties.json
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw[a-z]
+*.un~
+Session.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+################################################################################
+# Operating System Files
+################################################################################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.stackdump
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+################################################################################
+# Configuration Files (Keep templates, exclude actual configs)
+################################################################################
+
+# Keep template configuration
+!P2P-DLL/config/p2p_config.json
+
+# Exclude actual configuration files with sensitive data
+P2P-DLL/config/p2p_config.local.json
+P2P-DLL/config/p2p_config.production.json
+P2P-DLL/config/*.key
+P2P-DLL/config/*.pem
+P2P-DLL/config/*.cert
+
+# Exclude log files
+*.log
+P2P-DLL/logs/
+logs/
+
+################################################################################
+# Testing & Coverage
+################################################################################
+
+# Test results
+Testing/
+TestResults/
+test-results/
+*.testlog
+*.trs
+
+# Coverage reports
+coverage/
+*.gcov
+*.gcda
+*.gcno
+*.coverage
+*.coveragexml
+
+################################################################################
+# Documentation Build Artifacts
+################################################################################
+
+# Doxygen
+P2P-DLL/docs/html/
+P2P-DLL/docs/latex/
+P2P-DLL/docs/xml/
+Doxyfile.bak
+
+################################################################################
+# Package/Distribution
+################################################################################
+
+# CPack generated files
+_CPack_Packages/
+*.tar.gz
+*.zip
+*.7z
+*.dmg
+*.deb
+*.rpm
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+################################################################################
+# Temporary & Backup Files
+################################################################################
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# Backup files
+*.orig
+*.rej
+*.bkp
+*.backup
+
+################################################################################
+# Node.js (if any web components exist)
+################################################################################
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+################################################################################
+# Python (if any build scripts exist)
+################################################################################
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+################################################################################
+# Exceptions (Files to keep)
+################################################################################
+
+# Keep README and documentation
+!README.md
+!BUILD_GUIDE.md
+!WEBRTC_GUIDE.md
+!API_REFERENCE.md
+!DEPLOYMENT_GUIDE.md
+!CHANGELOG.md
+!LICENSE
+
+# Keep example/template files
+!**/example.*
+!**/template.*
+!**/*.example.*
+!**/*.template.*

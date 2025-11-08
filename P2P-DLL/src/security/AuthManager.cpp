@@ -241,12 +241,12 @@ void AuthManager::StopAutoRefresh() {
     LOG_INFO("Auto-refresh stopped");
 }
 
-std::chrono::system_clock::time_point AuthManager::ParseTokenExpiration(const std::string& token) {
+std::chrono::system_clock::time_point AuthManager::ParseTokenExpiration(const std::string& /* token */) {
     // JWT format: header.payload.signature
     // Payload is base64-encoded JSON containing "exp" field
 
     // For now, default to 24 hours from now
-    // TODO: Implement proper JWT parsing
+    // TODO: Implement proper JWT parsing with the token parameter
     auto now = std::chrono::system_clock::now();
     return now + std::chrono::hours(24);
 }
@@ -267,7 +267,7 @@ void AuthManager::AutoRefreshWorker() {
         // Check if refresh is needed
         if (NeedsRefresh()) {
             LOG_INFO("Auto-refresh triggered");
-            RefreshToken([](bool success, const std::string& new_token) {
+            RefreshToken([](bool success, const std::string& /* new_token */) {
                 if (success) {
                     LOG_INFO("Auto-refresh successful");
                 } else {

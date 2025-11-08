@@ -27,10 +27,11 @@ public:
 
     /**
      * Initialize network manager
-     * 
+     *
+     * @param peer_id Peer identifier
      * @return true if initialized successfully, false otherwise
      */
-    bool Initialize();
+    bool Initialize(const std::string& peer_id);
 
     /**
      * Shutdown network manager
@@ -39,12 +40,10 @@ public:
 
     /**
      * Start P2P networking
-     * 
-     * @param player_id Player identifier
-     * @param user_id User identifier
+     *
      * @return true if started successfully, false otherwise
      */
-    bool Start(const std::string& player_id, const std::string& user_id);
+    bool Start();
 
     /**
      * Stop P2P networking
@@ -72,12 +71,12 @@ public:
     bool SendPacket(const Packet& packet);
 
 private:
-    NetworkManager() = default;
-    ~NetworkManager() = default;
+    NetworkManager();
+    ~NetworkManager();
     NetworkManager(const NetworkManager&) = delete;
     NetworkManager& operator=(const NetworkManager&) = delete;
 
-    class Impl;
+    struct Impl;
     std::unique_ptr<Impl> impl_;
 };
 

@@ -68,7 +68,7 @@ bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vecto
     return true;
 }
 
-bool SecurityManager::ValidatePacket(const uint8_t* data, size_t size) {
+bool SecurityManager::ValidatePacket(const uint8_t* /* data */, size_t /* size */) {
     // TODO: Implement packet validation
     // - Check packet structure
     // - Verify checksums

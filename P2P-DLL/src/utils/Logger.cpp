@@ -74,7 +74,8 @@ bool Logger::Initialize(const LoggingConfig& config) {
         impl_->logger->info("Logger initialized");
         return true;
     }
-    catch (const std::exception& e) {
+    catch (const std::exception&) {
+        // Exception caught during logger initialization
         return false;
     }
 }

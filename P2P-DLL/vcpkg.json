@@ -8,7 +8,6 @@
     "nlohmann-json",
     "spdlog",
     "openssl",
-    "websocketpp",
     "cpp-httplib",
     {
       "name": "gtest",
@@ -16,6 +15,5 @@
     },
     "detours"
   ],
-  "builtin-baseline": "latest"
+  "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36"
 }
-

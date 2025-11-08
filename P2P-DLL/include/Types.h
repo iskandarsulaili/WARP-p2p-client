@@ -45,7 +45,7 @@ enum class LogLevel {
     DEBUG,
     INFO,
     WARN,
-    ERROR,
+    ERR,  // Changed from ERROR to avoid Windows.h macro conflict
     FATAL
 };
 
@@ -56,6 +56,7 @@ struct CoordinatorConfig {
     std::string rest_api_url;
     std::string websocket_url;
     int timeout_seconds;
+    int timeout_ms;  // Timeout in milliseconds (for compatibility)
     int reconnect_max_attempts;
     int reconnect_backoff_ms;
 };
@@ -82,6 +83,7 @@ struct P2PConfig {
 
 struct SecurityConfig {
     bool enable_encryption;
+    bool encryption_enabled;  // Alias for compatibility
     bool enable_authentication;
     std::string api_key;
     std::string jwt_token;
@@ -139,6 +141,7 @@ struct Config {
  */
 struct Packet {
     uint16_t packet_id;
+    uint16_t type;  // Packet type for routing decisions
     std::vector<uint8_t> data;
     size_t length;
 };

@@ -32,6 +32,11 @@ NetworkManager::~NetworkManager() {
     Shutdown();
 }
 
+NetworkManager& NetworkManager::GetInstance() {
+    static NetworkManager instance;
+    return instance;
+}
+
 bool NetworkManager::Initialize(const std::string& peer_id) {
     if (impl_->initialized) {
         LOG_WARN("NetworkManager already initialized");
