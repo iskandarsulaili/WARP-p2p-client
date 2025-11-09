@@ -1,6 +1,196 @@
+################################################################################
+# WARP Patcher - Generated Files
+################################################################################
+
 # Ignore Outputs folder and everything inside
 /Outputs/
 
 # Ignore root-level config files
 /Settings.yml
 /LastSession.yml
+/SkippedPatches.log
+
+################################################################################
+# P2P DLL Build Artifacts
+################################################################################
+
+# CMake build directory
+/P2P-DLL/build/
+/P2P-DLL/Build/
+/P2P-DLL/BUILD/
+/P2P-DLL/out/
+
+# CMake cache and generated files
+/P2P-DLL/CMakeCache.txt
+/P2P-DLL/CMakeFiles/
+/P2P-DLL/cmake_install.cmake
+/P2P-DLL/install_manifest.txt
+/P2P-DLL/CTestTestfile.cmake
+/P2P-DLL/_deps/
+/P2P-DLL/compile_commands.json
+
+# vcpkg artifacts
+/P2P-DLL/vcpkg_installed/
+/P2P-DLL/.vcpkg/
+
+################################################################################
+# Compiled Binaries
+################################################################################
+
+# DLL files (compiled output)
+/P2P-DLL/*.dll
+/P2P-DLL/build/**/*.dll
+
+# Executable files
+/P2P-DLL/*.exe
+/P2P-DLL/build/**/*.exe
+
+# Static libraries
+/P2P-DLL/*.lib
+/P2P-DLL/*.a
+/P2P-DLL/build/**/*.lib
+/P2P-DLL/build/**/*.a
+
+# Object files
+/P2P-DLL/*.obj
+/P2P-DLL/*.o
+/P2P-DLL/build/**/*.obj
+/P2P-DLL/build/**/*.o
+
+# Debug files
+/P2P-DLL/*.pdb
+/P2P-DLL/*.ilk
+/P2P-DLL/*.exp
+/P2P-DLL/build/**/*.pdb
+/P2P-DLL/build/**/*.ilk
+/P2P-DLL/build/**/*.exp
+
+################################################################################
+# Log Files
+################################################################################
+
+# P2P DLL logs
+/P2P-DLL/p2p_dll.log
+/P2P-DLL/*.log
+/P2P-DLL/build/**/*.log
+
+# Build logs
+build.log
+cmake_config.log
+vcpkg_install.log
+
+################################################################################
+# Temporary & Backup Files
+################################################################################
+
+# Backup files
+*_OLD.exe
+*_OLD.dll
+*.bak
+*.backup
+*.orig
+
+# WARP patch intermediate files
+*.epi
+*.secure.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+################################################################################
+# IDE & Editor Files
+################################################################################
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+################################################################################
+# OS-Specific Files
+################################################################################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+################################################################################
+# Test & Coverage Files
+################################################################################
+
+# Test executables
+/P2P-DLL/tests/*.exe
+/P2P-DLL/build/**/tests/*.exe
+
+# Coverage reports
+/P2P-DLL/coverage/
+/P2P-DLL/*.gcov
+/P2P-DLL/*.gcda
+/P2P-DLL/*.gcno
+
+################################################################################
+# Important Files to Keep (Exceptions)
+################################################################################
+
+# Keep configuration templates
+!/P2P-DLL/config/p2p_config.json
+!/P2P-DLL/config/*.json.example
+
+# Keep CMake configuration
+!/P2P-DLL/CMakeLists.txt
+!/P2P-DLL/vcpkg.json
+
+# Keep source files
+!/P2P-DLL/src/**
+!/P2P-DLL/include/**
+!/P2P-DLL/tests/**/*.cpp
+!/P2P-DLL/tests/**/*.h
+
+# Keep documentation
+!/P2P-DLL/*.md
+!/P2P-DLL/docs/**

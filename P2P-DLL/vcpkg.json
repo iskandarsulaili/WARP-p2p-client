@@ -3,12 +3,18 @@
   "name": "p2p-network-dll",
   "version": "1.0.0",
   "description": "P2P Network DLL for Ragnarok Online",
-  "homepage": "https://github.com/your-org/p2p-network-dll",
+  "homepage": "hhttps://github.com/iskandarsulaili/WARP-p2p-client",
   "dependencies": [
     "nlohmann-json",
     "spdlog",
     "openssl",
     "cpp-httplib",
+    "libdatachannel",
+    "boost-system",
+    "boost-regex",
+    "boost-asio",
+    "boost-chrono",
+    "boost-random",
     {
       "name": "gtest",
       "host": true
