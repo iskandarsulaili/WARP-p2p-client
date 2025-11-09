@@ -3,8 +3,20 @@
 #include "Types.h"
 #include <memory>
 #include <string>
+#include <functional>
 
 namespace P2P {
+
+// Forward declarations
+class WebRTCManager;
+
+/**
+ * Callback for routing packets to the original server
+ * @param data Packet data
+ * @param length Packet length
+ * @return true if packet was sent successfully
+ */
+using ServerRouteCallback = std::function<bool(const uint8_t* data, size_t length)>;
 
 /**
  * PacketRouter - Routes packets between P2P and server based on configuration
@@ -23,9 +35,13 @@ public:
     /**
      * Initialize the packet router
      * @param p2p_enabled Whether P2P routing is enabled
+     * @param webrtc_manager WebRTC manager for P2P routing
+     * @param server_callback Callback for routing to server
      * @return true if initialization succeeded
      */
-    bool Initialize(bool p2p_enabled);
+    bool Initialize(bool p2p_enabled,
+                   std::shared_ptr<WebRTCManager> webrtc_manager,
+                   ServerRouteCallback server_callback);
 
     /**
      * Shutdown the packet router

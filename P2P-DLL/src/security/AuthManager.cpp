@@ -58,43 +58,43 @@ void AuthManager::Shutdown() {
     LOG_INFO("AuthManager shutdown complete");
 }
 
-void AuthManager::Authenticate(const std::string& peer_id, AuthCallback callback) {
+bool AuthManager::AuthenticateSync(const std::string& peer_id, std::string& error_message) {
     if (!impl_->http_client) {
-        LOG_ERROR("AuthManager not initialized");
-        if (callback) callback(false, "AuthManager not initialized");
-        return;
+        error_message = "AuthManager not initialized";
+        LOG_ERROR(error_message);
+        return false;
     }
-    
+
     LOG_INFO("Authenticating peer: " + peer_id);
-    
+
     // Prepare authentication request
     json auth_request = {
         {"peer_id", peer_id},
         {"client_version", "1.0.0"},
         {"timestamp", std::time(nullptr)}
     };
-    
+
     // Send authentication request
     auto response = impl_->http_client->Post("/api/v1/auth/token", auth_request.dump());
-    
+
     if (!response.success) {
-        LOG_ERROR("Authentication failed: " + response.error_message);
-        if (callback) callback(false, response.error_message);
-        return;
+        error_message = response.error_message;
+        LOG_ERROR("Authentication failed: " + error_message);
+        return false;
     }
-    
+
     // Parse response
     try {
         auto response_json = json::parse(response.body);
-        
+
         if (!response_json.contains("token")) {
+            error_message = "Invalid response: missing token";
             LOG_ERROR("Authentication response missing token");
-            if (callback) callback(false, "Invalid response: missing token");
-            return;
+            return false;
         }
-        
+
         std::string token = response_json["token"];
-        
+
         // Store token
         {
             std::lock_guard<std::mutex> lock(impl_->token_mutex);
@@ -102,16 +102,25 @@ void AuthManager::Authenticate(const std::string& peer_id, AuthCallback callback
             impl_->peer_id = peer_id;
             impl_->token_expiration = ParseTokenExpiration(token);
         }
-        
+
         // Update HTTP client with new token
         impl_->http_client->SetAuthToken(token);
-        
+
         LOG_INFO("Authentication successful for peer: " + peer_id);
-        if (callback) callback(true, "");
-        
+        return true;
+
     } catch (const json::exception& e) {
-        LOG_ERROR("Failed to parse authentication response: " + std::string(e.what()));
-        if (callback) callback(false, "Failed to parse response");
+        error_message = "Failed to parse response: " + std::string(e.what());
+        LOG_ERROR(error_message);
+        return false;
+    }
+}
+
+void AuthManager::Authenticate(const std::string& peer_id, AuthCallback callback) {
+    std::string error_message;
+    bool success = AuthenticateSync(peer_id, error_message);
+    if (callback) {
+        callback(success, error_message);
     }
 }
 
@@ -241,14 +250,88 @@ void AuthManager::StopAutoRefresh() {
     LOG_INFO("Auto-refresh stopped");
 }
 
-std::chrono::system_clock::time_point AuthManager::ParseTokenExpiration(const std::string& /* token */) {
+std::string Base64UrlDecode(const std::string& input) {
+    // Base64 URL decoding (JWT uses URL-safe base64)
+    std::string base64 = input;
+
+    // Replace URL-safe characters
+    for (char& c : base64) {
+        if (c == '-') c = '+';
+        if (c == '_') c = '/';
+    }
+
+    // Add padding if needed
+    while (base64.length() % 4 != 0) {
+        base64 += '=';
+    }
+
+    // Simple base64 decode
+    static const std::string base64_chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
+
+    std::string decoded;
+    std::vector<int> T(256, -1);
+    for (int i = 0; i < 64; i++) T[base64_chars[i]] = i;
+
+    int val = 0, valb = -8;
+    for (unsigned char c : base64) {
+        if (T[c] == -1) break;
+        val = (val << 6) + T[c];
+        valb += 6;
+        if (valb >= 0) {
+            decoded.push_back(char((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+
+    return decoded;
+}
+
+std::chrono::system_clock::time_point AuthManager::ParseTokenExpiration(const std::string& token) {
     // JWT format: header.payload.signature
     // Payload is base64-encoded JSON containing "exp" field
 
-    // For now, default to 24 hours from now
-    // TODO: Implement proper JWT parsing with the token parameter
-    auto now = std::chrono::system_clock::now();
-    return now + std::chrono::hours(24);
+    try {
+        // Split token by '.'
+        size_t first_dot = token.find('.');
+        size_t second_dot = token.find('.', first_dot + 1);
+
+        if (first_dot == std::string::npos || second_dot == std::string::npos) {
+            LOG_ERROR("Invalid JWT format: missing dots");
+            return std::chrono::system_clock::now() + std::chrono::hours(24);
+        }
+
+        // Extract payload (between first and second dot)
+        std::string payload_b64 = token.substr(first_dot + 1, second_dot - first_dot - 1);
+
+        // Decode base64 payload
+        std::string payload_json = Base64UrlDecode(payload_b64);
+
+        // Parse JSON
+        json payload = json::parse(payload_json);
+
+        // Extract "exp" field (Unix timestamp)
+        if (!payload.contains("exp")) {
+            LOG_WARN("JWT payload missing 'exp' field");
+            return std::chrono::system_clock::now() + std::chrono::hours(24);
+        }
+
+        int64_t exp_timestamp = payload["exp"].get<int64_t>();
+
+        // Convert Unix timestamp to time_point
+        auto expiration = std::chrono::system_clock::from_time_t(static_cast<time_t>(exp_timestamp));
+
+        LOG_DEBUG("JWT expiration parsed: " + std::to_string(exp_timestamp));
+
+        return expiration;
+
+    } catch (const std::exception& e) {
+        LOG_ERROR("Failed to parse JWT token: " + std::string(e.what()));
+        // Default to 24 hours from now on error
+        return std::chrono::system_clock::now() + std::chrono::hours(24);
+    }
 }
 
 void AuthManager::AutoRefreshWorker() {

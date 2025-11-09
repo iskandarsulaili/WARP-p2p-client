@@ -56,9 +56,29 @@ public:
     int current_reconnect_delay_ms = 1000;
 
     Impl() {
-        // Configure SSL context to skip certificate verification for now
-        // TODO: Implement proper certificate validation
-        ssl_ctx.set_verify_mode(ssl::verify_none);
+        // Configure SSL context with proper certificate verification
+        ssl_ctx.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
+
+        // Load default CA certificates from system
+        ssl_ctx.set_default_verify_paths();
+
+        // Set verification callback for additional validation
+        ssl_ctx.set_verify_callback([](bool preverified, ssl::verify_context& ctx) {
+            // Get certificate subject
+            char subject_name[256];
+            X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+            X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+
+            if (!preverified) {
+                LOG_WARN("Certificate verification failed for: " + std::string(subject_name));
+                return false;
+            }
+
+            LOG_DEBUG("Certificate verified for: " + std::string(subject_name));
+            return true;
+        });
+
+        LOG_INFO("SSL certificate verification enabled");
     }
 };
 
@@ -112,17 +132,19 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
         if (!impl_->running) {
             impl_->running = true;
             impl_->io_thread = std::thread([this]() {
-                try {
-                    // Resolve hostname
-                    tcp::resolver resolver(impl_->ioc);
-                    auto const results = resolver.resolve(impl_->host, impl_->port);
+                // Reconnection loop
+                while (impl_->running && impl_->should_reconnect) {
+                    try {
+                        // Resolve hostname
+                        tcp::resolver resolver(impl_->ioc);
+                        auto const results = resolver.resolve(impl_->host, impl_->port);
 
-                    // Create WebSocket stream
-                    impl_->ws = std::make_unique<websocket::stream<ssl::stream<tcp::socket>>>(
-                        impl_->ioc, impl_->ssl_ctx);
+                        // Create WebSocket stream
+                        impl_->ws = std::make_unique<websocket::stream<ssl::stream<tcp::socket>>>(
+                            impl_->ioc, impl_->ssl_ctx);
 
-                    // Connect to server
-                    auto ep = net::connect(beast::get_lowest_layer(*impl_->ws), results);
+                        // Connect to server
+                        auto ep = net::connect(beast::get_lowest_layer(*impl_->ws), results);
 
                     // Perform SSL handshake
                     impl_->ws->next_layer().handshake(ssl::stream_base::client);
@@ -137,6 +159,10 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
                     impl_->ws->handshake(impl_->host, impl_->path);
 
                     impl_->connected = true;
+
+                    // Reset reconnection delay on successful connection
+                    impl_->current_reconnect_delay_ms = impl_->reconnect_delay_ms;
+
                     LOG_INFO("Connected to: " + impl_->server_url);
 
                     // Call connected callback
@@ -178,10 +204,49 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
                         }
                     }
 
+                    // Attempt reconnection if enabled
+                    if (impl_->should_reconnect && impl_->running) {
+                        LOG_INFO("Connection lost, attempting reconnection in " +
+                                std::to_string(impl_->current_reconnect_delay_ms) + "ms");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(impl_->current_reconnect_delay_ms));
+
+                        // Exponential backoff
+                        impl_->current_reconnect_delay_ms = std::min(
+                            impl_->current_reconnect_delay_ms * 2,
+                            impl_->max_reconnect_delay_ms
+                        );
+
+                        // Continue to next iteration to reconnect
+                        continue;
+                    }
+
+                    break;
+
                 } catch (const std::exception& e) {
                     LOG_ERROR("Connection thread error: " + std::string(e.what()));
                     impl_->connected = false;
+
+                    // Attempt reconnection if enabled
+                    if (impl_->should_reconnect && impl_->running) {
+                        LOG_INFO("Connection error, attempting reconnection in " +
+                                std::to_string(impl_->current_reconnect_delay_ms) + "ms");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(impl_->current_reconnect_delay_ms));
+
+                        // Exponential backoff
+                        impl_->current_reconnect_delay_ms = std::min(
+                            impl_->current_reconnect_delay_ms * 2,
+                            impl_->max_reconnect_delay_ms
+                        );
+
+                        // Continue to next iteration to reconnect
+                        continue;
+                    }
+
+                    break;
                 }
+                } // End of reconnection while loop
+
+                LOG_INFO("Connection thread exiting");
             });
         }
 

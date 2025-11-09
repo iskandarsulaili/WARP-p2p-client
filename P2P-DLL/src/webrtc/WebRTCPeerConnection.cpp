@@ -3,6 +3,7 @@
 #include <rtc/rtc.hpp>
 #include <mutex>
 #include <memory>
+#include <condition_variable>
 
 namespace P2P {
 
@@ -19,7 +20,9 @@ struct WebRTCPeerConnection::Impl {
     OnIceCandidateCallback on_ice_candidate;
 
     std::mutex mutex;
+    std::condition_variable cv;
     std::string local_sdp;
+    bool sdp_ready = false;
     bool gathering_complete = false;
 };
 
@@ -57,6 +60,8 @@ bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, cons
         impl_->pc->onLocalDescription([this](rtc::Description description) {
             std::lock_guard<std::mutex> lock(impl_->mutex);
             impl_->local_sdp = std::string(description);
+            impl_->sdp_ready = true;
+            impl_->cv.notify_one();
             LOG_DEBUG("Local description created for: " + impl_->peer_id);
         });
 
@@ -145,11 +150,15 @@ bool WebRTCPeerConnection::CreateOffer(std::string& sdp_out) {
             }
         });
 
-        // Wait for local description
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Wait for local description with timeout (5 seconds)
+        std::unique_lock<std::mutex> lock(impl_->mutex);
+        if (!impl_->cv.wait_for(lock, std::chrono::seconds(5), [this] { return impl_->sdp_ready; })) {
+            LOG_ERROR("Timeout waiting for local description (offer) for: " + impl_->peer_id);
+            return false;
+        }
 
-        std::lock_guard<std::mutex> lock(impl_->mutex);
         sdp_out = impl_->local_sdp;
+        impl_->sdp_ready = false;  // Reset for next use
 
         LOG_INFO("Created offer for: " + impl_->peer_id);
         return !sdp_out.empty();
@@ -168,10 +177,14 @@ bool WebRTCPeerConnection::CreateAnswer(std::string& sdp_out) {
         }
 
         // Wait for local description (answer is created automatically after setRemoteDescription)
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::unique_lock<std::mutex> lock(impl_->mutex);
+        if (!impl_->cv.wait_for(lock, std::chrono::seconds(5), [this] { return impl_->sdp_ready; })) {
+            LOG_ERROR("Timeout waiting for local description (answer) for: " + impl_->peer_id);
+            return false;
+        }
 
-        std::lock_guard<std::mutex> lock(impl_->mutex);
         sdp_out = impl_->local_sdp;
+        impl_->sdp_ready = false;  // Reset for next use
 
         LOG_INFO("Created answer for: " + impl_->peer_id);
         return !sdp_out.empty();

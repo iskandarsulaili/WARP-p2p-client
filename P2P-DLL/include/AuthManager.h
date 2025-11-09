@@ -53,7 +53,15 @@ public:
     void Shutdown();
     
     /**
-     * @brief Authenticate with coordinator service
+     * @brief Authenticate with coordinator service (synchronous)
+     * @param peer_id Unique peer identifier
+     * @param error_message Output parameter for error message if failed
+     * @return True if authentication succeeded
+     */
+    bool AuthenticateSync(const std::string& peer_id, std::string& error_message);
+
+    /**
+     * @brief Authenticate with coordinator service (async with callback)
      * @param peer_id Unique peer identifier
      * @param callback Callback for authentication result
      */

@@ -55,8 +55,7 @@ enum class LogLevel {
 struct CoordinatorConfig {
     std::string rest_api_url;
     std::string websocket_url;
-    int timeout_seconds;
-    int timeout_ms;  // Timeout in milliseconds (for compatibility)
+    int timeout_ms;  // Timeout in milliseconds
     int reconnect_max_attempts;
     int reconnect_backoff_ms;
 };
@@ -83,7 +82,6 @@ struct P2PConfig {
 
 struct SecurityConfig {
     bool enable_encryption;
-    bool encryption_enabled;  // Alias for compatibility
     bool enable_authentication;
     std::string api_key;
     std::string jwt_token;
