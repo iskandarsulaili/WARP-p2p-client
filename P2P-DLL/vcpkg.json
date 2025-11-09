@@ -13,7 +13,14 @@
       "name": "gtest",
       "host": true
     },
-    "detours"
+    "detours",
+    "boost-system",
+    "boost-regex",
+    "boost-chrono",
+    "boost-random",
+    "boost-asio",
+    "boost-beast",
+    "libdatachannel"
   ],
   "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36"
 }

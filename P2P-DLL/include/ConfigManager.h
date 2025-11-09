@@ -104,10 +104,31 @@ public:
 
     /**
      * Update JWT token
-     * 
+     *
      * @param token New JWT token
      */
     void UpdateJWTToken(const std::string& token);
+
+    /**
+     * Get coordinator REST API URL
+     *
+     * @return Coordinator URL
+     */
+    std::string GetCoordinatorUrl() const;
+
+    /**
+     * Get coordinator WebSocket signaling URL
+     *
+     * @return Signaling URL
+     */
+    std::string GetSignalingUrl() const;
+
+    /**
+     * Get API key for coordinator authentication
+     *
+     * @return API key
+     */
+    std::string GetApiKey() const;
 
 private:
     ConfigManager() = default;

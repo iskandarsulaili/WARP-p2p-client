@@ -26,13 +26,12 @@ endif()
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
-# Find Boost components needed by Boost.Beast (each is a separate vcpkg package)
+# Find Boost components - vcpkg provides individual component packages
 find_package(boost_system CONFIG REQUIRED)
 find_package(boost_regex CONFIG REQUIRED)
-find_package(boost_asio CONFIG REQUIRED)
 find_package(boost_chrono CONFIG REQUIRED)
 find_package(boost_random CONFIG REQUIRED)
-# Boost.Beast is header-only, included with Boost.Asio
+find_package(boost_asio CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
 
 # WebRTC library
@@ -57,6 +56,7 @@ set(SOURCES
     src/security/SecurityManager.cpp
     src/security/AuthManager.cpp
     src/utils/Logger.cpp
+    src/utils/PacketSerializer.cpp
     src/DllMain.cpp
 )
 

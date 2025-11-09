@@ -8,6 +8,16 @@
 namespace P2P {
 
 /**
+ * HTTP Request
+ */
+struct HttpRequest {
+    std::string method;  // GET, POST, PUT, DELETE
+    std::string url;
+    std::map<std::string, std::string> headers;
+    std::string body;
+};
+
+/**
  * HTTP Response
  */
 struct HttpResponse {
@@ -79,11 +89,19 @@ public:
 
     /**
      * DELETE request
-     * 
+     *
      * @param path API path
      * @return HTTP response
      */
     HttpResponse Delete(const std::string& path);
+
+    /**
+     * Send generic HTTP request
+     *
+     * @param request HTTP request
+     * @return HTTP response
+     */
+    HttpResponse SendRequest(const HttpRequest& request);
 
     /**
      * Check if client is configured

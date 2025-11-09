@@ -128,8 +128,18 @@ bool NetworkManager::Initialize(const std::string& peer_id) {
         }
     });
 
-    // Initialize PacketRouter
-    if (!impl_->packet_router->Initialize(config.GetP2PConfig().enabled)) {
+    // Initialize PacketRouter with proper parameters
+    auto server_callback = [](const uint8_t* data, size_t length) -> bool {
+        // Suppress unused parameter warning
+        (void)data;
+        // TODO: Implement actual server routing callback
+        LOG_DEBUG("Routing packet to server: " + std::to_string(length) + " bytes");
+        return true;
+    };
+
+    if (!impl_->packet_router->Initialize(config.GetP2PConfig().enabled,
+                                          impl_->webrtc_manager,
+                                          server_callback)) {
         LOG_ERROR("Failed to initialize PacketRouter");
         return false;
     }

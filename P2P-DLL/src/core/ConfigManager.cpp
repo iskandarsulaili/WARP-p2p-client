@@ -39,6 +39,7 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
             config_.coordinator.rest_api_url = coord.value("rest_api_url", "http://localhost:8001/api/v1");
             config_.coordinator.websocket_url = coord.value("websocket_url", "ws://localhost:8001/api/v1/signaling/ws");
             config_.coordinator.timeout_seconds = coord.value("timeout_seconds", 30);
+            config_.coordinator.timeout_ms = coord.value("timeout_ms", config_.coordinator.timeout_seconds * 1000);
             config_.coordinator.reconnect_max_attempts = coord.value("reconnect_max_attempts", 5);
             config_.coordinator.reconnect_backoff_ms = coord.value("reconnect_backoff_ms", 1000);
         }
@@ -75,6 +76,7 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
         if (j.contains("security")) {
             auto& security = j["security"];
             config_.security.enable_encryption = security.value("enable_encryption", true);
+            config_.security.encryption_enabled = config_.security.enable_encryption;  // Set alias
             config_.security.enable_authentication = security.value("enable_authentication", true);
             config_.security.api_key = security.value("api_key", "");
             config_.security.jwt_token = security.value("jwt_token", "");
@@ -201,6 +203,18 @@ bool ConfigManager::IsZoneP2PEnabled(const std::string& zone_id) const {
 
 void ConfigManager::UpdateJWTToken(const std::string& token) {
     config_.security.jwt_token = token;
+}
+
+std::string ConfigManager::GetCoordinatorUrl() const {
+    return config_.coordinator.rest_api_url;
+}
+
+std::string ConfigManager::GetSignalingUrl() const {
+    return config_.coordinator.websocket_url;
+}
+
+std::string ConfigManager::GetApiKey() const {
+    return config_.security.api_key;
 }
 
 } // namespace P2P

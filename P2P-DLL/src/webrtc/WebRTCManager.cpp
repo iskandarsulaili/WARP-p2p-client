@@ -239,6 +239,10 @@ bool WebRTCManager::HandleAnswer(const std::string& peer_id, const std::string& 
 
 bool WebRTCManager::AddIceCandidate(const std::string& peer_id, const std::string& candidate,
                                    const std::string& sdp_mid, int sdp_mline_index) {
+    // Suppress unused parameter warnings
+    (void)sdp_mid;
+    (void)sdp_mline_index;
+
     LOG_DEBUG("Adding ICE candidate for peer: " + peer_id + ", candidate: " + candidate);
 
     auto peer_conn = GetPeerConnection(peer_id);

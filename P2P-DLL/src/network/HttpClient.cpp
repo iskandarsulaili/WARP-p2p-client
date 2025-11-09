@@ -223,6 +223,74 @@ HttpResponse HttpClient::Delete(const std::string& path) {
     return response;
 }
 
+HttpResponse HttpClient::SendRequest(const HttpRequest& request) {
+    HttpResponse response;
+
+    if (!impl_->client) {
+        LOG_ERROR("HttpClient not configured");
+        response.success = false;
+        response.error_message = "Client not configured";
+        return response;
+    }
+
+    LOG_DEBUG(request.method + " " + request.url);
+
+    // Build headers
+    httplib::Headers httplib_headers;
+    for (const auto& [key, value] : request.headers) {
+        httplib_headers.insert({key, value});
+    }
+
+    // Add default headers if not present
+    auto default_headers = BuildHeaders();
+    for (const auto& [key, value] : default_headers) {
+        if (request.headers.find(key) == request.headers.end()) {
+            httplib_headers.insert({key, value});
+        }
+    }
+
+    // Parse URL to extract path
+    std::string path = request.url;
+    if (path.find(impl_->base_url) == 0) {
+        path = path.substr(impl_->base_url.length());
+    }
+
+    // Execute request based on method
+    httplib::Result result;
+    if (request.method == "GET") {
+        result = impl_->client->Get(path, httplib_headers);
+    } else if (request.method == "POST") {
+        result = impl_->client->Post(path, httplib_headers, request.body, "application/json");
+    } else if (request.method == "PUT") {
+        result = impl_->client->Put(path, httplib_headers, request.body, "application/json");
+    } else if (request.method == "DELETE") {
+        result = impl_->client->Delete(path, httplib_headers);
+    } else {
+        response.success = false;
+        response.error_message = "Unsupported HTTP method: " + request.method;
+        LOG_ERROR(response.error_message);
+        return response;
+    }
+
+    if (result) {
+        response.status_code = result->status;
+        response.body = result->body;
+        response.success = (result->status >= 200 && result->status < 300);
+
+        for (const auto& [key, value] : result->headers) {
+            response.headers[key] = value;
+        }
+
+        LOG_DEBUG(request.method + " " + path + " -> " + std::to_string(result->status));
+    } else {
+        response.success = false;
+        response.error_message = "Request failed: " + httplib::to_string(result.error());
+        LOG_ERROR(request.method + " " + path + " failed: " + response.error_message);
+    }
+
+    return response;
+}
+
 bool HttpClient::IsConfigured() const {
     return impl_->client != nullptr && !impl_->base_url.empty();
 }

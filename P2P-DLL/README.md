@@ -5,9 +5,12 @@
 **Production-Ready WebRTC P2P Networking DLL**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-13%2F13%20passing-brightgreen)]()
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
-[![Version](https://img.shields.io/badge/version-1.0.0-orange)]()
+[![Version](https://img.shields.io/badge/version-2.0.0-orange)]()
+
+**✅ Build Status: 0 Errors, 0 Warnings, 100% Tests Passing**
 
 </div>
 
@@ -161,10 +164,17 @@ This P2P DLL is part of the **WARP-p2p-client** package, which includes:
    cmake --build . --config Release
    ```
 
-4. **Verify build**
+4. **Run tests**
+
+   ```powershell
+   ctest --output-on-failure -C Release
+   # Expected: 100% tests passed, 0 tests failed out of 13
+   ```
+
+5. **Verify build**
    ```powershell
    Get-Item bin\Release\p2p_network.dll
-   # Should show: p2p_network.dll (approximately 503 KB)
+   # Should show: p2p_network.dll (568 KB)
    ```
 
 ### Usage
@@ -175,13 +185,23 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instr
 
 ## 📚 Documentation
 
-| Document                                                 | Description                                      |
-| -------------------------------------------------------- | ------------------------------------------------ |
-| **[BUILD_GUIDE.md](BUILD_GUIDE.md)**                     | Complete build instructions with troubleshooting |
-| **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)**                   | WebRTC implementation details and usage examples |
-| **[API_REFERENCE.md](API_REFERENCE.md)**                 | Complete API documentation for all classes       |
-| **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**           | NEMO integration and deployment instructions     |
-| **[INTEGRATION_TEST_PLAN.md](INTEGRATION_TEST_PLAN.md)** | Integration testing procedures                   |
+### For Users
+
+| Document                                                       | Description                                                   | Audience           |
+| -------------------------------------------------------------- | ------------------------------------------------------------- | ------------------ |
+| **[DEPLOYMENT_FOR_BEGINNERS.md](DEPLOYMENT_FOR_BEGINNERS.md)** | 🌟 **START HERE!** Step-by-step guide for non-technical users | Players, Beginners |
+| **[BUILD_STATUS.md](BUILD_STATUS.md)**                         | Current build status and test results                         | Everyone           |
+
+### For Developers
+
+| Document                                                   | Description                                      | Audience            |
+| ---------------------------------------------------------- | ------------------------------------------------ | ------------------- |
+| **[BUILD_GUIDE.md](BUILD_GUIDE.md)**                       | Complete build instructions with troubleshooting | Developers          |
+| **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**             | Technical deployment and NEMO integration        | Server Admins       |
+| **[RATHENA_AI_INTEGRATION.md](RATHENA_AI_INTEGRATION.md)** | Integration with rAthena AI World server         | Server Admins       |
+| **[API_REFERENCE.md](API_REFERENCE.md)**                   | Complete API documentation for all classes       | Developers          |
+| **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)**                     | WebRTC implementation details                    | Advanced Developers |
+| **[INTEGRATION_TEST_PLAN.md](INTEGRATION_TEST_PLAN.md)**   | Integration testing procedures                   | QA Engineers        |
 
 ---
 
