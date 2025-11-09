@@ -1,81 +1,132 @@
-Discord [![Discord](https://img.shields.io/discord/724239709966041128)](https://discord.com/invite/ByEQHDf)
+<p align="center">
+    <img src="Images/logo.png?raw=true" alt="Warp logo" width=128 height=128>
+</p>
 
-# WARP P2P Client - Nemo Patcher + P2P Network DLL
+# Win App Revamp Package
+![License](https://img.shields.io/github/license/Neo-Mind/WARP)
+![RepoSize](https://img.shields.io/github/repo-size/Neo-Mind/WARP)
+![Commit](https://img.shields.io/github/last-commit/Neo-Mind/WARP)
+![DiscordInfo](https://img.shields.io/discord/780647066871136266?label=Discord&logo=Discord&logoColor=white)
 
-This repository contains:
-1. **NEMO Patcher** - Fork of @MStr3am project [Nemo](https://github.com/MStr3am/NEMO) for patching Ragnarok Online clients
-2. **P2P Network DLL** - Production-ready P2P networking implementation for zone-based peer-to-peer gameplay
+WARP is a package of tools for Querying and Revamping a 32 bit Windows Application by means of JS (ECMA-262) Scripts.<br>
+The core tools were written in C++ utilizing the versatile Qt Framework, while the tools themselves provide APIs extending traditional JS for writing the scripts.
 
----
+[Wiki](https://github.com/Neo-Mind/WARP/wiki) | [Discord](https://discord.gg/WGeB4wZZgS) | [Issues](https://github.com/Neo-Mind/WARP/issues/new?template=bug_report.md) | [Feature Requests](https://github.com/Neo-Mind/WARP/issues/new?template=feature_request.md) | [Changelog](CHANGELOG.md)
+---|---|---|---
 
-## NEMO Patcher
+## What's included
+The package follows the file hierarchy as shown below.
 
-This program can be used for patch closed source clients for using with [Hercules](https://github.com/herculesws/hercules/) or other Rag*rok emulators.
+```text
+WARP/
+│
+├── README.md        (This readme file)
+│
+├── LICENSE          (GPL-3.0 license file)
+│
+├── ICON_attribution (Attribution for the tool icons & the logo)
+│
+├── Patches.yml      (YAML file describing all the patches)
+│
+├── Extensions.yml   (YAML file describing all the extensions)
+│
+├── Settings.yml     (YAML file containing all the tool settings)
+│
+├── LastSession.yml  (YAML session file from the last patch application)
+│
+├── Wiki/     (The Wiki's repository)
+│
+├── Fonts/    (All fonts contained in here are automatically loaded. NovaFlat is used as default.)
+│   │
+│   ├── NovaFlat-Bold.ttf
+│   └── NovaFlat.ttf
+│
+├── Images/   (Contains all images used by the Tools.)
+│   │
+│   ├── Wiki (Images used in the Wiki)
+│   │
+│   ├── Dark_Mode (Overrides used in Dark Mode)
+│   │   ├── bold_on.png
+│   │   ├── error_header.png
+│   │   ├── github_a.png
+│   │   ├── github_i.png
+│   │   ├── grip.png
+│   │   ├── italic_on.png
+│   │   ├── query_header.png
+│   │   ├── success_header.png
+│   │   └── warn_header.png
+│   │
+│   ├── actns_a.png
+│   ├── actns_i.png
+│   ├── ascend.png
+│   ├── bold_off.png
+│   ├── bold_on.png
+│   ├── browse_a.png
+│   ├── browse_i.png
+│   ├── clear_a.png
+│   ├── clear_i.png
+│   ├── descend.png
+│   ├── discord_a.png
+│   ├── discord_i.png
+│   ├── error_header.png
+│   ├── extns_a.png
+│   ├── extns_i.png
+│   ├── github_a.png
+│   ├── github_i.png
+│   ├── grip.png
+│   ├── info_a.png
+│   ├── info_i.png
+│   ├── italic_off.png
+│   ├── italic_on.png
+│   ├── logo.png
+│   ├── next_a.png
+│   ├── next_i.png
+│   ├── prev_a.png
+│   ├── prev_i.png
+│   ├── query_header.png
+│   ├── rcmd_i.png
+│   ├── rcmd_s.png
+│   ├── search.png
+│   ├── success_header.png
+│   └── warn_header.png
+│
+├── Scripts/
+│   │
+│   ├── Support/        (Contains all scripts which add supporting data & functions for Patches & Extensions.)
+│   │   │
+│   │   ├── Addons.qjs            (Implements addons to the existing Prototypes)
+│   │   ├── AllDebug.qjs          (Implements functions used for debugging)
+│   │   ├── AllFuncs.qjs          (Implements supporting functions)
+│   │   ├── Class_IPrefix.qjs     (Represents Instruction Prefix)
+│   │   ├── Class_Instr.qjs       (Represents Instruction)
+│   │   ├── Class_ModRM.qjs       (Represents ModRM byte)
+│   │   ├── Class_OpData.qjs      (Represents Operational Data)
+│   │   ├── Class_PtrSize.qjs     (Represents Memory Pointer size)
+│   │   ├── Class_Register.qjs    (Represents CPU register)
+│   │   ├── Class_SIBase.qjs      (Represents SIB byte)
+│   │   ├── Constants.qjs         (Commonly used constants)
+│   │   ├── Instructions.qjs      (Generic instruction generators)
+│   │   ├── Instructions_ST.qjs   (ST based instruction generators)
+│   │   └── Instructions_XMM.qjs  (XMM based instruction generators)
+│   │
+│   ├── Patches/      (Contains all scripts implementing Patches)
+│   │
+│   ├── Extensions/   (Contains all scripts implementing Extensions)
+│   │
+│   └── Init/         (Contains all initialization scripts. Gets loaded each time an app is loaded)
+│
+├── Languages/   (Contains all Language description YAML files)
+│                
+├── Styles/      (Contains all Styling description YAML files)
+│                
+├── Inputs/      (Contains all input files for Patches & Extensions here)
+│                
+├── Outputs/     (Use this folder for generating files from Extensions & Patches)
+│
+└── <os_specific_folder>/    (Contains the tools along with DLL/SO files)
+```
 
-## P2P Network DLL
+## Supported Platforms
+- Windows (Only this version is available as of now but will be extended to other platforms later)
 
-**Location**: `P2P-DLL/`
-
-The P2P Network DLL provides WebRTC-based peer-to-peer connections for zone-based gameplay while maintaining centralized AI NPCs, authentication, and anti-cheat systems.
-
-**Key Features**:
-- ✅ Hybrid architecture (P2P + centralized server)
-- ✅ Graceful fallback to server when P2P unavailable
-- ✅ Zone-based P2P enablement
-- ✅ JWT authentication with coordinator service
-- ✅ Production-ready WebRTC integration
-- ✅ Non-invasive design (doesn't break existing client-server)
-
-**Documentation**:
-- `P2P-DLL/README.md` - Build instructions and usage
-- `../P2P_DLL_BUILD_PLAN.md` - Complete implementation roadmap
-- `../COORDINATOR_DLL_INTEGRATION.md` - Integration with coordinator service
-- `../P2P_FEATURES.md` - Feature documentation
-
-**NEMO Patch**: `Patches/LoadP2PDLL.qs` - Injects P2P DLL into RO client at startup
-
----
-
-## Usage
-
-# Docs
-
-Basic docs located in [Docs](Docs) directory.
-
-## Profiles
-
-Predefined minimal profile for zero clients. See in [profiles](profiles) directory.
-
-## Configs
-
-Working config for [zero client](configs/zero/)
-
-# Patch reports
-
-Reports for all patches and all clients http://nemo.herc.ws/
-
-# Support
-
-Forum topic: http://herc.ws/board/topic/15523-another-nemo-patcher-fork/
-
-Discord server: https://discord.com/invite/ByEQHDf
-
-You can create bug reports here: https://gitlab.com/4144/Nemo/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=
-
-or vote on any existing issue here: https://gitlab.com/4144/Nemo/issues
-
-# Game guard files
-
-For disable game guard Cheat Defender need:
-
-1. get dropin replacment file [CDClient.dll](Input/CDClient.dll) and save into client directory.
-
-2. Enable patch "Disable Cheat Defender Game Guard".
-
-# License
-
-Original code and binary files licensed under unknown free use license.
-
-Asm files licensed under CC-NC-ND,
-
-All additional changes licensed under GPL3.
+## Quick Links

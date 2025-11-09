@@ -10,7 +10,9 @@
 
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
-3. [NEMO Patcher Integration](#nemo-patcher-integration)
+3. [Deployment Methods](#deployment-methods)
+   - [Method 1: WARP Patcher (Recommended)](#method-1-warp-patcher-recommended)
+   - [Method 2: Manual DLL Injection](#method-2-manual-dll-injection)
 4. [DLL Dependencies](#dll-dependencies)
 5. [Configuration Setup](#configuration-setup)
 6. [Coordinator Server Deployment](#coordinator-server-deployment)
@@ -22,7 +24,18 @@
 
 ## Overview
 
-This guide explains how to deploy the P2P Network DLL to end-users and integrate it with the Ragnarok Online client using NEMO patcher.
+This guide explains how to deploy the P2P Network DLL to end-users and integrate it with the Ragnarok Online client.
+
+### Current Status
+
+✅ **P2P DLL is already built and deployed** to `d:\RO\client\`
+✅ **WARP Patcher is available** in `d:\RO\patcher\WARP-p2p-client\win32\WARP.exe`
+✅ **All dependencies are present** in the client directory
+
+This guide covers two deployment methods:
+
+1. **WARP Patcher** (recommended) - Modern NEMO alternative for patching RO clients
+2. **Manual DLL Injection** (alternative) - Direct DLL loading without patching
 
 ### Deployment Architecture
 
@@ -30,7 +43,7 @@ This guide explains how to deploy the P2P Network DLL to end-users and integrate
 ┌─────────────────────────────────────────────────────────────┐
 │                     End User's PC                            │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  Ragnarok Online Client (Patched with NEMO)          │  │
+│  │  Ragnarok Online Client (d:\RO\client\)              │  │
 │  │  ┌─────────────────────────────────────────────────┐ │  │
 │  │  │  p2p_network.dll (Injected)                     │ │  │
 │  │  │  + Dependencies (OpenSSL, spdlog, etc.)         │ │  │
@@ -65,23 +78,29 @@ This guide explains how to deploy the P2P Network DLL to end-users and integrate
 
 ## Prerequisites
 
-### For Deployment
+### Current Setup (Already Complete)
 
-- **NEMO Patcher** - Latest version from https://gitlab.com/4144/Nemo
-- **Ragnarok Online Client** - Compatible client executable (2018+ recommended)
-- **Built DLL** - `p2p_network.dll` from [BUILD_GUIDE.md](BUILD_GUIDE.md)
+✅ **P2P DLL Built** - `p2p_network.dll` (568 KB) in `d:\RO\client\`
+✅ **All Dependencies** - 7 DLLs deployed to `d:\RO\client\`
+✅ **WARP Patcher** - Available in `d:\RO\patcher\WARP-p2p-client\win32\WARP.exe`
+✅ **RO Client** - Multiple executables in `d:\RO\client\`
+
+### Still Needed
+
+- **Configuration** - Copy `p2p_config.json` to client directory
 - **Coordinator Server** - Running and accessible (see [Coordinator Server Deployment](#coordinator-server-deployment))
+- **Visual C++ Redistributable 2015-2022** (x64) - https://aka.ms/vs/17/release/vc_redist.x64.exe (for end users)
 
 ### For End Users
 
 - **Windows 10/11** (64-bit)
-- **Visual C++ Redistributable 2022** (x64) - https://aka.ms/vs/17/release/vc_redist.x64.exe
-- **Internet Connection** - For coordinator and STUN/TURN servers
-- **Firewall Configuration** - Allow UDP traffic for WebRTC
+- **Visual C++ Redistributable 2022** (x64)
+- **Internet Connection** - For coordinator and STUN servers
+- **Firewall Configuration** - Allow UDP traffic for WebRTC (usually automatic)
 
 ---
 
-## NEMO Patcher Integration
+## Deployment Methods
 
 ### Step 1: Prepare NEMO Patch Script
 

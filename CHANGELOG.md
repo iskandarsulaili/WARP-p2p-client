@@ -1,1299 +1,1077 @@
-# 2023-04-24 Different updates
+# SKylove — 2025-06-04 build
+- ShowReplayBtn
+- @llchrisll: spopup & QuestQualificationInfo patches; added Rune System Lua and fixed related issues
+- NPC Dialogue Scrolling
+- Preview in Shop
+- Chat Repeat
+- Data Folder First
+- No Hourly
+- Increase Zoom
+- Enable Proxy
+- Load KrExtSettings
+- License Screen Visibility
+- Enable Flag Animation
+- Ignore Palette errors
+- Increase Human/Doram Hair Limit
+- IgnoreLuaErr
+- Enable Emblem hover for BG
+- HideNewwButtons
+- ShowNewButtons
+- RestoreBattlegroundUI
+- DisableTraitStatusButton
+- HideTraitStatusButton
+- Hide itemba
+- PreviewInTrader
+- Remove Eq Window Title
+- IncreaseHairsLimit
+- RestoreCpsDll
+- CustomQSDelay
+- Allow all items in Shortcut
+- CustomInventoryExpandingLimit
+- CustomInventoryLimit 
+- AllowAPBarforAllJobs
+- HideCashShop
 
-## Patches
+# 2024-08-07 Changes
 
-- Fix patch [Change MVP monster hp bar size](http://nemo.herc.ws/patches/ChangeMvpHealthBarSize/#success-clients). (fix by @4144).
-- Fix patch [Change boss monster hp bar size](http://nemo.herc.ws/patches/ChangeBossHealthBarSize/#success-clients). (fix by @4144).
-- Fix patch [Change normal monster hp bar size](http://nemo.herc.ws/patches/ChangeNormalHealthBarSize/#success-clients). (fix by @4144).
-- Fix patch [Change Quick Switch Delay](http://nemo.herc.ws/patches/ChangeQuickSwitchDelay/#success-clients). (by 4144).
-- Fix patch [Change guild exp limit](http://nemo.herc.ws/patches/ChangeGuildExpLimit/#success-clients). (fix by @4144).
-- Fix patch [Remove Equipment Swap Button](http://nemo.herc.ws/patches/RemoveEquipmentSwap/#success-clients). (fix by 4144).
-- Add patch [Fix homunculus hp and sp display in stats window.](http://nemo.herc.ws/patches/FixHomunHpSp/#success-clients). (by 4144).
-- Add patch [Increase human hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSpritesHuman/#success-clients). (by @4144).
-- Add patch [Increase doram hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSpritesDoram/#success-clients). (by @4144).
-- Add patch [Remove trait open button from status window](http://nemo.herc.ws/patches/RemoveTraitStatusButton/#success-clients). (by Secret, @4144).
-- Add patch [Use Custom dll in simple way](http://nemo.herc.ws/patches/UseCustomDllSimple/#success-clients). (by 4144).
-- Add patch [Enable debug file PingLog.txt](http://nemo.herc.ws/patches/EnablePingLog/#success-clients). (by 4144).
+## Common Updates
+- Updated Copyright year in all the Init & Support files.
 
-## Other
-- Improve error message in patch [Check is servertype in xml file was set to correct value](http://nemo.herc.ws/patches/ValidateClientType/#success-clients). (fix by @4144).
-- Improve error message in patch [Load custom icon in running client](http://nemo.herc.ws/patches/LoadCustomIcon/#success-clients). (by @4144).
-- Add into some legacy patches word "legacy".
-- Set as recommended patch [Fix HTTP Emblems in clients](http://nemo.herc.ws/patches/EnableRagHTTPEmblem/#success-clients).
-- Update tables.
+## Patch Updates
+- Fixed Init modules to work with latest clients (i.e. 2024).
+- Some amount of validation is still needed for some of them especially LUA which will be done while fixing the patches.
 
 
-# 2023-02-03 Different updates
+# 2023-08-27 Changes
 
-## Patches
+## Common Updates
+- Updated Copyright year in all the files.
 
-- Fix patch [Change MVP monster hp bar size](http://nemo.herc.ws/patches/ChangeMvpHealthBarSize/#success-clients). (fix by @4144).
-- Fix patch [Set custom message for error if client started without launcher](http://nemo.herc.ws/patches/ChangeMissingLauncherError/#success-clients). (fix by @4144).
-- Fix patch [Disable Ragexe Filename Check](http://nemo.herc.ws/patches/DisableFilenameCheck/#success-clients). (fix by @4144).
-- Fix patch [Change adventurer agency level range](http://nemo.herc.ws/patches/ChangeAdventureAgencyLevelRange/#success-clients). (fix by @4144).
-- Add patch [Load custom icon in running client](http://nemo.herc.ws/patches/LoadCustomIcon/#success-clients). (by @4144).
-- Add patch [Change boss monster hp bar size](http://nemo.herc.ws/patches/ChangeBossHealthBarSize/#success-clients). (by @4144).
-- Add patch [Change normal monster hp bar size](http://nemo.herc.ws/patches/ChangeNormalHealthBarSize/#success-clients). (by @4144).
-- Add patch [Unlock all valid skills for homunculus and mercenary AI](http://nemo.herc.ws/patches/AllowHomunSkills/#success-clients). (by @4144).
+## Script Updates
+- Updated **`$$`** function to accept 3 arguments to show as `arg1 : arg2 - arg3`.
 
-## Other
+  Also fixed angled brackets not being displayed in console.
 
-- Update tables.
 
+# 2022-12-30 Changes
 
-# 2022-11-02 Update tables
+## Patch Updates
+- Fixed bug in [Enforce 0 C in Cash Shop](https://github.com/Neo-Mind/WARP/issues/115) patch.
 
-- Update tables.
+- Updated valid build dates for [Fix Homunculi AI](https://github.com/Neo-Mind/WARP/issues/93) patch.
 
+- Fixed bug in [Increase Headgear View ID](https://discord.com/channels/780647066871136266/1051858994584633404) patch.
 
-# 2022-10-31
 
-## Patches
+# 2022-10-05 Changes
 
-- Fix patch [Change Max Friends Value](http://nemo.herc.ws/patches/ChangeMaxFriendsValue/#success-clients). (fix by @4144).
-- Fix patch [Check is servertype in xml file was set to correct value](http://nemo.herc.ws/patches/ValidateClientType/#success-clients). (fix by @4144).
-- Fix patch [Remove hardcoded address/port](http://nemo.herc.ws/patches/RemoveHardcodedAddress/#success-clients). (fix by @4144).
+## Patch Updates
+- Updated Restore App Icon & Customize App icon patches.
 
-## Other
+	- Restore enables the new bigger icon in latest clients.
+	
+	- Custom icon has no limits now aside from anything Windows imposes.
 
-- Update tables.
+## Extension Updates
+- Fixed **`DumpImportTable`** extension for certain clients where LUT address is set as 0.
 
+## Script Updates
+- Updated **`RsrcEntry`** class with better traverse function & a dump function to report the hierarchy.
 
-# 2022-10-07 Different changes
+## Tool Updates
+- Fixed minor bugs in GATE (similar issue as **`DumpImportTable`**)
 
-## Patches
 
-- Fix patch [Disable Official Custom Fonts](http://nemo.herc.ws/patches/DisableOfficialCustomFonts/#success-clients) for 2022-10-05. (fix by @4144).
-- Fix patch [Enable Official Custom Fonts](http://nemo.herc.ws/patches/EnableOfficialCustomFonts/#success-clients) for 2022-10-05. (fix by @4144).
+# 2022-09-24 Changes
 
-## Other
+## Patch Updates
+- Updated Chris' lua override patch to work with a mapping file and work properly on more recent clients.
 
-- Update tables.
+## Script Updates
+- Added **`LUA.loadLuaAfter`** function to support the branched loading in recent clients (used by `AddLuaOverrides` patch)
 
 
-# 2022-09-22 Different changes
+# 2022-09-24 Changes
 
-## Patches
+## Patch Updates
+- Added new module for capturing session value & related functions
 
-- Add patch [Add custom lua support \[HatEffectInfo\]](http://nemo.herc.ws/patches/AddCLSHatEffect/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Headgears\]](http://nemo.herc.ws/patches/AddCLSHeadgear/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Lapine Box\]](http://nemo.herc.ws/patches/AddCLSLapine/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Navigation\]](http://nemo.herc.ws/patches/AddCLSNavi/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[NPC/Mob/Pet\]](http://nemo.herc.ws/patches/AddCLSNPC/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Quest\]](http://nemo.herc.ws/patches/AddCLSQuest/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Random Option\]](http://nemo.herc.ws/patches/AddCLSRandomOption/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Robe\]](http://nemo.herc.ws/patches/AddCLSRobe/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Signboard\]](http://nemo.herc.ws/patches/AddCLSSign/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Title\]](http://nemo.herc.ws/patches/AddCLSTitle/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[Weapon\]](http://nemo.herc.ws/patches/AddCLSWeapon/#success-clients). (by llchrisll, @4144).
-- Add patch [Add custom lua support \[World Map\]](http://nemo.herc.ws/patches/AddCLSWorldView/#success-clients). (by llchrisll, @4144).
-- Remove patch "Add loading custom lua files".
+- Added new patches to
 
-## Other
+	- Enable preview for equipments in Trader cash shops. Requires 2017+ clients.
+	
+	- Customize guild emblem file size.
+	
+	- Customize error message displayed when client runs without launcher.
+	
+	- Customize tax value used for mail (Rodex)
+	
+- Adapted some patches for latest clients (more to come soon).
 
-- Update tables.
-- Fix multi patch feature (was broken in previous update).
-- Replace some legacy input functions in some patches.
+- Updated copyright date for a few patches (more to be updated soon).
 
 
-# 2022-09-14 Different changes
+# 2022-09-08 Changes
 
-## Patches
+## Patch Updates
+- Updated [Skill spam patch for newer clients](https://github.com/Neo-Mind/WARP/issues/102).
 
-- Fix patch [Change character display deletion time](http://nemo.herc.ws/patches/ChangeDisplayCharDelDelay/#success-clients). (fix by @4144).
-- Fix patch [Change Max Friends Value](http://nemo.herc.ws/patches/ChangeMaxFriendsValue/#success-clients). (fix by @4144).
-- Fix patch [Disable Auto follow](http://nemo.herc.ws/patches/DisableAutofollow/#success-clients). (fix by @4144).
-- Fix patch [Disable Ragexe Filename Check](http://nemo.herc.ws/patches/DisableFilenameCheck/#success-clients). (fix by @4144).
-- Fix patch [Always read msgstringtable.txt](http://nemo.herc.ws/patches/ReadMsgstringtabledottxt/#success-clients). (fix by @4144).
-- Fix patch [Remove Equipment Title UI](http://nemo.herc.ws/patches/RemoveEquipmentTitleUI/#success-clients). (fix by @4144).
-- Add patch [Change maximum guild emblem file size](http://nemo.herc.ws/patches/ChangeMaxEmblemFileSize/#success-clients). (by @4144).
-- Add patch [Change tax value on sending items by rodex](http://nemo.herc.ws/patches/ChangeRodexTax/#success-clients). (by @4144).
-- Add patch [Disable Game Guard (NProtect)](http://nemo.herc.ws/patches/DisableNProtect/#success-clients) for 2022 clients. (by @4144).
-- Add patch [Disable packets id encryption](http://nemo.herc.ws/patches/DisablePacketEncryption/#success-clients). (by @4144).
-- Add patch [Enable packets id encryption](http://nemo.herc.ws/patches/EnablePacketEncryption/#success-clients). (by @4144).
-- Add patch [Add support for preview button in custom shops](http://nemo.herc.ws/patches/ExtendOldCashShopPreview/#success-clients). (by @4144).
-- Add patch [Never read msgstringtable.txt](http://nemo.herc.ws/patches/NeverReadMsgstringtabledottxt/#success-clients). (by @4144).
-- Add patch [Set fixed charset on drawing text messages](http://nemo.herc.ws/patches/SetDrawingFontCharset/#success-clients). (by @4144).
-- Add patch [Set fixed charset](http://nemo.herc.ws/patches/SetFontCharset/#success-clients). (by @4144).
-- Add patch [Draw text messages always with bold font](http://nemo.herc.ws/patches/SetDrawingFontBold/#success-clients). (by @4144).
-- Add patch [Draw text messages always with non bold font](http://nemo.herc.ws/patches/SetDrawingFontNonBold/#success-clients). (by @4144).
-- Add patch [Draw text messages always with italic font](http://nemo.herc.ws/patches/SetDrawingFontItalic/#success-clients). (by @4144).
-- Add patch [Draw text messages always with given font type](http://nemo.herc.ws/patches/SetDrawingFontType/#success-clients). (by @4144).
-- Add patch [Draw text messages with fixed height](http://nemo.herc.ws/patches/SetDrawingFontHeight/#success-clients). (by @4144).
-- Add patch [Limit minimal font size for drawed text messages](http://nemo.herc.ws/patches/SetDrawingFontHeightMin/#success-clients). (by @4144).
-- Add patch [Limit maximum font size for drawed text messages](http://nemo.herc.ws/patches/SetDrawingFontHeightMax/#success-clients). (by @4144).
-- Add patch [Adjust font size for drawed text messages](http://nemo.herc.ws/patches/SetDrawingFontHeightAdjust/#success-clients). (by @4144).
-- Add patch [Set fixed server ip address](http://nemo.herc.ws/patches/SetHardcodedServerIp/#success-clients). (by @4144).
-- Add patch [Use low color custom icon](http://nemo.herc.ws/patches/UseCustomIcon16/#success-clients). (by @4144).
+- Updated copyrights for all patch definition yml files.
 
-## For devs
+- Updated [Disable Gameguard patch for 2022 clients](https://github.com/Neo-Mind/WARP/issues/95)
 
-- Add input hex string validation in asm.hexToAsm.
-- Add functions for work with random numbers. See docs.
 
-## Other
+# 2022-09-06 Changes
 
-- Update tables.
+## Patch Updates
+- Fixed [bug with Custom Captcha decompression patch](https://github.com/Neo-Mind/WARP/issues/103)
 
 
-# 2022-02-10 Different changes
+# 2022-08-24 Changes
 
-## Patches
+## Extension Updates
+- Updated **`Extract msgstringtable`** extension for latest client.
 
-- Fix patch [Disable Adventure Agent button on Party Window](http://nemo.herc.ws/patches/DisableAdventureAgent/#success-clients). (fix by @4144).
-- Add patch [Change Walk To Delay from chat](http://nemo.herc.ws/patches/SetWalkToDelayCmd/#success-clients). (by @4144).
-- Add patch [Check is servertype in xml file was set to correct value](http://nemo.herc.ws/patches/ValidateClientType/#success-clients). (by @4144).
-- Add patch [Change names font size](http://nemo.herc.ws/patches/ChangeNameBalloonFontSize/#success-clients). (by @4144).
-- Add patch [Protect shorten and bold name flags](http://nemo.herc.ws/patches/DisableSetTextType/#success-clients). (by @4144).
-- Add patch [Draw names with bold or normal font](http://nemo.herc.ws/patches/ChangeNameBalloonFontBold/#success-clients). (by @4144).
-- Add patch [Set custom message for error if client started without launcher](http://nemo.herc.ws/patches/ChangeMissingLauncherError/#success-clients). (by @4144).
 
-## For devs
+# 2022-08-23 Changes
 
-- Add function for resize hex code to given len: pe.resizeHexCode.
-- Add code len parameter into function pe.replaceAsmFile.
-- Add functions for get first existing table variable from list: table.getAny, table.getAnyValidated.
-- Add function for insert null terminated string: pe.insertString
-- Add macro assembler conditional commands: %if, %ifdef, %endif.
-- Enable report about legacy functions.
+## Patch Updates
+- Fixed [crashes with Custom Shield patch](https://github.com/Neo-Mind/WARP/issues/97)
 
-## Other
+- Fixed [crashes with Custom Font Height patches](https://github.com/Neo-Mind/WARP/issues/92)
 
-- Update tables.
+- Added patch to [Disable password encryption in login packet for new clients](https://github.com/Neo-Mind/WARP/issues/94)
 
+- Fixed [conflict in Shared head palette patches](https://github.com/Neo-Mind/WARP/issues/84)
 
-# 2022-01-06 Functions fixes
+- Updated Lua files for Custom Job patch with [missing entries for new jobs](https://github.com/Neo-Mind/WARP/issues/98)
+  and [correct mappings for doram race](https://github.com/Neo-Mind/WARP/issues/96)
+  
+- Partially fixed Gameguard patch. Still needs more work. 
 
-## Other
+- Removed unnecessary parseInt calls from scripts.
 
-- Fixed new assembler insert functions.
+## Script Updates
+- Updated **`ReloadPatch`** function to return the value of the called patch function.
 
-# 2022-01-05 Different updates
 
-## Patches
+# 2022-04-03 Changes
 
-- Fix patch [Remove Serial Display](http://nemo.herc.ws/patches/RemoveSerialDisplay/#success-clients). (fix by @4144).
-- Fix patch [Always Load Client Plugins](http://nemo.herc.ws/patches/AlwaysLoadClientPlugins/#success-clients) for old clients. (fix by @4144).
+## Patch Updates
+- Added new patches.
+	- [Case-Insensitive cash shop search](https://github.com/Neo-Mind/WARP/issues/13)
+	- [Enable "Notice" email section](https://github.com/Neo-Mind/WARP/issues/41)
 
-## For devs
+- Added the start date for "No Color" translation.
 
-- Add function for insert data at address: pe.insertAt.
-- Add functions for insert in any free space: pe.insert, pe.insertHex.
-- Add function for get exe build date: pe.getDate.
-- Copy insert functions from exe object into pe object.
+## Script Updates
+- Added **`PUSH_STR`** function to perform a `PUSH+JMP` for pushing strings .
 
-## Other
 
-- Update copyright year.
-- Update tables.
+# 2022-02-23 Changes
 
-# 2021-12-28 Different updates
+## Patch Updates
+- Fixed crash in **`Custom Job`** patch.
 
-## Patches
+- Fixed [issue in Draw Shield on Top patch](https://github.com/Neo-Mind/WARP/issues/83)
 
-- Fix patch [Load Custom lua file instead of iteminfo*.lub](http://nemo.herc.ws/patches/ChangeItemInfo/#success-clients). (fix by @4144).
-- Fix patch [Change new char name field height](http://nemo.herc.ws/patches/ChangeNewCharNameHeight/#success-clients). (fix by @4144).
-- Add patch [Change minimal gold amount for start roulette](http://nemo.herc.ws/patches/ChangeRouletteGoldLimit/#success-clients). (by @4144).
-- Add patch [Change minimal silver amount for start roulette](http://nemo.herc.ws/patches/ChangeRouletteSilverLimit/#success-clients). (by @4144).
-- Add patch [Change minimal bronze amount for start roulette](http://nemo.herc.ws/patches/ChangeRouletteBronzeLimit/#success-clients). (by @4144).
+- Updated **`Disconnect to Login Window`** patch [for newer clients](https://github.com/Neo-Mind/WARP/issues/81)
 
-## For devs
+- Fixed [bug in Increase Zoom Out patch](https://github.com/Neo-Mind/WARP/issues/44).
 
-- Add functions for search strings with information: pe.stringInfoVa and pe.stringInfoRaw.
-- Add function for match one of any block: pe.matchAny.
-- Add function for search one of any hex bytes block: pe.findAny.
 
-# 2021-12-21 Different updates
+# 2022-02-22 Changes
 
-## Patches
+## Patch Updates
+- Updated LUA files for **`Custom Job`** patch.
 
-- Fix patch [Disable Hallucination Wavy Screen](http://nemo.herc.ws/patches/DisableHallucinationWavyScreen/#success-clients). (fix by @4144).
-- Add patch [Disable Official Custom Fonts](http://nemo.herc.ws/patches/DisableOfficialCustomFonts/#success-clients). (by @4144).
-- Add patch [Fix Camera Angles (custom)](http://nemo.herc.ws/patches/FixCameraAnglesCustom/#success-clients). (by @4144).
+- Added new translation [as requested](https://github.com/Neo-Mind/WARP/issues/89)
 
-## For devs
+- Updated Custom Path patches to handle the various suffixes with a slightly better approach.
 
-- Add functions for replace: pe.replace, pe.replaceByte, pe.replaceWord, pe.replaceDWord.
-- Add function for reserve part of free binary: alloc.reserve.
-- Add functions for set value: pe.setValue, pe.setValueSimple.
-- Add functions for set jmp: pe.setJmpVa, pe.setJmpRaw, pe.setShortJmpVa, pe.setShortJmpRaw.
-- Add functions for set nops: pe.setNops, pe.setNopsRange, pe.setNopsValueRange.
-- Add function for insert hex bytes at selected address: pe.insertHexAt.
 
-## Other
+# 2021-12-29 Changes
 
-- Update tables.
-- Replace many legacy functions usage to actual functions.
+## Tool Updates (v1.5.3)
+- Fixed Bug in `Exe.Allocate` function when no active patch is available.
 
-# 2021-12-15 Different updates
+- Fixed `Exe.FindFunc` function to use look up table instead of thunk table.
 
-## Patches
+- Fixed issue with `Drag & Drop` for Session files & Tester Directory.
 
-- Fix patch [Disable OTP Login Packet](http://nemo.herc.ws/patches/DisableOTPLoginPacket/#success-clients) for some clients. (fix by @4144).
-- Fix patch [Remove hardcoded address/port](http://nemo.herc.ws/patches/RemoveHardcodedAddress/#success-clients) for some clients. (fix by @4144).
-- Fix drawing sprites in max zoom level in patch [Increase Zoom Out 25%](http://nemo.herc.ws/patches/IncreaseZoomOut25Per/#success-clients). (fix by @4144).
-- Fix drawing sprites in max zoom level in patch [Increase Zoom Out 50%](http://nemo.herc.ws/patches/IncreaseZoomOut50Per/#success-clients). (fix by @4144).
-- Fix drawing sprites in max zoom level in patch [Increase Zoom Out 75%](http://nemo.herc.ws/patches/IncreaseZoomOut75Per/#success-clients). (fix by @4144).
-- Fix drawing sprites in max zoom level in patch [Increase Zoom Out Max](http://nemo.herc.ws/patches/IncreaseZoomOutMax/#success-clients). (fix by @4144).
-- Fix drawing sprites in max zoom level in patch [Increase Zoom Out Custom](http://nemo.herc.ws/patches/IncreaseZoomOutCustom/#success-clients). (fix by @4144).
-- Add patch [Hide reputation button](http://nemo.herc.ws/patches/HideReputationButton/#success-clients). (by @4144).
 
-## For devs
+# 2021-11-26 Changes
 
-- Add function for fetch data similar to exe functions: pe.fetch, pe.fetchHex.
-- Add function for fetch hex bytes: pe.fetchHexBytes.
-- Add function for insert hex bytes: exe.insertHex.
-- Move more functions from exe object into legacy functions.
+## Patch Updates
+- Fixed the following patches for latest clients (2021-11-10+)
+	- **`Enforce 0 C in Cash Shop`**
+	- **`Custom Exp Bar Limits`**
+	- **`Enable Custom Homunculi`**
+	- **`Enable Custom Jobs`**
+	- **`Enable Custom Shields`**
+	- **`Allow 65k hair styles`**
+	- **`Increase hair styles`**
+	- **`Always see hidden/cloaked objects`**
+	- **`Load iteminfo per server`**
+	- **`Always load korea ExternalSettings lua file`**
+	- **`Remove Adventurer Agency from party`**
+	- All path customization patches
 
-## Other
+- Disabled **`Translate Taekwon`** patch for new clients, since it is picked up from msg table and therefore can be altered there instead.
 
-- Redesigned patches list drawing.
-- Add support for search by all columns in filter.
-- Update tables.
-- Replace many legacy functions usage to actual functions.
+- Fixed bug in **`Custom Font Weight for all`** patch
 
 
-# 2021-11-22 Different updates
+# 2021-11-11 Changes
 
-## Patches
+## Patch Updates
+- Fixed bug in **`Custom MerchantURLs`** patch.
 
-- Re add old patch [Fix Tetra Vortex](http://nemo.herc.ws/patches/FixTetraVortex/#success-clients). (by sanosan33, Neo).
-- Add patch [Disable password encryption for lang types 4, 7](http://nemo.herc.ws/patches/DisablePasswordEncryption/#success-clients). (by @jchcc, @4144).
 
-## For devs
+# 2021-11-04 Changes
 
-- Add functions for search strings not from start: pe.halfStringVa, pe.halfStringRaw.
-- Add functions for fetch values: pe.fetchValue, pe.fetchValueSimple, pe.fetchRelativeValue.
+## Patch Updates
+- Fixed [bug in Enable Proxy Support patch](https://github.com/Neo-Mind/WARP/issues/80)
+- Fixed [bug in Allow Guild activities in clan patch](https://github.com/Neo-Mind/WARP/issues/75)
 
-## Other
+# 2021-10-29 Changes
 
-- Add missing tables.
-- Replace many legacy functions usage to actual functions.
+## Script Updates
+- Updated **`AutoHook`** function to allow for multiple from addresses & source offset(s). Also added 'this' pointer support for post processing function.
 
 
-# 2021-11-18 Different updates
+- Added **`MultiAlloc`** function to perform contiguous DIFF allocation for storing multiple values. It accepts the sizes needed and returns corresponding **`VIRTUAL`** addresses.
 
-## Patches
 
-- Fix patch [Enable Official Custom Fonts](http://nemo.herc.ws/patches/EnableOfficialCustomFonts/#success-clients). (fix by @4144).
-- Fix codepage issues in addon [Extract and translate msgstringtable](http://nemo.herc.ws/addons/ExtractMsgTableTranslate/#success-clients). (fix by @4144).
-- Add addon [Extract msgstringtable](http://nemo.herc.ws/addons/ExtractMsgTable/#success-clients). (by @4144).
+# 2021-10-28 Changes
 
-## For devs
+## Patch Updates
+- Fixed the order in `Enable Multiple GRFs` patch.
 
-- Add function TextFile.setEncoding
-- Add functions BinFile.writeAll, BinFile.append, BinFile.appendHex, BinFile.appendLine.
 
-## Other
+# 2021-10-27 Changes
 
-- Update tables.
-- Fix loading nemo from non english paths.
+## Tool Updates (v1.5.2)
+- Added Drag & Drop support for the tools.
+	- You can drop `Exe files` or `Session YAMLs` directly on the [Main GUI] for them to be loaded. 
 
+	- Similarly you can drop the `Test Folder` or `Session YAMLs` in  [Test Bench]
 
-# 2021-11-10 Different updates
+	- Also, you can drop any files/folders into the various editor frames and text boxes to get their paths added directly.
 
-- Update tables.
-- Replace some legacy functions in addons.
-- Update plugin.dll.
+- `Exe.FindSpace` function has been changed to `Exe.Allocate` and it always reserves the space allocated now. 
 
+- Continuing from the above change, `Exe.Add*` functions no longer takes the target address as an argument. Please use the `Exe.Set*` functions instead on `allocated` addresses.
 
-# 2021-11-04 Tables update
+- If the value going to be added is already known, then use the `Exe.Add*` functions to stage the addition to the `DIFF` section and use it's return value (addresses & size - similar to `Exe.Allocate`). 
 
-- Update tables.
+- `Exe.ProtectChanges` function has been split into `Exe.ConcealChanges` and `Exe.RevealChanges` respectively and they both take a password now.
 
+- Added caching support to `Exe.FindFunc` to avoid repetitive searches for the same function later.
 
-# 2021-11-04 Patches updates
+- Fixed bug with dependency chain not ignoring invalidated patches.
 
-## Patches
+- Added type information to input values in Session files.
 
-- Fix patch [Change Walk To Delay](http://nemo.herc.ws/patches/SetWalkToDelay/#success-clients). (fix by @4144).
+- Added support for `init` member function on Patch functions which will get executed when a client is loaded.
 
-## Other
+- Added support for `initvars` and `clearvars` member arrays on Patch functions to hold the name of member variables to be initialized/purged when a client is loaded.
 
-- Update tables.
+  `initvars` need to be of the form `["name1", value1, "name2", value2...]`
 
+## Script Updates
+- Fixed bug in **`UserChoice`** function
 
-# 2021-10-04 Patches updates
+## Patch Updates
+- Updated patch **`Enable DNS Support`** to fix[Issue #77](https://github.com/Neo-Mind/WARP/issues/77)
 
-## Patches
 
-- Add patch [Fix default position of new char create window](http://nemo.herc.ws/patches/FixNewCharCreationPos/#success-clients). (by @4144).
-- Add patch [Remove blured background from new char creation window](http://nemo.herc.ws/patches/RemoveNewCharCreationBluredBackground/#success-clients). (by @4144).
+# 2021-10-26 Changes
 
+## Script Updates
+- Added new function **`AutoHook`** to group together all the common steps involved in hooking & addition of code.
 
-# 2021-10-02 Different updates
 
-## Patches
+# 2021-10-22 Changes
 
-- Add patch [Fix captcha decompression buffer size](http://nemo.herc.ws/patches/ChangeCaptchaImageDecompressionSize/#success-clients). (by @Asheraf).
-- Fix patch [Change Tipbox*.lub path](http://nemo.herc.ws/patches/ChangeTipboxPath/#success-clients) for new clients. (fix by @4144).
-- Fix patch [Change MonsterSizeEffect*.lub path](http://nemo.herc.ws/patches/ChangeMonsterSizeEffectPath/#success-clients) for new clients. (fix by @4144).
-- Fix patch [Change Towninfo*.lub path](http://nemo.herc.ws/patches/ChangeTowninfoPath/#success-clients) for new clients. (fix by @4144).
-- Fix patch [Change CheckAttendance*.lub path](http://nemo.herc.ws/patches/ChangeCheckAttendancePath/#success-clients) for new clients. (fix by @4144).
+## Script Updates
+- Added new function `AttachCode` to group together all the common steps involved in hooking & addition of code.
 
-## For devs
 
-- Add functions pe.stringAnyVa, pe.stringAnyRaw for search one of any strings.
-- License for all asm files changed from GPL-3 to CC-NC-ND.
+# 2021-10-06 Changes
 
-## Other
+## Patch Updates
+- Minor correction in `Font Height` patch script
 
-- Fix some typos in docs.
-- Update tables.
 
+# 2021-10-04 Changes
 
-# 2021-09-02 Different updates
+## Patch Updates
+- Added patch to disable pkt encryption for login/char
 
-## Patches
+- Fixed issue with `Auto mute` patch
 
-- Fix import errors in 2021 clients.
-- Add patch [Change all fonts logical size to fixed value](http://nemo.herc.ws/patches/ResizeFontL/#success-clients). (by @4144).
-- Add patch [Limit all fonts logical minimal size](http://nemo.herc.ws/patches/ResizeFontSizeMinL/#success-clients). (by @4144).
-- Add patch [Limit all fonts logical maximum size](http://nemo.herc.ws/patches/ResizeFontSizeMaxL/#success-clients). (by @4144).
-- Add patch [Adjust all fonts logical size](http://nemo.herc.ws/patches/ResizeFontSizeAdjL/#success-clients). (by @4144).
-- Add patch [Set all fonts weight to fixed value](http://nemo.herc.ws/patches/SetFontWeight/#success-clients). (by @4144).
-- Add patch [Change all bold fonts weight to fixed value](http://nemo.herc.ws/patches/SetBoldFontWeight/#success-clients). (by @4144).
-- Add patch [Change all normal fonts weight to fixed value](http://nemo.herc.ws/patches/SetNormalFontWeight/#success-clients). (by @4144).
-- Add patch [Adjust all fonts weight to fixed value](http://nemo.herc.ws/patches/SetFontWeightAdjust/#success-clients). (by @4144).
-- Add patch [Change all fonts charset](http://nemo.herc.ws/patches/SetFontCharset/#success-clients). (by @4144).
-- Add patch [Change all fonts face](http://nemo.herc.ws/patches/SetFontName/#success-clients). (by @4144).
-- Add patch [Hide debugger](http://nemo.herc.ws/patches/HideDebugger/#success-clients). (by @4144).
-- Add patch [Set high priority class for active client](http://nemo.herc.ws/patches/SetPriorityClassHigh/#success-clients). (by @4144).
-- Add patch [Set normal priority class for inactive client](http://nemo.herc.ws/patches/SetPriorityClassNormal/#success-clients). (by @4144).
-- Add patch [Add input delay](http://nemo.herc.ws/patches/ChangeSleep0/#success-clients). (by @4144).
-- Add patch [Change Sleep delay in game loop](http://nemo.herc.ws/patches/ChangeSleep1/#success-clients). (by @4144).
-- Add patch [Ignore most errors](http://nemo.herc.ws/patches/IgnoreMostErrors/#success-clients). (by @4144).
-- Add patch [Use borderless mode in full screen](http://nemo.herc.ws/patches/UseBorderlessFullScreen/#success-clients). (by @4144).
-- Add patch [Limit minimal width in all resolutions](http://nemo.herc.ws/patches/LimitMinResolutionWidth/#success-clients). (by @4144).
-- Add patch [Limit minimal height in all resolutions](http://nemo.herc.ws/patches/LimitMinResolutionHeight/#success-clients). (by @4144).
-- Add patch [Limit maximum width in all resolutions](http://nemo.herc.ws/patches/LimitMaxResolutionWidth/#success-clients). (by @4144).
-- Add patch [Limit maximum height in all resolutions](http://nemo.herc.ws/patches/LimitMaxResolutionHeight/#success-clients). (by @4144).
-- Add patch [Add close button to game window](http://nemo.herc.ws/patches/AddCloseButton/#success-clients). (by @4144).
-- Add patch [Use small titlebar in game window](http://nemo.herc.ws/patches/UseSmallTitleBar/#success-clients). (by @4144).
-- Add patch [Show icon with error messages](http://nemo.herc.ws/patches/ShowErrorsIcon/#success-clients). (by @4144).
-- Add patch [Plays sound instead of error message](http://nemo.herc.ws/patches/ReplaceErrorMessageToSound/#success-clients). (by @4144).
 
-## For devs
+# 2021-10-03 Changes
 
-- Add functions for fetch/set simple values: exe.fetchValueSimple, exe.SetValueSimple.
-- Add macro assembler command for read table var without validation: %tablevar0.
-- Add macro assembler command for resolve existing import: %import.
-- Add alternative start for macro assembler commands as "#%".
-- Add fetch functions: pe.fetchUQWord, pe.fetchUDWord, pe.fetchUWord, pe.fetchUByte, pe.fetchString.
-- Add functions for convert rva to va and rva to raw: pe.rvaToVa, pe.rvaToRaw.
-- Add functions for access pe header: pe.getPeHeader, pe.getOptHeader, pe.getSubSection, pe.getImageBase, pe.getImportTable.
-- Add function for insert dword: exe.insertDWord.
-- Add function for search/match many patch addresses: hooks.initHooks.
-- Add function for direct replace dword: pe.directReplaceDWord.
-- Add support for search/match imports in multi hooks.
-- Add object **imports** for access imports and function in it.
+## Patch Updates
+- Updated the Lua files used with `Custom Jobs` patch
 
+- Added patch to fix the alignment & bg issue with recent 'New Character' window.
 
-## Other
 
-- Update tables.
+# 2021-10-02 Changes
 
+## Patch Updates
+- Updated `Customize Walk delay` patch to set individual delays.
 
-# 2021-08-12 Different updates
+- Added patches for the following:
 
-## Patches
+	- More `Font customization` options i.e. weight (fixed and specific to normal & bold), charset, relative height & weight
+	
+	- Play sound instead of displaying `MessageBox`
+	
+	- Show icon inside `MessageBox`
+	
+	- Skip showing `MessageBox` altogether
+	
+	- Borderless full screen
+	
+	- Setting Mini title bar
+	
+	- Ignoring Debugger presence
 
-- Fix patch [Increase Screenshot Quality](http://nemo.herc.ws/patches/IncreaseScreenshotQuality/#success-clients) for some clients. (fix by @4144).
-- Fix patch [Extend Npc Dialog Box](http://nemo.herc.ws/patches/ExtendNpcBox/#success-clients) for some clients. (fix by @4144).
-- Fix patch [Disable HShield](http://nemo.herc.ws/patches/DisableHShield/#success-clients) for some clients. (fix by @4144).
-- Rename patch [Enable HTTP Emblem on Ragexe](http://nemo.herc.ws/patches/EnableRagHTTPEmblem/#success-clients) to [Fix HTTP Emblems in clients](http://nemo.herc.ws/patches/EnableRagHTTPEmblem/#success-clients) for better describe what it doing.
+	- Add Input Delay
+	
+	- Change Game Loop delay
 
-## For devs
+	- Altering priority from (Idle to Normal) or (Normal to High)
+	
+	- Changing Captcha decompression size
+	
+## Script Updates
+	- Added new function `GetImpRefs` to get references of Imported function
+	
+	
+# 2021-09-26 Changes
 
-- Remove old unused functions from logger.qs.
-- Fix frame pointer detection for 2019+ clients.
-- Fix patch.getName() for return patch function name.
-- Add function patch.getDescription() for return patch text name.
-- Add macro assembler support. See macroasm docs.
-- Add assembler commands: long, short.
-- Add functions for load asm code from file: asm.load, asm.loadHex.
-- Add function for insert asm code into free space from file: exe.insertAsmFile.
-- Add function for apply patch based on asm code from file: exe.replaceAsmFile.
-- Add function hooks.initTableEndHook.
-- Add functions for validate table values: table.getValidated, table.getRawValidated.
-- Different improvments in multi hooks.
-- Move many asm code into separate asm files.
+## Patch Updates
+- Added patch to `Customize Auto follow stop delay`.
 
-## Other
+## Tool Updates
+- Fixed number input issue in session files.
 
-- Update tables.
+- Modified `Exe.FindSpace` function to include the size allocated as the 3rd element in the returned list.
 
+- Added `Exe.Reserve` function for performing allocation + reserve address in DIFF section without needing to set any data.
 
-# 2021-07-26 Different updates
+- Added variants of `Exe.Add*` functions which performs the allocation along with insertion and returns the addr & size list identical to `Exe.FindSpace`.
 
-## Patches
 
-- Fix patch [Change auto follow delay](http://nemo.herc.ws/patches/SetAutoFollowDelay/#success-clients). (fix by @4144).
-- Add patch [Change default font size for base class of all balloons](http://nemo.herc.ws/patches/ChangeUIBalloonTextFontSize/#success-clients). (by @4144).
-- Add patch [Change default font size for class UITransBalloonText](http://nemo.herc.ws/patches/ChangeUITransBalloonTextFontSize/#success-clients). (by @4144).
-- Add patch [Change default font size for class UICharInfoBalloonText](http://nemo.herc.ws/patches/ChangeUICharInfoBalloonTextFontSize/#success-clients). (by @4144).
-- Add patch [Change default font color for base class of all balloons](http://nemo.herc.ws/patches/ChangeUIBalloonTextFontColor/#success-clients). (by @4144).
-- Add patch [Change default font color for class UITransBalloonText](http://nemo.herc.ws/patches/ChangeUITransBalloonTextFontColor/#success-clients). (by @4144).
-- Add patch [Change default font color for class UICharInfoBalloonText](http://nemo.herc.ws/patches/ChangeUICharInfoBalloonTextFontColor/#success-clients). (by @4144).
-- Add patch [Change default shadow color for base class of all balloons](http://nemo.herc.ws/patches/ChangeUIBalloonTextBgColor/#success-clients). (by @4144).
-- Add patch [Change default shadow color for class UITransBalloonText](http://nemo.herc.ws/patches/ChangeUITransBalloonTextBgColor/#success-clients). (by @4144).
-- Add patch [Change default shadow color for class UICharInfoBalloonText](http://nemo.herc.ws/patches/ChangeUICharInfoBalloonTextBgColor/#success-clients). (by @4144).
-- Add patch [Change default icon type for class UINameBalloonText](http://nemo.herc.ws/patches/ChangeUINameBalloonTextIconType/#success-clients). (by @4144).
-- Add patch [Change default text width for class UINameBalloonText](http://nemo.herc.ws/patches/ChangeUINameBalloonTextWidth/#success-clients). (by @4144).
-- Add patch [Change default text width for class UIVerticalNameBalloonText](http://nemo.herc.ws/patches/ChangeUIVerticalNameBalloonTextWidth/#success-clients). (by @4144).
-- Add patch [Change default text decoration for class UITransBalloonText](http://nemo.herc.ws/patches/ChangeUITransBalloonTextDecoration/#success-clients). (by @4144).
-- Add patch [Change default border color for class UITransBalloonText](http://nemo.herc.ws/patches/ChangeUITransBalloonTextFillColor/#success-clients). (by @4144).
-- Add patch [Change auto follow stop delay](http://nemo.herc.ws/patches/SetAutoFollowStopDelay/#success-clients). (by @4144).
+# 2021-09-11 Changes
 
-## For devs
+## Patch Updates
+- Added temporary fix for integers being loaded as strings from session files.
+  Fixes [bug with Custom Jobs patch](https://github.com/Neo-Mind/WARP/issues/73)
 
-- Add into Number type function for reverse RGB color: reverseRGB.
-- Add support for multi hooks (for now only part of hooks supported).
-- Add functions for direct changes in binary: pe.directReplace, pe.directReplaceBytes.
-- Add function patch.getName for get current patch name.
-- Add function patch.getState for get current patch state.
 
-## Other
+# 2021-08-31 Changes
 
-- Update tables.
+## Patch Updates
+- Fixed bug with Custom Font Name patch
 
+## Tool Updates
+- Fixed 1 non-critical issue with the GATE dll
 
-# 2021-07-05 Different updates
+# 2021-08-27 Changes
 
-## Patches
+## Patch Updates
+- Fixed [bug with MonSizeEffect lub patch](https://github.com/Neo-Mind/WARP/issues/70)
 
-- Fix patch [Custom Window Title](http://nemo.herc.ws/patches/CustomWindowTitle/#success-clients). (fix by @4144).
-- Fix patch [Disable Multiple Windows](http://nemo.herc.ws/patches/DisableMultipleWindows/#success-clients). (fix by @4144).
+- Fixed [bug with Hide Packets from PEEK patch](https://github.com/Neo-Mind/WARP/issues/68)
 
-## Themes
+- Fixed [bug with Restore model culling patch](https://github.com/Neo-Mind/WARP/issues/67)
 
-- Add theme EXcite Dark (by @X-EcutiOnner).
+- Fixed [bug with New Button visibility patch](https://github.com/Neo-Mind/WARP/issues/72)
 
-## Other
+## Script Updates
+- Renamed the `self_call` sub function to `self`
 
-- Improve speed in asm.stringToAsm.
+## Tool Updates
+- Added `Warp.BlockMsgs` & `Warp.AllowMsgs` function to allow partial logging.
 
 
-# 2021-06-30 Patches updates
+# 2021-08-26 Changes
 
-## Patches
+## Script Updates
+- Added extra functions to `Function`, `Map` & `Set` types.
 
-- Update patch [Add loading custom lua files](http://nemo.herc.ws/patches/AddCustomLua/#success-clients). (by @4144).
+	| Function           | Description |
+	| ----------------   | ----------- |
+	| `<map>.open`       | Provides a proxy for destructuring the keys out similar to an `Object` |
+	| `<map>.hasValue`   | Check if the map has the specified value (alternative to the `has` function |
+	| `<set>.get`        | Retrieve a value using it's index |
+	| `<func>.call_self` | Enables call a function with itself as the `this` pointer |
 
-## For devs
+- Added `MakeMap` function to create a `Map` object in a clearer form.
 
-- Add function lua.replace for replace existing lua file to custom one.
+- Added `ReloadPatch` function to clear & load an already selected patch.
 
+- Fixed bug in `OpData` class for 1 of the Scale index forms.
 
-# 2021-06-29 Different updates
+- Fixed bugs in some instruction generators.
+ 
+## Patch/Extension Updates
+- Started using all the new features in all the patches & extensions.
 
-## Patches
+## Tool Updates
+- Added 2 new options related to errors in [Test Bench].
 
-- Add patch [Load custom lua files for most loaded lua files](http://nemo.herc.ws/patches/LoadCustomLuaBeforeAfterFiles/#success-clients). (by @4144).
-- Add patch [Fixes the Korean Job name issue with LangType](http://nemo.herc.ws/patches/TaekwonJobNameFix/#success-clients) from translation patch. (by Ai4rei/AN, Neo, @4144).
-- Add patch [Add loading custom lua files](http://nemo.herc.ws/patches/AddCustomLua/#success-clients). (by @4144).
-- Fix patch [Move Cash Shop Icon](http://nemo.herc.ws/patches/MoveCashShopIcon/#success-clients). (fix by @4144).
-- Fix patch [Disable kRO Site Launch](http://nemo.herc.ws/patches/DisableKROSiteLaunch/#success-clients). (fix by @4144).
+	- `Show only errors & warnings` => As the name sounds, it allows for skipping 'success' & 'ignored' messages for each individual patch/extension during tests.
+	
+	- `Show lines with error` => Option to display the linenumber & filename from where the error originated.
 
-## For devs
+- Modified the way the exe file names are displayed during test => Now the test directory being used is displayed first and only the filenames are reported seperately.
 
-- Fix exe.insertAsmText with complex asm code.
-- Fix asm.hexToAsm for emptry strings.
-- Add new parameter into exe.setJmpVa and exe.setJmpRaw.
-- Add hooks object.
-- Add lua object.
-- Add functions for check enabled patches.
-- Add functions for search strings pe.stringVa, pe.stringRaw, pe.stringHex4.
-- Add for generic count bytes length in asm text asm.textToHexLength.
-- Reconfigure current themes to use one css file.
-- Add support for additional css attributes in themes.
-- Add proper css usage in selected patch.
-- Add support for custom variables in css theme files.
 
-## Other
+# 2021-08-22 Changes
 
-- Update Chinese Traditional translation from chinese fork.
-- Update Thai translation by @X-EcutiOnner.
-- Improve loading speed.
-- Partial apply new theme after theme selection without nemo restart.
+## Script Updates
+- Added `PatchReporter` function which uses the logging mechanism to report the changes staged by the tool. 
 
-# 2021-05-17 Different updates
+- Moved most of the `Init` scripts into Modules.
 
-## Patches
+- Added a new `CACHE` module for storing data persistent per session i.e. It will remain in there as long as you don't load a new client.
+  
+  The module also helps with setting up shared data & changes amongst related patches by means of multiple Vaults & a User Registration system.
 
-- Add patch [Increase Zoom Out 25%](http://nemo.herc.ws/patches/IncreaseZoomOut25Per/#success-clients). (by Shinryo, @4144).
-- Add patch [Increase Zoom Out to custom value](http://nemo.herc.ws/patches/IncreaseZoomOutCustom/#success-clients). (by Shinryo, @4144).
+## Tool Updates
+- Added `Exe.HasTag` function to check for existing tags.
 
-## For devs
+- Enabled the use of `this` pointer in all the patch & extension functions. It will point to the main function for each.
 
-- Replace exe.findAll to pe.findAll in all files.
-- Updated return value for exe.insertAsmText.
-- Add function asm.stringToAsm for convert string in assembler format.
-- Add function exe.insertAsmTextObj similar to exe.insertAsmText.
-- Add javascript debugger (menu tools/debugger).
-- Move function removePatchData into object patch.
-- Add function patch.replacePatchDataDWord for replaced already patched dword.
-- Add function patch.getPatchDataDWord for read already patched dword.
+- Modified the change reporting mechanism to use a Scripted function called `PatchReporter` instead.
 
-## Other
+- Now evaluation errors displays the line number & filename the error came from properly.
 
-- Update tables with clients support.
-- Add shortcut F1 for open patch information.
-- Fix window resize on startup.
 
+# 2021-08-20 Changes
 
-# 2021-05-06 Different updates
+## Script Updates
+- Shifted `Log` and `OpCodeList` to module files
 
-## Patches
+- Added depth settings to `Log` for hiding unnecessary level of support function logs. All the support functions have been updated.
 
-- Add patch [Send client flags to server](http://nemo.herc.ws/patches/SendClientFlags/#success-clients). (by @4144).
-- Add patch [Enable GvG Damage display](http://nemo.herc.ws/patches/EnableGvGDamage/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Disable Adventure Agent button on Party Window](http://nemo.herc.ws/patches/DisableAdventureAgent/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Translate Arrows Charset from korean to english](http://nemo.herc.ws/patches/FixArrowsCharset/#success-clients). (by @X-EcutiOnner, @4144).
-- Remove wrong parameter from patch [Disable Game Guard](http://nemo.herc.ws/patches/DisableGameGuard/#success-clients). (by @4144).
+- Added `getReg` functon to `ModRM` and `SIBase` classes to get their respective member registers quickly.
 
-## For devs
+  It accepts 1 letter as argument ('R' & 'O' for `ModRm` , `I` & `B` for `SIBase`)
 
-- Add script function isPatchActive. Checks if given patch name active.
-- Add script function enablePatch. Enable patch with given name.
-- Add script function removePatchData. Remove patch data from given address.
-- Add functions for patches: NAME_cancel(). Called for patch if patch was enabled and switched to disabled state.
-- Add function ApplyPatches. This function called after apply all patches.
-- Add new variables in tables.
+- Added `PH_Regs` map to get Placeholder registers quickly based on bit sizes.
 
-## Other
+- Removed `TAB` constant since it is not needed anymore.
 
-- Update tables with clients support.
+- Shifted some of the content in initialization scripts into modules.
 
-# 2021-04-22 Different updates
 
-## Patches
+# 2021-08-19 Changes
 
-- Add patch [Restore auto follow](http://nemo.herc.ws/patches/RestoreAutoFollow/#success-clients). (by @4144).
+## Tool Updates
+- Changed the root node of **`Patches.yml` & `Extensions.yml`** to a map. No more hyphens needed for Group names and Extension names.
 
-## For devs
+- Added support for including/importing additional YAML files into current one for **`Style` & `Language`** files as well as **`Patches.yml`** by means of the **`include`** key.
 
-- Add function pe.find as improvement of exe.find.
-- Add function pe.findAll as improvement of exe.findAll.
-- Add function pe.findCode as improvement of exe.findCode.
-- Add function pe.findCodes as improvement of exe.findCodes.
-- Add function pe.match as improvement of exe.match.
-- Add function pe.vaToRaw as improvement of exe.Raw2Rva.
-- Add function pe.rawToVa as improvement of exe.Rva2Raw.
-- Add function pe.sectionRaw as improvement of exe.getROffset.
-- Add function pe.sectionVa as improvement of exe.getVOffset.
-- Add function pe.dataBaseRaw for return start of data raw address.
+  It can be either 1 name of list of names. 
+  
+  **`Extensions.yml` do not have it yet since it will rarely get big enough to split into multiple files.**
 
+- Session files now also records the selected **`extensions`**, the **`Test Dir`** as well as the selected **`tester exes`** when saving the file in [Test Bench].
 
-# 2021-04-07 Patches update
+  This will help to quickly start the tests when re-launched, instead of selecting everything again from scratch.
 
-- Fix patch [Disable Auto follow](http://nemo.herc.ws/patches/DisableAutofollow/#success-clients). (fix by @4144).
-- Add patch [Disable OS Privileges execution level](http://nemo.herc.ws/patches/DisableRequireAdmin/#success-clients). (by @X-EcutiOnner).
+- Updated the inbuilt extension for converting NEMO profiles to WARP session files. Inputs are also mapped properly now (aside from **`D_MultiChoice`**).
 
+- Fixed issue with session file generation of **`Target Exe`** when the option is enabled.
 
-# 2021-03-11 Patches update
+- Added support for fully encrypted scripts with the suffix **`.ejs`**. It can also have an optional disclaimer/license header.
 
-- Fix patch [Enable Emblem hover for BG](http://nemo.herc.ws/patches/EnableEmblemForBG/#success-clients) for 2019 clients. (fix by @4144).
+  **Do not try to create this manually.**
+  
+- Added **`Warp.EncryptFile`** function for generating **`.ejs`** files from the specified source file. Any disclaimer/license header present will be retained as is.
 
+- Added **`Warp.LoadEJS`** function for loading **`.ejs`** files explicitly from scripts or the **`Script Editor`**.
 
-# 2021-03-11 Different updates
+- Added support for module scripts with the suffix **`.mjs`**.
 
-## Patches
+	- Modules are a handy way of encapsulating 'Singleton' objects and as such you are likely to see more use of these in future.
 
-- Add patch [Send at commands to server](http://nemo.herc.ws/patches/EnableSlashAtCommands/#success-clients). (by @4144).
-- Fix patch [Enable Emblem hover for BG](http://nemo.herc.ws/patches/EnableEmblemForBG/#success-clients). (fix by @4144).
+	- The name of the module can be defined inside the **`.mjs`** file by adding the following in a seperate line:
 
-## Translations
+	   `// MODULE_NAME => put_the_name_here`
 
-- Update Thai translation (by @X-EcutiOnner).
+	- In case this line is not there, then the tool will use the **basename** of the file as the module name.
 
-## For devs
+	- Be aware that modules only get loaded once and the variables exported can only be updated from within the module.
 
-- Add function exe.fetchRelativeValue for fetch relative address for example from "call XXX".
-- Add function exe.fetchHexBytes for fetch any number of hex bytes with offsets in standard format.
+	- Since the loading process is different, module scripts cannot be encrypted into **`.ejs`**.
 
-## Plugin
 
-- Save/load previous profiles near patched exe.
-- Fixed possible crash on load downloader scripts.
+# 2021-08-18 Changes
 
-## Other
+## Tool Updates
+- Added overload of **`Exe.FindHexN`, `Exe.FindLastHexN`, `Exe.FindTextN` & `Exe.FindLastTextN`** functions to accept a `min`, `max` pair as the count.
 
-- Update tables with clients support.
+  These will return an empty list if the number of elements are < `min` or > `max`.
 
+- Fixed bugs and modified the inner workings of **`D_Color`** type. It only takes the following constraints now:
 
-# 2021-02-23 Different updates
+	- `format` => Previously called `order`. Indicates the format in which the components need to be kept from MSB to LSB.
 
-## Patches
+	- `R`, `G`, `B` & `A` => Optional keys to set the default value for any missing components in the format (need this for the color `ColorPanel` being displayed).
+	
+- Similarly the color value can be provided in one of 3 forms:
 
-- Update translation strings in patch [Translate Client](http://nemo.herc.ws/patches/TranslateClient/#success-clients). (fix by @4144).
+	- `[component list]` => The components need to follow the `format` specified. i.e. for `RGB`, it should be [r,g,b]
 
-## For devs
+	- `0xnumber` => Same point here the bytes need to follow the `format` specified from MSB to LSB
 
-- Add functions for put short jump in client: exe.setShortJmpVa and exe.setShortJmpRaw.
-- Allow use any similar to jump commands in exe.setShortJmp* and exe.setJmp* as last parameter.
+	- `'#hexcode'` => Standard coloring hex code . The `format` is only used for determining the internal byte representation.
 
-## Other
+- Changed `align` constraint to `pad` for string types. 
 
-- Update tables with clients support.
+- `align` constraint now represents the horizontal alignment of the string values inside the respective textboxes of the **`Input Dialog`**
 
 
-# 2021-02-11 Patches update
+# 2021-08-17 Changes
 
-## Patches
+## Tool Updates
+- Fixed the visual bug with List Panel (used for **`D_Choice & D_MultiChoice`** types) where the frame was coming out and the window just kept enlarging too much.
 
-- Fix patch [Add support for preview button in cash shop](http://nemo.herc.ws/patches/ExtendCashShopPreview/#success-clients) for 2019-12-xx and newer. (fix by @4144).
+- Disabled the corner size-grips from going beyond specified `maxWidth` & `maxHeight` if any.
 
-## Other
+- Added a **"Global"** patch that is now available by default when an exe is loaded.
 
-- Update tables with clients support.
+	- The purpose of this patch is to allow for a common patch to stage changes shared by multiple patches.
 
+  	- Therefore it will not be available for selection in the **`Patch List`**.
 
-# 2021-02-10 Different updates
+- Added **`Exe.ActivateGlobal` & `Exe.ClearGlobal`** functions to work with the aforementioned **"Global"** patch (as counterparts to **SetActivePatch** & **ClearPatch**.
 
-## Patches
+  These also selects & deselects the **"Global"** patch respectively unlike their counterparts.
 
-- Add patch [Add support for preview button in cash shop](http://nemo.herc.ws/patches/ExtendCashShopPreview/#success-clients). (by @4144).
-- Add patch [Change MerchantStore Url](http://nemo.herc.ws/patches/ChangeMerchantStoreUrl/#success-clients). (by @jchcc).
-- Add patch [Mvp Drop Item Use Identified Name](http://nemo.herc.ws/patches/MvpItemIdentifyName/#success-clients). (by @jchcc, @4144).
-- Fix patch [Skip some hidden menu icon buttons](http://nemo.herc.ws/patches/SkipHiddenMenuButtons/#success-clients) for some clients. (fix by @4144).
-- Fix patch [Disable Ragexe Filename Check](http://nemo.herc.ws/patches/DisableFilenameCheck/#success-clients) for latest clients. (fix by @4144)
-- Fix patch [Fix item description bug](http://nemo.herc.ws/patches/FixItemDescBug/#success-clients) for some clients. (fix by @jchcc).
+- Added **`ActivePatch`** property to **`Exe`** object which reflects the name of the currently active patch.
 
+  You can also set it directly instead of using **SetActivePatch** function.
 
-## For devs
+- **`Exe.ClearPatch` & `Exe.SetActivePatch`** can now be invoked without arguments. Behavior for empty argument is as follows:
 
-- Add function for match bytes at given address: exe.match.
-- Add function for fetch value from binary with size defined in variable: exe.fetchValue.
-- Add function for save value to binary with size defined in variable: exe.setValue.
+	- **`Exe.ClearPatch`** => will clear the changes in the active patch.
+	
+	- **`Exe.SetActivePatch`** => will keep no patch as active. Same thing happens if you assign **`Exe.ActivePatch`** member directly.
 
-## Other
+- Added **`Exe.UndoChanges`** function to revert the changes setup for a range of addresses.
 
-- Update tables with clients support.
-- Update chinese traditional translation from jian916 fork.
+- Added **`Exe.FreeUp`** function to revert the changes setup & free up a range of addresses from `DIFF` section.
 
+- Added **`Exe.BeginTag` , `Exe.EndTag` , `Exe.DelTag`** for associating tag names with set of changes & address reservations (in `DIFF` section) to tag names.
 
-# 2021-02-04 Patches update
+	- The first 2 are used to mark the beginning & ending of the tagging process.
 
-- Fix patch [Skip some hidden menu icon buttons](http://nemo.herc.ws/patches/SkipHiddenMenuButtons/#success-clients). (fix by @4144).
+	- If **`Exe.BeginTag`** is again invoked with the same name, the previous changes gets wiped (and you can optionally `FreeUp` any reservations too).
 
+	- The 3rd one is for deleting a tag. With this you have the option of either preserving or discarding the staged changes & reservations respectively.
 
-# 2021-01-26 Themes and docs.
 
-## Plugin
+# 2021-08-16 Changes
 
-- Add support for themes.
+## Tool Updates
+- Added overloads for **`Warp.Define` , `Warp.Encrypt` & `Warp.Execute`** functions to accept list of strings (which gets concatenated internally).
 
-## For devs
+- Added support for links in titles, tooltips & descriptions of **`Patch List & Extension List`** (latter only makes sense while testing though).
 
-- Add function insert asm code into empty block: exe.insertAsmText.
-- Add function for replace code to asm text: exe.replaceAsmText.
-- Fix function asm.cmdToObjVa.
-- Add basic [documentation](Docs/api.md) about api functions.
+- A `linkText` key is now available for specifying color for these link texts (items in the lists) inside a **`Style file`**
 
-## Themes
+- Right clicking on the items in **`Patch List, Extension List & Exe List`** will now copy the details to the clipboard.
 
-- Add support for themes.
-- Add theme default, notheme, green.
+- All **`patch`** functions & sub-functions as well as **`extension`** functions get their respective titles as optional 2nd argument now.
 
+- Added **`allowSkip`** key for use in **`Patches.yml` & `Extensions.yml`** to allow skipping of patches & extensions respectively without reporting it as a warning.
 
-# 2021-01-21 Different updates
+  The **`SkippedPatches.log`** file will still have the details.
 
-## Patches
+- Fixed the issue where patches & extensions could not be fully empty.
 
-- Add patch [Ignore Entry Queue Errors](http://nemo.herc.ws/patches/IgnoreEntryQueueErrors/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Disable mp3NameTable.txt](http://nemo.herc.ws/patches/DisableBGMAudio/#success-clients). (by @X-EcutiOnner).
-- Add patch [Disable map sign display](http://nemo.herc.ws/patches/DisableMapInfo/#success-clients). (by @X-EcutiOnner, @4144).
-- Fix patch [Change Walk To Delay](http://nemo.herc.ws/patches/SetWalkToDelay/#success-clients). (fix by @X-EcutiOnner).
-- Fix patch [Enable /who command](http://nemo.herc.ws/patches/EnableWhoCommand/#success-clients). (fix by @4144).
-- Update patch [Change minimal screen resolution limit](http://nemo.herc.ws/patches/ChangeMinimalResolutionLimit/#success-clients) with assembler usage. (fix by @4144).
+  Now you can just specify the `<name>` alone without any keys attached to use the defaults for the other details.
 
-## Plugin
+- Fixed the issue with `Ctrl+Q` interruption mechanism.
 
-- Add assembler functions asm.textToBytes and asm.cmdToBytes.
+- Fixed the issue with empty string auto-returning false for all the string types in **`Exe.GetUserInput`**
 
-## For devs
+- Modified the usage of **`D_Hex`** type. Now it only has 2 constraints to guide it
 
-- Add different functions for assembler usage.
-- Add javascript function String.replaceAll.
-- Add functions for put jump in client: exe.setJmpVa and exe.setJmpRaw.
-- Add functions for put nops in client: exe.setNopsRange and exe.setNops.
+	- **`endian`** => Indicates the endianness of the displayed values. This can be either `little` or `big` . Default is `big` .
+	
+	- **`byteCount`** => The number of bytes expected to be stored. Default is 1
 
-## Other
+- Added optional `stepSize0`, `stepSize1`, `stepSize2` & `stepSize3` constraints to use for the respective individual elements of **`D_Vec\*`** types.
 
-- Update copyright year to 2021
+- Enabled global `min`, `max` and `stepSize` constraints to **`D_Vec\*`** as well.
 
+  If the individual constraint is not available, the elements will pick up these.
 
-# 2021-01-18 Clients support update
+- The escape characters `\n` and `\t` now gets displayed properly in the **`Output`** section. Same goes for blank spaces.
 
-## Other
+- Added `maxWidth` and `maxHeight` constraints in the **`Input Dialog`** for all types.
 
-- Update tables with clients support.
-- Update copyright year to 2021.
+- Added **`Warp.clearEditor` & `Warp.clearOutput`** functions for clearing the **`Script Editor` & `Output`** sections respectively from Scripts or the editor itself.
 
+  **Please note that the starting letter is small unlike other functions** (need this way, since these serve as signals)
 
-# 2020-12-11 Patches and translations update
 
-## Patches
+# 2021-08-15 Changes
 
-- Hide patches [Ignore Quest Errors](http://nemo.herc.ws/patches/IgnoreQuestErrors/#success-clients) and [Ignore Resource Errors](http://nemo.herc.ws/patches/IgnoreResourceErrors/#success-clients) (by @X-EcutiOnner)
+## Tool Updates
+- Added option in the **`Settings`** dialog to show the modifications setup via **`Exe.Set\*` & `Exe.Add\*`** functions.
 
-## Translations
+- Added **`Exe.ProtectChanges`** function to selectively avoid the above switch when needed. It gets automatically re-enabled when the patch/extension function call is over. 
 
-- Update Thai translation (by @X-EcutiOnner).
+- Added **`Exe.SetFloat` & `Exe.GetFloat`** functions. Also added **`Exe.SetBytes`** function for list of bytes.
 
+- Added **`Exe.Add\*`** variants of all the numeric types (including float) as well as list of bytes.
 
-# 2020-12-09 Patches and plugin update
 
-## Patches
+# 2021-07-31 Changes
 
-- Add patch [Additional client validation](http://nemo.herc.ws/patches/ValidateClient/#success-clients). (by @4144).
-- Fix patch [Show Replay Button](http://nemo.herc.ws/patches/ShowReplayButton/#success-clients). (fix by @jchcc).
-- Fix patch [Disable Help Message on Login](http://nemo.herc.ws/patches/DisableHelpMsg/#success-clients). (fix by @X-EcutiOnner).
-- Fix patch [Ignore Lua Errors](http://nemo.herc.ws/patches/IgnoreLuaErrors/#success-clients). (fix by @X-EcutiOnner, @4144).
-- Update patch [Translate Client](http://nemo.herc.ws/patches/TranslateClient/#success-clients) for translating sign in achievement window. (fix by @X-EcutiOnner).
-- Fixes for different patches due using tables.
+## Patch Updates
+- Fixed the remaining [issue with Increase Hair style patches](https://github.com/Neo-Mind/WARP/issues/56).
 
-## Addons
 
-- Fix addon Extract msgstringtable by using tables. (by @4144).
-- Fix addon Dump Import Table for different clients with broken import table. (by @4144).
+# 2021-07-29 Changes
 
-## Plugin
+## Patch Updates
+- Corrected 1 issue in "Add Chris' lua overrides" patch.
 
-- Add tables with known values.
-- Validate all clients loading. Show error on non kro or modified clients exe.
-- From now NEMO will not works with modified clients as source.
-- New script variable IS_RO for check is loaded binary ro client or not.
+- Divided the HP bar resize patch for mobs into 3 => 1 for Normal, 1 for Mini-Boss and 1 for Boss monster respectively.
 
+  Now no more [conflicts about the health bar](https://github.com/Neo-Mind/WARP/issues/57).
 
-# 2020-11-10 Patches update
+- Fixed the [byte order issue in Packet Key patches](https://github.com/Neo-Mind/WARP/issues/55). 
 
-## Patches
+  The `PACKET` object now better recognizes patched clients and `Get Packet Keys` extension works correctly for patched clients too.
 
-- Fix patch [Disable HShield](http://nemo.herc.ws/patches/DisableHShield/#success-clients). (fix by @4144).
 
+# 2021-07-25 Changes
 
-# 2020-11-06 Patches and plugin update
+## Patch Updates
+- Rearranging some codes and using `const` where appropriate.
 
-## Patches
+## Tool Updates
+- Added `findAs` function to `Array` types as an extended version of `find`. The function provided as argument can return the result required instead of `true`.
 
-- Add patch [Change Max Friends Value](http://nemo.herc.ws/patches/ChangeMaxFriendsValue/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Remove Hardcoded HTTP IP](http://nemo.herc.ws/patches/RemoveHardcodedHttpIP/#success-clients). (by @jchcc).
-- Add patch [Enable HTTP Emblem on Ragexe](http://nemo.herc.ws/patches/EnableRagHTTPEmblem/#success-clients). (by @jchcc).
-- Add patch [Remove Equipment Preview Button](http://nemo.herc.ws/patches/RemoveItemsEquipPreview/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Change adventurer agency level range](http://nemo.herc.ws/patches/ChangeAdventureAgencyLevelRange/#success-clients). (by @Asheraf).
-- Fix patch [Disable kRO Site Launch](http://nemo.herc.ws/patches/DisableKROSiteLaunch/#success-clients). (fix by @sctnightcore).
-- Fix patch [Disable 1rag1 type parameters](http://nemo.herc.ws/patches/Disable1rag1Params/#success-clients). (fix by @X-EcutiOnner).
-- Fix patch [Always load Korea ExternalSettings lua file](http://nemo.herc.ws/patches/AlwaysReadKrExtSettings/#success-clients). (fix by @X-EcutiOnner, @4144).
-- Fix patch [Disable Cheat Defender Game Guard](http://nemo.herc.ws/patches/DisableCDGuard/#success-clients). (fix by @X-EcutiOnner, @4144).
-- Fix patch [Load custom ClientInfo file](http://nemo.herc.ws/patches/LoadCustomClientInfo/#success-clients). (fix by @jchcc).
-- Fix patch [Show Exp Numbers](http://nemo.herc.ws/patches/ShowExpNumbers/#success-clients). (fix by @jchcc).
-- Fix patch [Ignore Lua Errors](http://nemo.herc.ws/patches/IgnoreLuaErrors/#success-clients). (fix by @X-EcutiOnner).
-- Fix patch [Disable HShield](http://nemo.herc.ws/patches/DisableHShield/#success-clients). (fix by @X-EcutiOnner).
-- Fix patch [Disable Help Message on Login](http://nemo.herc.ws/patches/DisableHelpMsg/#success-clients). (fix by @X-EcutiOnner).
+- Forgot to identify `GetInstr` function earlier. Fixed now.
 
-## Plugin
 
-- Prevent load files with name started from get_.
-- Add discord link.
+# 2021-07-24 Changes
 
-## For devs
+## Patch Updates
+- Fixed [issue in Packet key patches](https://github.com/Neo-Mind/WARP/issues/55) for latest clients.
 
-- Add function for simple search/replace. See SimpleReplaceDemo.qs (by @4144).
+- Fixed [issue with Resize MVP health bar](https://github.com/Neo-Mind/WARP/issues/57).
 
-## Other
+## Tool Updates
+- Corrected 1 bug in `OpData` class.
 
-- Update chinese traditional translation from jian916 fork.
 
-# 2020-10-19 Patches update
+# 2021-07-23 Changes
 
-## Patches
+## Patch Updates
+- Updated patches using the placeholder functions to remove the deprecated functions.
 
-- Add patch [Ignore SignBoardList.lub Reading](http://nemo.herc.ws/patches/IgnoreSignBoardReading/#success-clients). (by @X-EcutiOnner, @4144).
-- Add patch [Disable Blind skills effect](http://nemo.herc.ws/patches/DisableBlindEffect/#success-clients). (by @X-EcutiOnner, @4144).
-- Fix patch [Hide packets from peek](http://nemo.herc.ws/patches/HidePacketsFromPeek/#success-clients). (fix by @X-EcutiOnner).
+- Minor cleanup also being done (using `const` and swapping out `forEach` with `for of`)
 
+## Extension Updates
+- A little bit of cleanup (using `const` and swapping out `forEach` with `for of`)
 
-# 2020-10-05 Patches update
 
-## Patches
+# 2021-07-22 Changes
 
-- Add patch [Disable ViewPointTable.txt](http://nemo.herc.ws/patches/DisableCameraLock/#success-clients). (by @X-EcutiOnner).
-- Fix patch [Change character display deletion time from actual date to relative date](http://nemo.herc.ws/patches/ChangeDisplayCharDelDelay/#success-clients). (fix by @jchcc).
-- Fix patch [Disable Multiple Windows](http://nemo.herc.ws/patches/DisableMultipleWindows/#success-clients). (fix by @jchcc).
-- Fix patch [Highlight Skillslot Color](http://nemo.herc.ws/patches/HighlightSkillSlotColor/#success-clients). (fix by @X-EcutiOnner).
+## Patch Updates
+- Converted a lot of `let` to `const`
 
+- Changed some of the `forEach` functions to `for of` loops.
 
-# 2020-09-09 Patches update
+## Tool Updates
+- Changed the placeholder functions to use `_` & `_.` instead of `?` to avoid clashing with regular wildcards.
 
-## Patches
+- Removed `SwapFiller` & `SetFillTarget` function (kind of redundant with the other one without much benefits).
 
-- Add patch [Disable OTP Login Packet](http://nemo.herc.ws/patches/DisableOTPLoginPacket/#success-clients). (by @jchcc).
-- Add patch [Auto Mute Audio (Experimental)](http://nemo.herc.ws/patches/AutoMute/#success-clients). (by @jchcc).
-- Add patch [Enable 44.1 kHz Audio Sampling Frequency](http://nemo.herc.ws/patches/Enable44khzAudio/#success-clients). (by @jchcc).
-- Fix patch [Always Load Client Plugins (Experimental)](http://nemo.herc.ws/patches/AlwaysLoadClientPlugins/#success-clients). (fix by @jchcc).
+- Changed the way the byte count is sent to `SwapFillers` and `SetFillTargets`, now the byte count can be clubbed with the index as a string key => `"index, bc"`
 
+- Also, for `SetFillTargets`, the starting address needs to be provided in the map argument itself using the key `start`. If it's not there then `0` is assumed.
 
-# 2020-08-06 Patches update
+- Converted a lot of `let` to `const`
 
-## Patches
+- Changed some of the `forEach` functions to `for of` loops.
 
-- Add patch [Remove Equipment Title UI](http://nemo.herc.ws/patches/RemoveEquipmentTitleUI/#success-clients). (by @jchcc, @X-EcutiOnner, fix by @4144).
+- Changed `LOCK`, `REPE` & `REPN` to `ILOCK`, `IREPE` & `IREPN` respectively. The first 3 are now functions instead to automatically prefix these values.
 
+  `REP` function has also been provided as an alias to `REPE`. Check the wiki for more details. 
 
-# 2020-07-31 Patches update
+- Added string instructions to use with the `REP*` functions.
 
-## Patches
+- Updated **'Init'** scripts to reflect the changes in placeholder functions.
 
-- Add patch [Change second char create job](http://nemo.herc.ws/patches/ChangeSecondCharCreateJob/#success-clients). (by @4144).
 
+# 2021-07-15 Changes
 
-# 2020-07-27 Patches update
+## Patch Updates
+- Added patch for [Chris' lua overrides](https://github.com/llchrisll/ROenglishRE/tree/master/Custom%20Lua%20Files)
 
-## Patches
+## Extension Updates
+- Bug fix (Changed all the wrong `CaseInsensitive` names to `CASE_INSENSITIVE`).
 
-- Fix patch [Case-Insensitive Storage Search](http://nemo.herc.ws/patches/InsensitiveStorageSearch/#success-clients). (fix by @jchcc).
-- Fix patch [Hide attendance button](http://nemo.herc.ws/patches/HideAttendanceButton/#success-clients). (fix by @jchcc).
-- Fix patch [Hide adventurer agency button](http://nemo.herc.ws/patches/HideAdventurerAgencyButton/#success-clients). (fix by @jchcc).
-- Fix patch [Skip some hidden menu icon buttons](http://nemo.herc.ws/patches/SkipHiddenMenuButtons/#success-clients). (fix by @jchcc).
-- Fix patch [Hide Cash Shop](http://nemo.herc.ws/patches/HideCashShop/#success-clients). (fix by @jchcc).
-- Fix patch [Restore Songs Effect](http://nemo.herc.ws/patches/RestoreSongsEffect/#success-clients). (fix by @jchcc).
-- Fix wrong insert buffer in different patches. (fix by @4144).
+- Added the missing `_` variable in `GenMapEffectPlugin.qjs`
 
 
-# 2020-07-20 Patches update
+# 2021-07-12 Changes
 
-## Patches
+## Patch Updates
+- Fixed bug in [Disable Multiple Windows](https://github.com/Neo-Mind/WARP/issues/52) patch.
 
-- Add patch [Ignore Towninfo*.lub Reading](http://nemo.herc.ws/patches/IgnoreTownInfoReading/#success-clients). (by @X-EcutiOnner).
-- Add patch [Disable specified Windows](http://nemo.herc.ws/patches/DisableWindows/#success-clients). (by @jchcc).
-- Add patch [Case-Insensitive Storage Search](http://nemo.herc.ws/patches/InsensitiveStorageSearch/#success-clients). (by @jchcc).
-- Add patch [Restore Songs Effect](http://nemo.herc.ws/patches/RestoreSongsEffect/#success-clients). (by @jchcc).
+- Some minor cleanup.
 
 
-# 2020-07-17 Patches update
+# 2021-07-07 Changes
 
-## Patches
+## Patch Updates
+- Fixed issue with doram palette in **`Increase Hairstyle`** patches.
 
-- Fix patch [Disable 4 Letter Character Name Limit](http://nemo.herc.ws/patches/Disable4LetterCharnameLimit/#success-clients). (fix by @jchcc).
-- Fix patch [Disable 4 Letter User Name Limit](http://nemo.herc.ws/patches/Disable4LetterUsernameLimit/#success-clients). (fix by @jchcc).
-- Fix patch [Disable 4 Letter Password Limit](http://nemo.herc.ws/patches/Disable4LetterPasswordLimit/#success-clients). (fix by @jchcc).
+- (Hopefully) Fixed the rendering bug with [Increase Zoom](https://github.com/Neo-Mind/WARP/issues/44) patches.
 
-# 2020-07-13 Patches update
+## Tool Updates
+- Added thai language file with translations for the new entries.
 
-## Patches
+- Changed the pattern for 1 byte fillers to use `?.` prefix . The earlier pattern was creating chaos when the bytes are clubbed together.
 
-- Add patch [Opening To Service Select](http://nemo.herc.ws/patches/OpeningToServiceSelect/#success-clients). (by @jchcc).
-- Fix patch [Change guild exp limit](http://nemo.herc.ws/patches/ChangeGuildExpLimit/#success-clients). (fix by @jchcc).
-- Fix patch [Enable Multiple GRFs - Embedded](http://nemo.herc.ws/patches/EnableMultipleGRFsV2/#success-clients). (fix by @jchcc).
-- Fix patch [Ignore Missing Palette Error](http://nemo.herc.ws/patches/IgnoreMissingPaletteError/#success-clients). (fix by @jchcc).
-- Fix patch [Disconnect to Login Window](http://nemo.herc.ws/patches/DCToLoginWindow/#success-clients). (fix by @jchcc).
 
+# 2021-07-06 Changes
 
-# 2020-07-11 Patches update
+## Tool Updates
+- Added [Exe.ClearSavedInput](https://github.com/Neo-Mind/WARP/wiki/Exe-Object#patch-related) for clearing existing inputs. Useful in Test Bench.
 
-## Patches
+- Fixed the bug with WARP crashing when running **`Exe.GetUserInput`** from [Script Window](https://github.com/Neo-Mind/WARP/wiki/Script-Window).
 
-- Fix patch [Change minimal screen resolution limit](http://nemo.herc.ws/patches/ChangeMinimalResolutionLimit/#success-clients). (fix by @jchcc).
 
+# 2021-07-05 Changes
 
-# 2020-07-09 Patches update
+## Patch Updates
+- Converted comments in all the patch scripts to use `$$` function for optional reporting.
 
-## Patches
+## Tool Updates
+- Added few instruction constants.
 
-- Fix patch [Remove Hourly Announce](http://nemo.herc.ws/patches/RemoveHourlyAnnounce/#success-clients) for 2019-2020 clients. (fix by @jchcc).
+	- **`FP_START`** = Frame pointer begins (`push ebp` followed by `mov ebp, esp`)
+	
+	- **`FP_STOP`**  = Frame pointer ends (`mov esp, ebp` followed by `pop ebp`)
+	
+	- **`POP_EAX`**  = Obvious no?
+	
+	- **`CDQ`**
+	
+	- **`INT3`**
 
+- Changed [Exe.IsSelected](https://github.com/Neo-Mind/WARP/wiki/Exe-Object#patch-related) function to [Warp.GetPatchState](https://github.com/Neo-Mind/WARP/wiki/Warp-Object#functions) for logical reasons.
 
-# 2020-07-08 Patches update
+- Changed [Exe.TestMode](https://github.com/Neo-Mind/WARP/wiki/Exe-Object#properties) to [Warp.TestMode](https://github.com/Neo-Mind/WARP/wiki/Warp-Object#properties) as well.
 
-## Patches
+- Added 2 functions for displaying messages from patch/extension scripts.
 
-- Fix patch [Restore Model Culling](http://nemo.herc.ws/patches/RestoreModelCulling/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Change minimal screen resolution limit](http://nemo.herc.ws/patches/ChangeMinimalResolutionLimit/#success-clients) for 2019-2020 clients. (fix by @jchcc, @4144).
+	- **`Warp.InformUser`** = Used for information messages
+	
+	- **`Warp.WarnUser`**   = Used for warning messages
 
+- Added support for user interrupts with **`Ctrl+Q`** sequence while selecting multiple patches in [Main GUI] and running tests in [Test Bench].
 
-# 2020-07-07 Patches update
+- Added switches for **`RegEx`** & **`Case sensitivity`** in all the filter and search inputs.
 
-## Patches
+- Updated **`Dark_Mode`** style for the new entries in UI (for e.g. the filter/search options).
 
-- Fix patch [Increase hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSprites/#success-clients) for 2019-2020 clients. (fix by @jchcc).
+- Updated the templates for [Language](https://github.com/Neo-Mind/WARP/wiki/Language-File) & [Style](https://github.com/Neo-Mind/WARP/wiki/Style-File) files.
 
 
-# 2020-07-06 Patches update
+# 2021-07-02 Changes
 
-## Patches
+## Tool Updates
+- Removed [NO_ALLOC](https://github.com/Neo-Mind/WARP/wiki/Scripted-API#strings--error-messages) constant since it is no longer needed.
 
-- Fix patch [Remove hardcoded address/port](http://nemo.herc.ws/patches/RemoveHardcodedAddress/#success-clients) for 2020-07-01 clients. (fix by @4144).
-- Fix patch [Change hp bar size](http://nemo.herc.ws/patches/ChangeHealthBarSize/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Change Max Items in inventory](http://nemo.herc.ws/patches/SetMaxItemCount/#success-clients) for 2015, 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Change MVP hp bar size](http://nemo.herc.ws/patches/ChangeMvpHealthBarSize/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Enable Proxy Support](http://nemo.herc.ws/patches/EnableProxySupport/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Increase Zoom Out 50%](http://nemo.herc.ws/patches/IncreaseZoomOut50Per/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Increase Zoom Out 75%](http://nemo.herc.ws/patches/IncreaseZoomOut75Per/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Increase Zoom Out Max](http://nemo.herc.ws/patches/IncreaseZoomOutMax/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Use Ascii on All LangTypes](http://nemo.herc.ws/patches/UseAsciiOnAllLangTypes/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Use Plain Text Descriptions](http://nemo.herc.ws/patches/UsePlainTextDescriptions/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Add patch [Fix Charset For Custom Fonts](http://nemo.herc.ws/patches/FixCharsetForFonts/#success-clients) for 2015-2020 clients. (by @jchcc).
+- Changed the pattern generated by [Filler](https://github.com/Neo-Mind/WARP/wiki/Scripted-Functions#filler-functions) function for bc = 1. Now it looks like ?01 and ?121 etc.
 
+- Added the reflection options in [Instr](https://github.com/Neo-Mind/WARP/wiki/Instr) class and [CaseAddr](https://github.com/Neo-Mind/WARP/wiki/Scripted-Functions#extractors) function.
 
-# 2020-07-01 Patches update
+- Added [Exe.GetSavedInput](https://github.com/Neo-Mind/WARP/wiki/Exe-Object#user-input) function to retrieve the value of a previously saved user input (either obtained from `session file` or using [Exe.GetUserInput](https://github.com/Neo-Mind/WARP/wiki/Exe-Object#user-input)
 
-## Patches
+- Added support for encrypted scripting. To achieve this, following 3 functions have been added:
 
-- Fix patch [Increase Headgear ViewID](http://nemo.herc.ws/patches/IncreaseViewID/#success-clients) for 2020 clients. (fix by @jchcc).
-- Fix patch [Allow space in guild name](http://nemo.herc.ws/patches/AllowSpaceInGuildName/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Enforce Official Login Background](http://nemo.herc.ws/patches/EnforceOfficialLoginBackground/#success-clients) for 2019-2020 clients. (fix by @jchcc).
-- Fix patch [Show Exp Numbers](http://nemo.herc.ws/patches/ShowExpNumbers/#success-clients) for 2020 clients. (fix by @jchcc).
-- Fix patch [Fix Homunculus attack AI](http://nemo.herc.ws/patches/FixHomunculusAI/#success-clients) for 2019-10-30 client and up. (fix by @X-EcutiOnner).
+	- **`Warp.Encrypt`** = Converts a script code into it's equivalent encrypted bytes. Output is in hex form.
 
+	- **`Warp.Execute`** = Evaluates the provided encrypted hex in the underlying JS engine and return the result.
 
-# 2020-06-24 Patches update
+	- **`Warp.Define`**  = Execute the provided encrypted hex and assign the result to the specified global variable. Returns false if an error occured or if the result was `undefined`.
 
-## Patches
+- Added **`UserChoice`** function as a quick wrapper for yes/no questions to user. Primarily used in extensions.
 
-- Fix change lub patches for support sakray and main strings in same binary (fix by @4144).
+- Converted comments in all the initialization scripts to use `$$` function for optional reporting. Should be helpful for debugging in future.
 
+## Extension Updates
+- Converted comments in all the extension to use `$$` function for optional reporting. Should be helpful for debugging in future.
 
-# 2020-06-23 Different updates
 
-## Patches
+# 2021-06-30 Changes
 
-- Add patch [Highlight Skillslot Color](http://nemo.herc.ws/patches/HighlightSkillSlotColor/#success-clients) (by Hanashi, fix by @4144).
-- Add patch [Remove Equipment Swap Button](http://nemo.herc.ws/patches/RemoveEquipmentSwap/#success-clients) (by @X-EcutiOnner, fix by @4144).
-- Add patch [Ignore Quest Errors](http://nemo.herc.ws/patches/IgnoreQuestErrors/#success-clients) (by @X-EcutiOnner, fix by @4144).
+## Tool Updates
+- Modified Language **`translations`** to check for **`find`** patterns case-insensitively.
 
-## Addons
+- Fixed bug with filters not looking for translated text. Now they will look for both translated & original texts.
 
-- Removed global variable in addon GenMapEffectPlugin. (fix by @4144)
+- Fixed bug with **`D_Color`** type when returning default value.
 
-## Plugin
 
-- Increase .xdiff section size to 0x8000 bytes. This allow use many big patches at same time. (fix by @4144)
+# 2021-06-26 Changes
 
+## Tool Updates
+- Added *numeric vector* input [DataTypes](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#datatype)
 
-# 2020-04-30 Translations update
+	- **`D_VecI8, D_VecI16, D_VecI32`**
 
-## Translations
+	- **`D_VecI8, D_VecI16, D_VecU32`**
 
-- Update PT-BR translations by Frost and factor (@danilloestrela)
+	- **`D_VecF`**
+	
+- All the **`D_Vec`** can have upto `4` elements. The size is determined by the default value provided.
 
+- All of them have individual constraints for setting **`min & max`** values as well as specifying a **`name`**.
 
-# 2020-03-30 Patches update
+  For e.g. `index 1` can be setup as `min1: 3, name1: "X Coord"`. If the `name` is not provided then it defaults to `Index1`
 
-## Patches
 
-- Add new line into [Translate Client](http://nemo.herc.ws/patches/TranslateClient/#success-clients) (fix by @X-EcutiOnner).
-- Fix patch [Use Default Web Browser In Cashshop](http://nemo.herc.ws/patches/DefaultBrowserInCashshop/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
-- Fix patch [Increase Map Quality](http://nemo.herc.ws/patches/IncreaseMapQuality/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
-- Fix patch [Remove Hourly Announce](http://nemo.herc.ws/patches/RemoveHourlyAnnounce/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
+# 2021-06-25 Changes
 
+## Tool Updates
+- Added `view` button along with `browse` button for [D_InFile & D_OutFile](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#datatype) types to open currently specified filename.
 
-# 2020-03-07 Patches update
+- Fixed bug with saving user inputs of [D_Choice & D_MultiChoice](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#datatype) types.
 
-## Patches
 
-- Fix patch [Skip Service Selection Screen](http://nemo.herc.ws/patches/SkipServiceSelect/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
-- Fix patch [Chat Flood Remove Limit](http://nemo.herc.ws/patches/RemoveChatLimit/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
-- Fix patch [Chat Flood Allow](http://nemo.herc.ws/patches/AllowChatFlood/#success-clients) for 2019+ clients. (fix by @X-EcutiOnner).
+# 2021-06-24 Changes
 
+## Tool Updates
+- Added reflection support to all the **`Exe.Get`** functions
 
-# 2020-01-24 Patches update
+	- i.e. any existing changes staged by patches can now be `reflected` while retrieving the values.
 
-## Patches
+	- To do this an additional (optional) boolean argument has been added to all of the **`Exe.Get`** functions.
+	
+- Renamed **`D_List & D_MultiList`** types to [D_Choice & D_MultiChoice](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#datatype) respectively.
 
-- Fix patch [Disable Cheat Defender Game Guard](http://nemo.herc.ws/patches/DisableCDGuard/#success-clients) for 2020-01-22. (fix by @4144).
+	- Also added `Selected value` display and filtering support (similar to `Patch List`) for both of them.
 
 
-# 2020-01-12 Patches update
+# 2021-06-23 Changes
 
-## Patches
+## Tool Updates
+- Added [Warp.SetPatchState](https://github.com/Neo-Mind/WARP/wiki/Warp-Object#functions) function for updating the 'selection' state from script.
 
-- Fix corruptions in [Translate Client](http://nemo.herc.ws/patches/TranslateClient/#success-clients) fix by @4144.
+- Added dependency chain support (using **`'needs'`** key in **`Patches.yml`**
 
+- Added case-insensitive search option to [Exe.FindText & Exe.FindTextN] functions (only for default encoding i.e. [ASCII](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#encoding)).
 
-# 2020-01-09 Patches update
+	- [CASE_SENSITIVE & CASE_INSENSITIVE](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#sensitivity) keywords have been added to support this.
 
-## Patches
 
-- Fix patch [Custom Window Title](http://nemo.herc.ws/patches/CustomWindowTitle/#success-clients) for 2019 clients (fix by @X-EcutiOnner).
+# 2021-06-22 Changes
 
-## Translations
+## Tool Updates
+- Added **`D_Float`** user input [DataType](https://github.com/Neo-Mind/WARP/wiki/Inbuilt-API#datatype)
 
-- Update Thai translation by @X-EcutiOnner.
+- Added **`'stepSize'`** constraint for all numeric inputs.
 
-# 2020-01-06 Patches update
+- Added [System.Trash](https://github.com/Neo-Mind/WARP/wiki/System-Object#modifications) command for moving files to `Recycle Bin`
 
-## Patches
+- Added an optional ***`Build Version`*** display in [Main GUI]
 
-- Fix patch [Always load Korea ExternalSettings lua file](http://nemo.herc.ws/patches/AlwaysReadKrExtSettings/#success-clients) for zero clients (fix by @4144).
-- Fix patch [Enable Multiple GRFs - Embedded](http://nemo.herc.ws/patches/EnableMultipleGRFsV2/#success-clients) for 2019 clients (fix by @X-EcutiOnner).
-- Add patch [Change MapInfo*.lub path](http://nemo.herc.ws/patches/ChangeMapInfoPath/#success-clients) by @X-EcutiOnner.
+- Added **`Settings`** dialog containing the following options & buttons :
 
+	- [Main GUI]
 
-# 2020-01-01 Patches update
+		- Option to show `Build Version` along with `Build Date`.
+		- Option to enable/disable usage of EPI.
+		- Option to enable/disable generation of .secure.txt file along with **Target Exe**.
+		- Option to enable/disable generation of session files along with **Target Exe**.
+		- Option to keep the inputs as-is while loading session files.
+		- Button for saving current resolution of **Main & Script** windows as the default.
+		
+	- [Test Bench]
 
-## Patches
+		- Option to keep the inputs as-is while loading session files.
+		- Option to stop running tests when the first error is encountered.
+		- Button for saving current resolution as the default.
 
-- Fix patch [Disable Cheat Defender Game Guard](http://nemo.herc.ws/patches/DisableCDGuard/#success-clients) for 2019-12-xx. (fix by @4144).
 
-# 2019-12-17 Patches update
+# 2021-06-21 Changes
 
-## Patches
+## Tool Updates
+- Added **`Settings`** & **`Donate`** buttons to both GUIs
 
-- Fix patch [Change new char name field height](http://nemo.herc.ws/patches/ChangeNewCharNameHeight/#success-clients) for some new clients by Functor.
-- Fix patch [Enable Multiple GRFs](http://nemo.herc.ws/patches/EnableMultipleGRFs/#success-clients) for some new clients by Functor.
-- Disable useless patch [Fix shortcuts in wine](http://nemo.herc.ws/patches/FixShortcutsInWine/#success-clients).
+- Modified [Exe.FindSpace](https://github.com/Neo-Mind/WARP/wiki/Exe-Extractors#content-query) function to return **`[PHYSICAL, VIRTUAL]`** address pair
 
-# 2019-11-12 Patches update
+- **`Exe.FindSpace`** also throws an error automatically in case it fails.
 
-## Patches
 
-- Fix patch [Hide packets from peek](http://nemo.herc.ws/patches/HidePacketsFromPeek/#success-clients) for old client by @4144.
+# 2021-06-20 Changes
 
-# 2019-09-23 Patches update
+## Patch Updates
+- Slightly changed the title of **`OpenToServiceSelect`** patch.
 
-## Patches
+- Added patches to
 
- - Add patch [Always see hidden/cloaked objects](http://nemo.herc.ws/patches/Intravision/#success-clients) by Secret, A.K.M.
+	- Restore Auto Follow
 
-# 2019-08-00 Patches update
+	- Hide Ingame Windows
 
-## Patches
+	- Draw Shield on Top
 
- - Fix typo in patch [Allow spam skills by hotkey](http://nemo.herc.ws/patches/AllowSpamSkills/#success-clients) by Functor.
+	- Fix Achievement Counters
 
-# 2019-07-10 Patches and plugin update
+## Tool Updates
+- Updated [SwapFiller & SetFillTarget] functions to accept array of strings.
 
-## Patches
+- Added **`IsMain`** property to **ROC** object to indicate that the client is Main one (i.e. neither RE nor Zero type).
 
- - Copy patch [Increase hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSprites/#success-clients) into [Increase hair style limit in game (old)](http://nemo.herc.ws/patches/IncreaseHairSpritesOld/#success-clients)
- - Extend patch [Increase hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSprites/#success-clients) for support doram hairs by @4144.
- - Add Thai translation by Kelberwitz Blade's.
- - Add patch [Change Max Party Value](http://nemo.herc.ws/patches/ChangeMaxPartyValue/#success-clients) by Jchcc.
- - Add patch [Force use icons only from stateiconimginfo.lub](http://nemo.herc.ws/patches/ForceLubStateIcon/#success-clients) by Jchcc.
- - Add patches for hide all other buttons by @4144.
- - Add patches for set hide/show other buttons by @4144.
- - Add patch [Allow spam skills by hotkey](http://nemo.herc.ws/patches/AllowSpamSkills/#success-clients) by Functor, @4144.
 
-## Plugin
+# 2021-06-17 Changes
 
- - Show client version always with UTC time zone.
+## Patch Updates
+- Added patches to
 
+	- Enable Custom Homunculi
 
-# 2019-06-15 Patches update
+	- [Fix homunculus attack AI](https://github.com/Neo-Mind/WARP/issues/38)
 
-## Patches
+	- Send client flags
 
- - Fix patch [Change mvp hp bar size](http://nemo.herc.ws/patches/ChangeMvpHealthBarSize/#success-clients) for 20180919+ clients by Jchcc.
+	- Allow all items in Shortcut
 
-# 2019-06-12 Patches update
+	- Remove Adventurer Agency from Party
 
-## Patches
+	- Fix Charset for Fonts
 
-- Fix patch [Skip some hidden menu icon buttons](http://nemo.herc.ws/patches/SkipHiddenMenuButtons/#success-clients) for 2019+ clients by @4144.
+	- Customize Merchant store URL
 
-# 2019-04-22 Patches update
+	- Hide packets from PEEK
 
-## Patches
+	- Use 'identified' drops for Boss (MVP) mob
+	
+- Added cleanup function to PreviewInShop to work with Send Client Flags patch
 
-- Fix patch [Enable Proxy Support](http://nemo.herc.ws/patches/EnableProxySupport/#success-clients) for 2015+ clients by Functor.
+- Started fine tuning & comment fixes in scripts
 
-# 2019-04-01 Patches update
+- Updated some of the entries in Patch list (Patches.yml)
 
-## Patches
 
-- Fix patch [Read Data Folder First](http://nemo.herc.ws/patches/ReadDataFolderFirst/#success-clients) for 2019-03-20 RE+ by @4144.
-- Add patch [Fix shortcuts in wine](http://nemo.herc.ws/patches/FixShortcutsInWine/#success-clients) by @4144.
+# 2021-06-14 Changes
 
-# 2019-03-09 Patches update
+## Patch Updates
+- Added patch to [Enable item preview in Cash Shop](https://github.com/Neo-Mind/WARP/issues/17).
 
-## Patches
+- Added patch to Decrease the zoom to 25% of Maximum.
 
-- Update patch [Fix Homunculus attack AI](http://nemo.herc.ws/patches/FixHomunculusAI/#success-clients) by jchcc.
+- Fixed 1 remaining bug with Hide Buttons patch for new UI for slightly older clients.
 
-## License
+## Tool Updates
+- Fixed 1 bug in **`<number>.toIEEE`** function for conversion of float to IEEE hex string.
 
-- Add some missing GPL headers.
 
-# 2019-03-05 New translations
+# 2021-06-12 Changes
 
-## Translations
+## Patch Updates
+- Added patch to [Enable Custom Player Skills](https://github.com/Neo-Mind/WARP/issues/25).
 
-- Add Turkish translation by BigLord
+## Tool Updates
+- Updated signature of [SwapFiller & SetFillTarget] functions to accept index & bytecount together as a tuple (2 element array).
 
-# 2019-02-28 New patches
 
-## Patches
+# 2021-06-11 Changes
 
-- Add patch [Hide build info in client](http://nemo.herc.ws/patches/HideBuildInfo/#success-clients) by @4144.
-- Add patch [Hide packets from peek](http://nemo.herc.ws/patches/HidePacketsFromPeek/#success-clients) by @4144.
+## Patch Updates
+- Added patch for [Opening to Service Select from login screen](https://github.com/Neo-Mind/WARP/issues/35) in latest clients.
 
-# For devs
+- Added patch for [Restoring Songs Effects](https://github.com/Neo-Mind/WARP/issues/36)
 
-- Add javascript function eraseString.
+- Fixed bug in [Selected Login Background](https://github.com/Neo-Mind/WARP/issues/33) patch.
 
-# 2019-02-22 Plugin update
+- Fixed bug in [Hide Buttons patch for new UI](https://github.com/Neo-Mind/WARP/issues/32).
 
-## User interface
+- Fixed bug in [Custom Shields patch](https://github.com/Neo-Mind/WARP/issues/37) related to showing two handed weapons.
 
-- Add link to support page.
-- Add link to donation page.
+- Fixed bugs in **`Show Exp Numbers`** patch. Thanks [@Haziel](https://github.com/SirHaziel) for pointing it out.
 
-# 2019-02-19 Patches update
+## Tool Updates
+- Slight update to **`LUA.addLoaders`** function to report the reference lua file name (in case it fails)
 
-## Patches
 
-- Fix patch [Remove hardcoded connection address/port](http://nemo.herc.ws/patches/RemoveHardcodedAddress/#success-clients) for 2019-02-13 by @4144.
-- Fix patch [Read Data Folder First](http://nemo.herc.ws/patches/ReadDataFolderFirst/#success-clients) for 2019-02-13. (fix by @4144)
-- Fix patch [Read msgstringtable.txt](http://nemo.herc.ws/patches/ReadMsgstringtabledottxt/#success-clients) for 2019-02-13. (fix by @4144)
-- Fix patch [Enable Multiple GRFs](http://nemo.herc.ws/patches/EnableMultipleGRFs/#success-clients) for 2019-02-13. (fix by @4144)
-- Fix patch [Disable Ragexe Filename Check](http://nemo.herc.ws/patches/DisableFilenameCheck/#success-clients) for 2019-02-13. (fix by @4144)
-- Fix patch [Disable Cheat Defender Game Guard](http://nemo.herc.ws/patches/DisableCDGuard/#success-clients) for 2019-02-13. (fix by @4144)
-- Add patch [Fix Homunculus attack AI](http://nemo.herc.ws/patches/FixHomunculusAI/#success-clients) by jchcc.
+# 2021-06-10 Changes
 
+## Patch Updates
+- Made the higher limit of **`Custom Jobs`** patch a user input (restricted to max of `5000`).
 
-# 2019-02-04 Functions update
+- Fixed the [arrow translations](https://github.com/Neo-Mind/WARP/issues/24). Since we are restricted to ASCII table, the best resembling values were picked from them.
 
-# For devs
+- Fixed remaining [bugs in Increase Hairstyle patches](https://github.com/Neo-Mind/WARP/issues/16) (hopefully I have covered all the missed tables now)
 
-- Add new java script function for print text into stdout: ``print``.
-- Add new java script function for convert float number into dword: ``floatToDWord``.
-- Load qs files from Other directory.
+- Updated **`Shared Head palette`** patches to work well with **`Increase Hairstyle`** patches. 
 
-# 2019-01-17 Patches update
+- Fixed the **`Shared Body palette`** patches for costume palettes and doram palettes. 
 
-## Patches
+- Corrected descriptions for **`Shared Head palette`** patches & **`Translate Arrows`** patch.
 
-- Add patch [Draw shield on top of other player sprites](http://nemo.herc.ws/patches/MoveShieldToTop/#success-clients) by @4144.
+## Tool Updates
+- Updated **`LUA.addLoaders`** with option to load the reference lua file either before or after the new ones. You can also completely skip it.
 
-# 2018-12-30 Patches update
 
-## Patches
+# 2021-06-05 Changes
 
-- Add patch [Change character display deletion time from actual date to relative date](http://nemo.herc.ws/patches/ChangeDisplayCharDelDelay/#success-clients) by Functor.
+## Patch Updates
+- Fixed final [bug with Custom Vending Limit](https://github.com/Neo-Mind/WARP/issues/15) patch that was present in newer clients.
 
-# 2018-12-19 Patches update
+- Fixed 1 typo in **`Patches.yml`** (thanks [@Everade](https://github.com/Everade) for pointing it out).
 
-## Patches
+- Fixed titles for user inputs in **`Resize \* Box`** patches.
 
-- Add patch [Hide zero date (1969-01-01) in guild members window](http://nemo.herc.ws/patches/HideZeroDateInGuildMembers/#success-clients) by @4144.
+- Fixed 1 typo in [Translate arrows to English](https://github.com/Neo-Mind/WARP/issues/24) patch. But still the arrows arent correct.
 
-# 2018-11-29 Patches update
+## Tool Updates
+- Added link to Changelog in [README](README.md).
 
-## Patches
 
- - Fix patch [Change fade in/out delay](http://nemo.herc.ws/patches/ChangeFadeOutDelay/#success-clients) for some old clients (by @4144)
- - Add fix for total counter into patch [Fix achievement counters for each type of achievement](http://nemo.herc.ws/patches/FixAchievementCounters/#success-clients) by @4144
+# 2021-06-03 Changes
 
-# 2018-11-24 Patches update
+## Patch Updates
+- Added patch to [Show Damage for GvG](https://github.com/Neo-Mind/WARP/issues/23).
 
-## Patches
+- Added patch to [Translate arrows to English](https://github.com/Neo-Mind/WARP/issues/24).
 
- - Fix patch [Restore old login packet](http://nemo.herc.ws/patches/RestoreOldLoginPacket/#success-clients) for new Ragexe clients.
- - Include patch [Restore old login packet](http://nemo.herc.ws/patches/RestoreOldLoginPacket/#success-clients) into recommented patches list.
+- Fixed issues with **`Packet Key`** patches.
 
-# 2018-11-23 Different updates.
+- Fixed [issue with Custom Vending Limit](https://github.com/Neo-Mind/WARP/issues/15) patch.
 
-## Patches
+- Fixed [issue with Custom Walk Delay](https://github.com/Neo-Mind/WARP/issues/26) patch.
 
- - Fix patch [Change PrivateAirplane*.lub path](http://nemo.herc.ws/patches/ChangePrivateAirplanePath/#success-clients)
- - Add patch [Copy patched Cheat Defender Game Guard](http://nemo.herc.ws/patches/CopyCDGuard/#success-clients) by @4144
- - Add patch [Fix achievement counters for each type of achievement](http://nemo.herc.ws/patches/FixAchievementCounters/#success-clients) by @4144
- - Add patch [Fix act delay for act files with many frames](http://nemo.herc.ws/patches/FixActDelay/#success-clients) by Functor, @4144
+- Fixed [issue with Close Cutin on Esc key](https://github.com/Neo-Mind/WARP/issues/28) patch.
 
-## Translations
+- Updated the translation made by [@Everade](https://github.com/Everade).
 
- - Fix codepage for patch files. Now All files loaded as utf-8.
- - Add support for right to left languages.
- - Add support for translation almost all strings in UI.
- - Add support for translation texts inside patches.
- - Add partial translation for Russian language by @4144.
- - Add partial translation for Arabic language by Asheraf.
+## Extension Updates
+- Fixed problem with **`Get Packet Keys`** extension (now it is able to get the keys from patched clients as well).
 
-## User interface
-
- - Fix status label height.
- - Add menu help.
- - Fix scroll bar issue in qtgui.dll with enabled right to left text direction.
-
-## For devs
-
- - Add functions for patches: NAME_apply(). Called for each patch NAME after pressed button apply.
- - Add function for copy files into destination directory: copyFileToDst(srcPathWithName, dstName).
- - Add function for translate string and mark for translation: _(text)
- - Add function for mark for translation: N_(text)
- - Add script variable with plugin version: PLUGIN_VERSION.
- - Add script variables with source and destination client paths SRC_CLIENT_FILE, DST_CLIENT_FILE.
-
-# 2018-11-16 Patches update
-
-## Patches
-
- - Add patch [Change fade in/out delay](http://nemo.herc.ws/patches/ChangeFadeOutDelay/#success-clients) by @4144
- - Enable patch [Remove hardcoded connection address/port](http://nemo.herc.ws/patches/RemoveHardcodedAddress/#success-clients) for new main and re clients by @4144.
-
-## Other
-
- - Remove windows end lines from some translations.
-
-# 2018-10-31 Patches update
-
-## Patches
-
- - Fix patch [Increase hair style limit in game](http://nemo.herc.ws/patches/IncreaseHairSprites/#success-clients) for old 2018 clients by @4144.
-
-
-# 2018-10-29 Patches update
-
-## Patches
-
- - Add patch [Change hp bar size](http://nemo.herc.ws/patches/ChangeHealthBarSize/#success-clients) by Jchcc.
- - Add patch [Change mvp hp bar size](http://nemo.herc.ws/patches/ChangeMvpHealthBarSize/#success-clients) by Jchcc.
- - Fix patch [Show Exp Numbers](http://nemo.herc.ws/patches/ShowExpNumbers/#success-clients) for new clients (fix by Jchcc).
-
-
-# 2018-10-29 Patches update
-
-## Patches
-
- - Add patch [Change guild exp limit](http://nemo.herc.ws/patches/ChangeGuildExpLimit/#success-clients) by @4144
-
-# 2018-10-27 Patches update
-
-## Patches
-
- - Add patch "Change default BGM file" by Jian.
- - Add different change paths patches by Jian.
- - Add patch "Fix item description bug" by Jchcc.
- - Update patch [Load custom ClientInfo file](http://nemo.herc.ws/patches/LoadCustomClientInfo/#success-clients) by jchcc.
-
-## User interface
-
- - Changed nemo version string.
-
-# 2018-10-27 First change log entry
-
-## Patches
-
- - Add patch for restore input focus if click outside of window: [Restore chat focus](http://nemo.herc.ws/patches/RestoreChatFocus/#success-clients) by @4144
- - Fixed syntax errors and wrong parameters usage in different patches.
- - Unhide search errors from different patches.
- - Put conflicting increase hair sprites patches in same group.
- - Remove duplicated translation lines from TranslateClient.txt
- - Change id for some new patches related to show/hide buttons.
-
-## User interface
-
- - Add default values to input fields.
- - Dont show success client loaded messages.
- - Update nemo version in title bar.
-
-## For devs
-
- - Enable unbuffered writes into TextFile object.
- - Add append method into TextFile object.
- - Add xdiff section into CORE.dll.
- - Add basic script logger.
- - Add missing var keywords in different patches.
- - Fix call for function with wrong case in ShowCancelToServiceSelect.qs
+[Main GUI](https://github.com/Neo-Mind/WARP/wiki/Main-GUI)
+[Test Bench](https://github.com/Neo-Mind/WARP/wiki/Test-Bench)
+[SwapFiller & SetFillTarget](https://github.com/Neo-Mind/WARP/wiki/Scripted-Functions#filler-functions)

@@ -29,7 +29,7 @@
 
 - Ragnarok Online client is a Windows application
 - DLLs are Windows-specific binaries (.dll files)
-- NEMO patcher patches Windows executables
+- WARP patcher works with Windows executables
 - Project requires MSVC compiler (Windows-only)
 
 **Linux builds produce .so files** which will NOT work with the Windows RO client.
@@ -579,16 +579,22 @@ copy ..\config\p2p_config.json "C:\Program Files (x86)\Gravity\RO\"
 mkdir "C:\Program Files (x86)\Gravity\RO\logs" -Force
 ```
 
-### Apply NEMO Patch
+### Deploy to Client Directory
 
-1. Open NEMO patcher
-2. Load your RO client executable (e.g., `Ragnarok.exe`)
-3. Find "Load P2P Network DLL" patch (located in `Patches/LoadP2PDLL.qs`)
-4. Check the box to enable the patch
-5. Click "Apply Patches"
-6. Save the patched executable
+The DLLs are already in `d:\RO\client\`. If you rebuilt them, copy the new versions:
 
-**See DEPLOYMENT_GUIDE.md for detailed NEMO integration instructions.**
+```powershell
+# Copy rebuilt DLLs to client directory
+Copy-Item "build\bin\Release\p2p_network.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\libcrypto-3-x64.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\libssl-3-x64.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\spdlog.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\fmt.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\brotlicommon.dll" -Destination "d:\RO\client\" -Force
+Copy-Item "build\bin\Release\brotlidec.dll" -Destination "d:\RO\client\" -Force
+```
+
+**See [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md) for deployment instructions.**
 
 ---
 
@@ -596,9 +602,9 @@ mkdir "C:\Program Files (x86)\Gravity\RO\logs" -Force
 
 After successful build:
 
-1. ✅ **Verify DLL loads correctly** - Check Windows Event Viewer for DLL load events
-2. ✅ **Configure p2p_config.json** - Set coordinator URL, STUN/TURN servers
-3. ✅ **Apply NEMO patch** - Integrate DLL with RO client
+1. ✅ **Deploy DLLs** - Copy to `d:\RO\client\` (see above)
+2. ✅ **Configure p2p_config.json** - Set coordinator URL, STUN servers
+3. ✅ **Test DLL loading** - Run client and check logs
 4. ✅ **Test with P2P disabled** - Verify graceful fallback
 5. ✅ **Test WebRTC connections** - Create test peer connections
 6. ✅ **Deploy coordinator server** - Set up signaling server

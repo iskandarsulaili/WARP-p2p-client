@@ -34,7 +34,7 @@ The **P2P Network DLL** is a production-ready peer-to-peer networking solution d
 
 ### What is This?
 
-This DLL is injected into the Ragnarok Online client via **NEMO patcher** to enable:
+This DLL is loaded into the Ragnarok Online client to enable:
 
 - **Direct peer-to-peer connections** between players in the same zone
 - **Reduced server load** by offloading player movement/chat to P2P
@@ -45,10 +45,18 @@ This DLL is injected into the Ragnarok Online client via **NEMO patcher** to ena
 
 This P2P DLL is part of the **WARP-p2p-client** package, which includes:
 
-- **NEMO Patcher** - Tool to patch RO client executables
+- **WARP Patcher** - Modern tool to patch RO client executables (located in `win32/WARP.exe`)
 - **P2P-DLL** - This P2P networking implementation (C++)
-- **LoadP2PDLL.qs** - NEMO patch script to inject the DLL
 - **Configuration** - JSON-based configuration system
+- **Dependencies** - All required DLLs (OpenSSL, spdlog, etc.)
+
+### Current Status
+
+✅ **DLL is already built** - `p2p_network.dll` (568 KB) in `d:\RO\client\`
+✅ **All dependencies deployed** - 7 DLLs ready in client directory
+✅ **WARP patcher available** - `d:\RO\patcher\WARP-p2p-client\win32\WARP.exe`
+
+**See [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md) for deployment instructions.**
 
 ---
 
@@ -65,7 +73,7 @@ This P2P DLL is part of the **WARP-p2p-client** package, which includes:
 | **Packet Routing**           | Intelligent packet routing between P2P and server       | ✅ Complete |
 | **Security Manager**         | AES-256-GCM encryption for P2P packets                  | ✅ Complete |
 | **HTTP Client**              | REST API client for coordinator communication           | ✅ Complete |
-| **DLL Injection**            | NEMO patcher integration with Detours library           | ✅ Complete |
+| **DLL Loading**              | Compatible with WARP patcher and manual injection       | ✅ Complete |
 
 ### 🚧 In Progress
 
@@ -177,10 +185,11 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instr
 
 | Document                                                 | Description                                      |
 | -------------------------------------------------------- | ------------------------------------------------ |
+| **[QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md)**           | ⭐ Quick start guide for current setup           |
 | **[BUILD_GUIDE.md](BUILD_GUIDE.md)**                     | Complete build instructions with troubleshooting |
+| **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**           | Full deployment guide with multiple methods      |
 | **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)**                   | WebRTC implementation details and usage examples |
 | **[API_REFERENCE.md](API_REFERENCE.md)**                 | Complete API documentation for all classes       |
-| **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**           | NEMO integration and deployment instructions     |
 | **[INTEGRATION_TEST_PLAN.md](INTEGRATION_TEST_PLAN.md)** | Integration testing procedures                   |
 
 ---
@@ -321,8 +330,8 @@ The DLL is configured via `p2p_config.json` located in the same directory as the
 | **Logging**               | ✅ Complete | spdlog with rotation         |
 | **Security**              | ✅ Complete | AES-256-GCM encryption       |
 | **Packet Routing**        | ✅ Complete | Intelligent routing logic    |
-| **DLL Injection**         | ✅ Complete | NEMO patcher integration     |
-| **Unit Tests**            | 🚧 Partial  | 2 tests passing              |
+| **DLL Loading**           | ✅ Complete | WARP patcher compatible      |
+| **Unit Tests**            | ✅ Complete | 13/13 tests passing          |
 | **Integration Tests**     | 📋 Planned  | See INTEGRATION_TEST_PLAN.md |
 | **Documentation**         | ✅ Complete | All guides written           |
 
@@ -399,23 +408,32 @@ Test project C:/Users/.../P2P-DLL/build
 
 ## 📦 Deployment
 
-### 1. Copy DLL and Dependencies
+✅ **DLLs are already deployed to `d:\RO\client\`!**
+
+### 1. Copy Configuration
 
 ```powershell
-# Copy to RO directory
-copy build\bin\Release\p2p_network.dll "C:\Program Files (x86)\Gravity\RO\"
-copy build\bin\Release\*.dll "C:\Program Files (x86)\Gravity\RO\"
-copy config\p2p_config.json "C:\Program Files (x86)\Gravity\RO\"
+# Copy P2P configuration to client directory
+Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destination "d:\RO\client\" -Force
 ```
 
-### 2. Apply NEMO Patch
+### 2. Run Client
 
-1. Open NEMO patcher
-2. Load RO client executable
-3. Enable "Load P2P Network DLL" patch
-4. Apply and save patched executable
+```powershell
+cd d:\RO\client
+.\2025-06-04_Ragexe.exe
+```
 
-### 3. Configure Coordinator
+### 3. Check Logs
+
+```powershell
+# View P2P DLL log
+Get-Content d:\RO\client\p2p_dll.log -Tail 20
+```
+
+**📖 For detailed deployment instructions, see [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md)**
+
+### 4. Configure Coordinator
 
 Edit `p2p_config.json` to point to your coordinator server:
 
@@ -501,8 +519,9 @@ Get-Content "C:\Program Files (x86)\Gravity\RO\logs\p2p_dll.log" -Tail 100
 
 ## 🔗 Related Projects
 
-- **[WARP-p2p-client](../)** - Parent project with NEMO patcher
-- **[p2p-coordinator](../../rathena-AI-world/p2p-coordinator/)** - Coordinator server
+- **[WARP-p2p-client](../)** - Parent project with WARP patcher
+- **[WARP Patcher](../win32/WARP.exe)** - Modern RO client patcher (NEMO alternative)
+- **[p2p-coordinator](../../server/rathena-AI-world/p2p-coordinator/)** - Coordinator server
 - **[rAthena](https://github.com/rathena/rathena)** - Ragnarok Online server emulator
 
 ---
