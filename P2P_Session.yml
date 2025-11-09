@@ -1,0 +1,31 @@
+############################################################################
+#                                                                          #
+#   P2P Network DLL Patching Session for WARP                             #
+#                                                                          #
+#   This session file configures WARP to patch the RO client with:        #
+#   - CustomDLL patch to load p2p_network.dll                             #
+#   - Other useful patches for better gameplay                            #
+#                                                                          #
+############################################################################
+
+patches:
+  CustomDLL:
+    state: true
+    inputs:
+      $customDLL: Inputs/P2P_DLLSpec.yml
+  
+  MultiGRFs:
+    state: true
+  
+  IncrZoom:
+    state: true
+  
+  SkipServiceSelect:
+    state: true
+  
+  NoHardCodedAddr:
+    state: true
+  
+  EnableDnsSupport:
+    state: true
+

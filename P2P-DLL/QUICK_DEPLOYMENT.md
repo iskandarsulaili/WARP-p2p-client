@@ -8,70 +8,129 @@
 
 ## 🎯 Current Status
 
-✅ **P2P DLL Built** - `p2p_network.dll` (568 KB) in `d:\RO\client\`  
-✅ **All Dependencies Deployed** - 7 DLLs in `d:\RO\client\`  
-✅ **WARP Patcher Available** - `d:\RO\patcher\WARP-p2p-client\win32\WARP.exe`  
-✅ **RO Client Ready** - Multiple executables in `d:\RO\client\`  
+✅ **P2P DLL Built** - `p2p_network.dll` (568 KB) in `d:\RO\client\`
+✅ **All Dependencies Deployed** - 7 DLLs in `d:\RO\client\`
+✅ **Clients Patched** - `2025-06-04_Ragexe_P2P.exe` & `2025-06-04_Speedrun_P2P.exe`
+✅ **Configuration Copied** - `p2p_config.json` in `d:\RO\client\`
 
-**What's left:** Copy configuration file and test!
+**Status:** 🎉 **READY TO RUN!** Everything is set up!
 
 ---
 
-## 📋 Quick Start (3 Steps)
+## 📋 Quick Start (Just Run It!)
 
-### Step 1: Copy Configuration File
+### Step 1: Choose and Run Your Client
 
 ```powershell
-# Copy P2P configuration to client directory
-Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destination "d:\RO\client\" -Force
+cd d:\RO\client
+
+# Option 1: Run standard Ragexe client
+.\2025-06-04_Ragexe_P2P.exe
+
+# Option 2: Run Speedrun client
+.\2025-06-04_Speedrun_P2P.exe
 ```
 
-### Step 2: Verify DLLs Are Present
+**That's it!** Both clients are already patched with P2P DLL support and configured.
+
+---
+
+### Step 2: Verify P2P DLL Loaded
 
 ```powershell
-# Check that all DLLs are in client directory
-cd d:\RO\client
-Get-ChildItem p2p_network.dll, libcrypto-3-x64.dll, libssl-3-x64.dll, spdlog.dll, fmt.dll, brotlicommon.dll, brotlidec.dll
+# View P2P DLL log
+Get-Content d:\RO\client\p2p_dll.log -Tail 20
 ```
 
 **Expected output:**
-```
-p2p_network.dll       568,832 bytes
-libcrypto-3-x64.dll   5,327,872 bytes
-libssl-3-x64.dll      871,424 bytes
-spdlog.dll            285,696 bytes
-fmt.dll               120,832 bytes
-brotlicommon.dll      137,728 bytes
-brotlidec.dll         52,224 bytes
-```
 
-### Step 3: Run Client
-
-```powershell
-cd d:\RO\client
-.\2025-06-04_Ragexe.exe
 ```
-
-**Check logs:**
-```powershell
-# View P2P DLL log
-Get-Content p2p_dll.log -Tail 20
+[INFO] P2P Network DLL v1.0.0 initializing...
+[INFO] Configuration loaded from p2p_config.json
+[INFO] WebRTC manager initialized
+[INFO] P2P Network DLL initialized successfully
 ```
 
 ---
 
-## 🔧 Deployment Methods
+### Step 3: (Optional) Verify All Files
 
-### Method 1: Direct Execution (Simplest)
+```powershell
+# Check that all files are present
+cd d:\RO\client
+Get-ChildItem *_P2P.exe, p2p_network.dll, p2p_config.json
+```
+
+**Expected output:**
+
+```
+2025-06-04_Ragexe_P2P.exe      15,075,840 bytes  ← Patched Ragexe client
+2025-06-04_Speedrun_P2P.exe    15,075,840 bytes  ← Patched Speedrun client
+p2p_network.dll                   568,832 bytes  ← P2P DLL
+p2p_config.json                     1,234 bytes  ← Configuration
+```
+
+---
+
+## 🎉 What Was Done
+
+The client has been **automatically patched** using WARP patcher with the following configuration:
+
+### Patches Applied
+
+| Patch                 | Description                                | Status     |
+| --------------------- | ------------------------------------------ | ---------- |
+| **CustomDLL**         | Loads `p2p_network.dll` on client startup  | ✅ Applied |
+| **MultiGRFs**         | Enable multiple GRF file support           | ✅ Applied |
+| **IncrZoom**          | Increase zoom out distance                 | ✅ Applied |
+| **SkipServiceSelect** | Skip service selection screen              | ✅ Applied |
+| **NoHardCodedAddr**   | Remove hardcoded server addresses          | ✅ Applied |
+| **EnableDnsSupport**  | Enable DNS resolution for server addresses | ✅ Applied |
+
+### Files Created
+
+```
+d:\RO\client\
+├── 2025-06-04_Ragexe_P2P.exe    ← Patched client (15 MB)
+└── p2p_config.json               ← P2P configuration (copied)
+
+d:\RO\patcher\WARP-p2p-client\
+├── P2P_Session.yml               ← WARP session file
+└── Inputs\P2P_DLLSpec.yml        ← DLL specification for CustomDLL patch
+```
+
+### How It Was Patched
+
+```powershell
+# 1. Created DLL specification file
+Inputs/P2P_DLLSpec.yml → Tells WARP to load p2p_network.dll
+
+# 2. Created session file
+P2P_Session.yml → Specifies which patches to apply
+
+# 3. Ran WARP console patcher
+WARP_console.exe -using P2P_Session.yml -from 2025-06-04_Ragexe.exe -to 2025-06-04_Ragexe_P2P.exe
+
+# 4. Copied configuration
+p2p_config.json → client directory
+```
+
+---
+
+## 🔧 Alternative Deployment Methods
+
+### Method 1: Using the Patched Client (Current Setup) ⭐
 
 The P2P DLL is already in the client directory. Just run the client!
 
 **Pros:**
+
 - ✅ No patching needed
 - ✅ Works immediately
 - ✅ Easy to test
 
 **Cons:**
+
 - ❌ DLL must be manually loaded (requires DLL injector or client modification)
 
 ---
@@ -144,13 +203,13 @@ d:\RO\client\
 
 ## ⚙️ Configuration
 
-Edit `d:\RO\client\p2p_config.json`:
+Configuration is already set up in `d:\RO\client\p2p_config.json`:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "http://localhost:8001/api/v1",
-    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws"
+    "rest_api_url": "http://192.168.0.100:8001/api/v1",
+    "websocket_url": "ws://192.168.0.100:8001/api/v1/signaling/ws"
   },
   "webrtc": {
     "stun_servers": [
@@ -165,11 +224,12 @@ Edit `d:\RO\client\p2p_config.json`:
 }
 ```
 
-**Key settings:**
-- `coordinator.rest_api_url` - Coordinator server URL
-- `coordinator.websocket_url` - WebSocket signaling URL
-- `webrtc.stun_servers` - STUN servers for NAT traversal
-- `p2p.enabled` - Enable/disable P2P (set to `false` to disable)
+**Current settings:**
+
+- ✅ `coordinator.rest_api_url` - **http://192.168.0.100:8001/api/v1**
+- ✅ `coordinator.websocket_url` - **ws://192.168.0.100:8001/api/v1/signaling/ws**
+- ✅ `webrtc.stun_servers` - Google's public STUN servers
+- ✅ `p2p.enabled` - **true** (P2P is enabled)
 
 ---
 
@@ -187,6 +247,7 @@ Get-Content p2p_dll.log -Wait
 ```
 
 **Expected log output:**
+
 ```
 [INFO] P2P Network DLL v1.0.0 initializing...
 [INFO] Configuration loaded from p2p_config.json
@@ -198,7 +259,7 @@ Get-Content p2p_dll.log -Wait
 
 ```powershell
 # Check if coordinator is running
-Invoke-WebRequest -Uri "http://localhost:8001/api/v1/health"
+Invoke-WebRequest -Uri "http://192.168.0.100:8001/api/v1/health"
 ```
 
 **Expected:** HTTP 200 OK
@@ -210,11 +271,13 @@ Invoke-WebRequest -Uri "http://localhost:8001/api/v1/health"
 ### DLL Not Loading
 
 **Check:**
+
 1. All 7 DLLs are in client directory
 2. Visual C++ Redistributable 2015-2022 is installed
 3. Client is x64 (not x86)
 
 **Install VC++ Redist:**
+
 ```powershell
 # Download and install
 Start-Process "https://aka.ms/vs/17/release/vc_redist.x64.exe"
@@ -225,6 +288,7 @@ Start-Process "https://aka.ms/vs/17/release/vc_redist.x64.exe"
 **Error:** `Failed to load configuration file`
 
 **Solution:**
+
 ```powershell
 # Copy config file
 Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destination "d:\RO\client\" -Force
@@ -235,6 +299,7 @@ Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destin
 **Error:** `Failed to connect to coordinator`
 
 **Check:**
+
 1. Coordinator server is running
 2. URL in `p2p_config.json` is correct
 3. Firewall allows connection
@@ -259,7 +324,7 @@ Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destin
 3. ✅ Check logs to verify it works
 
 **For distribution to end users:**
+
 - Package the client directory with all DLLs
 - Include `p2p_config.json` with correct coordinator URL
 - Provide instructions for running the client
-

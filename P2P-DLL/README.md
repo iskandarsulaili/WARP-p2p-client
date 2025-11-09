@@ -54,9 +54,10 @@ This P2P DLL is part of the **WARP-p2p-client** package, which includes:
 
 ✅ **DLL is already built** - `p2p_network.dll` (568 KB) in `d:\RO\client\`
 ✅ **All dependencies deployed** - 7 DLLs ready in client directory
-✅ **WARP patcher available** - `d:\RO\patcher\WARP-p2p-client\win32\WARP.exe`
+✅ **Clients patched with WARP** - `2025-06-04_Ragexe_P2P.exe` & `2025-06-04_Speedrun_P2P.exe`
+✅ **Configuration deployed** - `p2p_config.json` in client directory
 
-**See [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md) for deployment instructions.**
+**🎉 READY TO RUN!** See [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md) to get started.
 
 ---
 
@@ -408,32 +409,47 @@ Test project C:/Users/.../P2P-DLL/build
 
 ## 📦 Deployment
 
-✅ **DLLs are already deployed to `d:\RO\client\`!**
+✅ **Everything is already deployed and patched!**
 
-### 1. Copy Configuration
-
-```powershell
-# Copy P2P configuration to client directory
-Copy-Item "d:\RO\patcher\WARP-p2p-client\P2P-DLL\config\p2p_config.json" -Destination "d:\RO\client\" -Force
-```
-
-### 2. Run Client
+### Just Run Your Patched Client
 
 ```powershell
 cd d:\RO\client
-.\2025-06-04_Ragexe.exe
+
+# Option 1: Run standard Ragexe client
+.\2025-06-04_Ragexe_P2P.exe
+
+# Option 2: Run Speedrun client
+.\2025-06-04_Speedrun_P2P.exe
 ```
 
-### 3. Check Logs
+**That's it!** Both clients are patched with WARP and configured to load the P2P DLL.
+
+---
+
+### Check Logs
 
 ```powershell
 # View P2P DLL log
 Get-Content d:\RO\client\p2p_dll.log -Tail 20
 ```
 
-**📖 For detailed deployment instructions, see [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md)**
+**Expected output:**
 
-### 4. Configure Coordinator
+```
+[INFO] P2P Network DLL v1.0.0 initializing...
+[INFO] Configuration loaded from p2p_config.json
+[INFO] WebRTC manager initialized
+[INFO] P2P Network DLL initialized successfully
+```
+
+---
+
+**📖 For detailed information, see [QUICK_DEPLOYMENT.md](QUICK_DEPLOYMENT.md)**
+
+---
+
+### Configure Coordinator
 
 Edit `p2p_config.json` to point to your coordinator server:
 

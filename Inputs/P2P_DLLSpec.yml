@@ -1,0 +1,13 @@
+############################################################################
+#                                                                          #
+#   P2P Network DLL Specification for WARP Patcher                         #
+#                                                                          #
+#   This file tells WARP to inject p2p_network.dll into the RO client     #
+#                                                                          #
+############################################################################
+
+-
+  Name: p2p_network.dll
+  Funcs:
+    - Name: "InitializeP2P"
+
