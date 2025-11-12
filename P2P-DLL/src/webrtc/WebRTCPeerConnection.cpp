@@ -33,7 +33,8 @@ WebRTCPeerConnection::~WebRTCPeerConnection() {
     Close();
 }
 
-bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn) {
+bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
+                                     const std::string& turn_username, const std::string& turn_credential) {
     try {
         // Configure ICE servers
         rtc::Configuration config;
@@ -44,10 +45,28 @@ bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, cons
             LOG_DEBUG("Added STUN server: " + server);
         }
 
-        // Add TURN servers
+        // Add TURN servers with credentials
         for (const auto& server : turn) {
-            config.iceServers.emplace_back(server);
-            LOG_DEBUG("Added TURN server: " + server);
+            if (!turn_username.empty() && !turn_credential.empty()) {
+                // Add TURN server with credentials in URL format: turn:username:password@server:port
+                std::string turn_url = server;
+                // Extract the server part if it already has turn: prefix
+                if (turn_url.find("turn:") == 0) {
+                    size_t at_pos = turn_url.find('@');
+                    if (at_pos != std::string::npos) {
+                        // Remove existing credentials if present
+                        turn_url = turn_url.substr(at_pos + 1);
+                    }
+                }
+                // Construct URL with credentials
+                std::string credentialed_turn = "turn:" + turn_username + ":" + turn_credential + "@" + turn_url;
+                config.iceServers.emplace_back(credentialed_turn);
+                LOG_DEBUG("Added TURN server with credentials: " + credentialed_turn);
+            } else {
+                // Add TURN server without credentials
+                config.iceServers.emplace_back(server);
+                LOG_DEBUG("Added TURN server: " + server);
+            }
         }
 
         // Create peer connection

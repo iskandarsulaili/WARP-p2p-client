@@ -33,7 +33,8 @@ public:
      * @param turn TURN server URLs
      * @return true if initialization succeeded
      */
-    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn);
+    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
+                   const std::string& turn_username, const std::string& turn_credential);
 
     /**
      * Close the peer connection

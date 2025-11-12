@@ -4,6 +4,11 @@
 #include <vector>
 #include <cstdint>
 
+// Forward declaration
+namespace P2P {
+class CompressionManager;
+}
+
 namespace P2P {
 
 /**
@@ -63,6 +68,12 @@ public:
      * @return true if encryption is enabled
      */
     bool IsEncryptionEnabled() const;
+
+    /**
+     * Set CompressionManager for packet compression
+     * @param compression_manager The CompressionManager instance
+     */
+    void SetCompressionManager(CompressionManager* compression_manager);
 
 private:
     // Pimpl idiom for implementation details

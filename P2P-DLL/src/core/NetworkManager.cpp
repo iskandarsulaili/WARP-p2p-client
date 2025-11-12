@@ -6,7 +6,12 @@
 #include "../../include/SignalingClient.h"
 #include "../../include/WebRTCManager.h"
 #include "../../include/PacketRouter.h"
+#include "../../include/NetworkHooks.h"
 #include "../../include/SecurityManager.h"
+#include "../../include/BandwidthManager.h"
+#include "../../include/CompressionManager.h"
+#include <nlohmann/json.hpp>
+#include <ctime>
 
 namespace P2P {
 
@@ -17,6 +22,9 @@ struct NetworkManager::Impl {
     std::shared_ptr<WebRTCManager> webrtc_manager;
     std::shared_ptr<PacketRouter> packet_router;
     std::shared_ptr<SecurityManager> security_manager;
+    std::shared_ptr<BandwidthManager> bandwidth_manager;
+    std::shared_ptr<CompressionManager> compression_manager;
+    std::shared_ptr<NetworkHooks> network_hooks;
     
     bool initialized = false;
     bool active = false;
@@ -74,11 +82,15 @@ bool NetworkManager::Initialize(const std::string& peer_id) {
     impl_->webrtc_manager = std::make_shared<WebRTCManager>();
     impl_->packet_router = std::make_shared<PacketRouter>();
     impl_->security_manager = std::make_shared<SecurityManager>();
+    impl_->bandwidth_manager = std::make_shared<BandwidthManager>();
+    impl_->compression_manager = std::make_shared<CompressionManager>();
     
     // Initialize WebRTC
     auto webrtc_config = config.GetWebRTCConfig();
-    if (!impl_->webrtc_manager->Initialize(webrtc_config.stun_servers, 
+    if (!impl_->webrtc_manager->Initialize(webrtc_config.stun_servers,
                                            webrtc_config.turn_servers,
+                                           webrtc_config.turn_username,
+                                           webrtc_config.turn_credential,
                                            config.GetP2PConfig().max_peers)) {
         LOG_ERROR("Failed to initialize WebRTCManager");
         return false;
@@ -96,6 +108,36 @@ bool NetworkManager::Initialize(const std::string& peer_id) {
         return false;
     }
     
+    // Initialize BandwidthManager
+    auto bandwidth_config = config.GetBandwidthConfig();
+    if (!impl_->bandwidth_manager->Initialize(bandwidth_config)) {
+        LOG_ERROR("Failed to initialize BandwidthManager");
+        return false;
+    }
+
+    // Initialize CompressionManager
+    auto compression_config = config.GetCompressionConfig();
+    if (!impl_->compression_manager->Initialize(compression_config)) {
+        LOG_ERROR("Failed to initialize CompressionManager");
+        return false;
+    }
+
+    // Initialize NetworkHooks
+    impl_->network_hooks = std::make_shared<NetworkHooks>();
+    if (!impl_->network_hooks->Initialize()) {
+        LOG_ERROR("Failed to initialize NetworkHooks");
+        return false;
+    }
+    
+    // Set packet router for network hooks
+    impl_->network_hooks->SetPacketRouter(impl_->packet_router);
+
+    // Set bandwidth manager for packet router
+    impl_->packet_router->SetBandwidthManager(impl_->bandwidth_manager.get());
+
+    // Set compression manager for security manager
+    impl_->security_manager->SetCompressionManager(impl_->compression_manager.get());
+
     impl_->initialized = true;
     LOG_INFO("NetworkManager initialized successfully");
     return true;
@@ -108,6 +150,7 @@ void NetworkManager::Shutdown() {
     
     Stop();
     
+    if (impl_->network_hooks) impl_->network_hooks->Shutdown();
     if (impl_->security_manager) impl_->security_manager->Shutdown();
     if (impl_->packet_router) impl_->packet_router->Shutdown();
     if (impl_->webrtc_manager) impl_->webrtc_manager->Shutdown();
@@ -174,6 +217,20 @@ bool NetworkManager::IsActive() const {
     return impl_->active;
 }
 
+BandwidthManager& NetworkManager::GetBandwidthManager() {
+    if (!impl_->bandwidth_manager) {
+        throw std::runtime_error("BandwidthManager not initialized");
+    }
+    return *impl_->bandwidth_manager;
+}
+
+CompressionManager& NetworkManager::GetCompressionManager() {
+    if (!impl_->compression_manager) {
+        throw std::runtime_error("CompressionManager not initialized");
+    }
+    return *impl_->compression_manager;
+}
+
 void NetworkManager::OnZoneChange(const std::string& zone) {
     LOG_INFO("Zone changed to: " + zone);
     
@@ -185,7 +242,40 @@ void NetworkManager::OnZoneChange(const std::string& zone) {
     auto& config = ConfigManager::GetInstance();
     if (config.IsZoneP2PEnabled(zone)) {
         LOG_INFO("P2P enabled for zone: " + zone);
-        // TODO: Connect to signaling server and join session
+        // Connect to signaling server and join session
+        const auto& coordinator_config = config.GetCoordinatorConfig();
+        
+        if (impl_->signaling_client) {
+            // Generate a unique session ID based on zone and timestamp
+            std::string session_id = zone + "_" + std::to_string(std::time(nullptr));
+            
+            // Connect to signaling server
+            if (impl_->signaling_client->Connect(coordinator_config.websocket_url, impl_->peer_id, session_id)) {
+                LOG_INFO("Connected to signaling server for zone: " + zone);
+                
+                // Set up message handler for session management
+                impl_->signaling_client->SetOnMessageCallback([this](const std::string& message) {
+                    HandleSignalingMessage(message);
+                });
+                
+                // Set up connection/disconnection handlers
+                impl_->signaling_client->SetOnConnectedCallback([this]() {
+                    LOG_INFO("Signaling connection established");
+                    // Send session join request
+                    SendSessionRequest();
+                });
+                
+                impl_->signaling_client->SetOnDisconnectedCallback([this]() {
+                    LOG_WARN("Signaling connection lost");
+                    // Handle disconnection - will be handled by reconnection logic
+                });
+            } else {
+                LOG_ERROR("Failed to connect to signaling server for zone: " + zone);
+                if (config.GetZonesConfig().fallback_on_failure) {
+                    LOG_INFO("Falling back to server-only mode for zone: " + zone);
+                }
+            }
+        }
     } else {
         LOG_INFO("P2P disabled for zone: " + zone);
         // Disconnect from P2P
@@ -202,6 +292,88 @@ bool NetworkManager::SendPacket(const Packet& packet) {
     
     auto decision = impl_->packet_router->DecideRoute(packet);
     return impl_->packet_router->RoutePacket(packet, decision);
+}
+
+void NetworkManager::HandleSignalingMessage(const std::string& message) {
+    LOG_DEBUG("Received signaling message: " + message);
+    
+    try {
+        auto json_msg = nlohmann::json::parse(message);
+        std::string msg_type = json_msg.value("type", "");
+        
+        if (msg_type == "session_created") {
+            // Session was created successfully
+            std::string session_id = json_msg.value("session_id", "");
+            LOG_INFO("Session created: " + session_id);
+            
+            // Handle WebRTC offer/answer exchange
+            if (json_msg.contains("offer")) {
+                // Process WebRTC offer from coordinator
+                std::string offer = json_msg["offer"];
+                if (impl_->webrtc_manager) {
+                    impl_->webrtc_manager->ProcessOffer(offer);
+                }
+            }
+            
+        } else if (msg_type == "peer_joined") {
+            // Another peer joined the session
+            std::string peer_id = json_msg.value("peer_id", "");
+            LOG_INFO("Peer joined: " + peer_id);
+            
+        } else if (msg_type == "peer_left") {
+            // Peer left the session
+            std::string peer_id = json_msg.value("peer_id", "");
+            LOG_INFO("Peer left: " + peer_id);
+            
+        } else if (msg_type == "ice_candidate") {
+            // ICE candidate from another client
+            if (impl_->webrtc_manager) {
+                impl_->webrtc_manager->AddIceCandidate(message);
+            }
+            
+        } else if (msg_type == "error") {
+            // Error from coordinator
+            std::string error_msg = json_msg.value("message", "Unknown error");
+            LOG_ERROR("Signaling error: " + error_msg);
+        }
+        
+    } catch (const std::exception& e) {
+        LOG_ERROR("Failed to parse signaling message: " + std::string(e.what()));
+    }
+}
+
+void NetworkManager::SendSessionRequest() {
+    if (!impl_->signaling_client || !impl_->signaling_client->IsConnected()) {
+        LOG_WARN("Cannot send session request - not connected to signaling server");
+        return;
+    }
+    
+    try {
+        nlohmann::json session_request = {
+            {"type", "create_session"},
+            {"peer_id", impl_->peer_id},
+            {"zone", impl_->packet_router ? impl_->packet_router->GetCurrentZone() : "unknown"},
+            {"capabilities", {
+                {"webrtc", true},
+                {"encryption", true},
+                {"compression", false}
+            }}
+        };
+        
+        // Undefine Windows SendMessage macro to avoid conflict
+        #ifdef SendMessage
+        #undef SendMessage
+        #endif
+        
+        if (impl_->signaling_client->SendMessage(session_request.dump())) {
+            LOG_INFO("Session request sent");
+        } else {
+            LOG_ERROR("Failed to send session request");
+        }
+        
+    } catch (const std::exception& e) {
+        LOG_ERROR("Failed to create session request: " + std::string(e.what()));
+    }
 }
 
 } // namespace P2P

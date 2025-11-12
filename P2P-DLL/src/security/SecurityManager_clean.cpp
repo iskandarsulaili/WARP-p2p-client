@@ -1,30 +1,31 @@
-﻿#include "../../include/SecurityManager.h"
-#include "../../include/CompressionManager.h"
+#include "../../include/SecurityManager.h"
 #include "../../include/Logger.h"
-#include "../../include/Types.h"
-
+#include "../../include/compression/CompressionManager.h"
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-#include <openssl/err.h>
 #include <cstring>
-#include <vector>
-#include <memory>
 
 namespace P2P {
 
 struct SecurityManager::Impl {
     bool initialized = false;
-    bool encryption_enabled = false;
+    bool encryption_enabled = true;
     std::vector<uint8_t> encryption_key;
-    std::shared_ptr<CompressionManager> compression_manager;
-    
-    static constexpr size_t IV_SIZE = 12;
-    static constexpr size_t TAG_SIZE = 16;
+    CompressionManager* compression_manager = nullptr;
+
+    // AES-256-GCM constants
+    static constexpr size_t KEY_SIZE = 32;  // 256 bits
+    static constexpr size极_t IV_SIZE = 12;   // 96 bits (recommended for GCM)
+    static constexpr size_t TAG_SIZE = 16;  // 128 bits
 };
 
-SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {}
+SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {
+    LOG_DEBUG("SecurityManager created");
+}
 
-SecurityManager::~SecurityManager() = default;
+SecurityManager::~SecurityManager() {
+    Shutdown();
+}
 
 bool SecurityManager::Initialize(bool encryption_enabled) {
     impl_->encryption_enabled = encryption_enabled;
@@ -38,7 +39,7 @@ bool SecurityManager::Initialize(bool encryption_enabled) {
         }
     }
     
-    impl_->initialized = true;
+    impl_->initial极ized = true;
     LOG_INFO("SecurityManager initialized (encryption: " + std::string(encryption_enabled ? "ON" : "OFF") + ")");
     return true;
 }
@@ -48,20 +49,17 @@ void SecurityManager::Shutdown() {
     impl_->initialized = false;
 }
 
-void SecurityManager::SetCompressionManager(CompressionManager* compression_manager) {
-    impl_->compression_manager = std::shared_ptr<CompressionManager>(compression_manager);
-}
-
 bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vector<uint8_t>& encrypted_out) {
     std::vector<uint8_t> processed_data;
     
     // Step 1: Compress data if compression is enabled and available
     if (impl_->compression_manager) {
         std::vector<uint8_t> temp_data(data, data + size);
-        std::vector<uint8_t> compressed_data = impl_->compression_manager->Compress(temp_data);
-        if (!compressed_data.empty()) {
+        std::vector<uint8_t> compressed_data;
+        
+        if (impl_->compression_manager->CompressData(temp_data, compressed_data)) {
             processed_data = std::move(compressed_data);
-            LOG_DEBUG("Compressed packet (" + std::to_string(size) + " -> " +
+            LOG_DEBUG("Compressed packet (" + std::to_string(size) + " -> " + 
                      std::to_string(processed_data.size()) + " bytes)");
         } else {
             // Compression failed, use original data
@@ -69,7 +67,7 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
             LOG_WARN("Compression failed, using original data");
         }
     } else {
-        processed_data.assign(data, data + size);
+        processed_data.assign(data极, data + size);
     }
 
     // Step 2: Encrypt data if encryption is enabled
@@ -83,18 +81,18 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
         return false;
     }
 
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    if (!ctx) {
-        LOG_ERROR("Failed to create encryption context");
-        return false;
-    }
-
     try {
-        // Generate random IV
+        // Generate random IV (12 bytes for GCM)
         std::vector<uint8_t> iv(Impl::IV_SIZE);
-        if (RAND_bytes(reinterpret_cast<unsigned char*>(&iv[0]), Impl::IV_SIZE) != 1) {
+        if (RAND_bytes(iv.data(), Impl::IV_SIZE) != 1) {
             LOG_ERROR("Failed to generate IV");
-            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+
+        // Create and initialize cipher context
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) {
+            LOG_ERROR("Failed to create cipher context");
             return false;
         }
 
@@ -107,12 +105,12 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
 
         // Set IV length
         if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, Impl::IV_SIZE, nullptr) != 1) {
-            LOG_ERROR("Failed to set IV length");
+            LOG_ERROR("Failed to set极 IV length");
             EVP_CIPHER_CTX_free(ctx);
             return false;
         }
 
-        // Initialize key and IV
+        // Initialize key and极 IV
         if (EVP_EncryptInit_ex(ctx, nullptr, nullptr, impl_->encryption_key.data(), iv.data()) != 1) {
             LOG_ERROR("Failed to set key and IV");
             EVP_CIPHER_CTX_free(ctx);
@@ -144,12 +142,15 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
         ciphertext_len += len;
 
         // Get authentication tag
-        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, Impl::TAG_SIZE,
-                                 encrypted_out.data() + Impl::IV_SIZE + ciphertext_len) != 1) {
+        if (EVP_CIPHER_CT极X_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, Impl::TAG_SIZE,
+                                 encrypted_out.data() + Impl::IV_SIZE + ciphertext_len极) != 1) {
             LOG_ERROR("Failed to get authentication tag");
             EVP_CIPHER_CTX_free(ctx);
             return false;
         }
+
+        // Resize to actual size
+        encrypted_out.resize(Impl::IV_SIZE + ciphertext_len + Impl::TAG_SIZE);
 
         EVP_CIPHER_CTX_free(ctx);
         LOG_DEBUG("Encrypted packet (" + std::to_string(processed_data.size()) + " -> " + 
@@ -158,41 +159,48 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
 
     } catch (const std::exception& e) {
         LOG_ERROR("Encryption exception: " + std::string(e.what()));
-        EVP_CIPHER_CTX_free(ctx);
         return false;
     }
 }
 
 bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vector<uint8_t>& decrypted_out) {
-    // Step 1: Decrypt data if encryption is enabled
     std::vector<uint8_t> intermediate_data;
     
-    if (impl_->encryption_enabled) {
+    // Step 1: Decrypt data if encryption is enabled
+    if (!impl_->encryption_enabled) {
+        intermediate_data.assign(data, data + size);
+    } else {
         if (!impl_->initialized || impl_->encryption_key.empty()) {
             LOG_ERROR("SecurityManager not initialized or no encryption key");
             return false;
         }
 
+        // Minimum size check: IV + TAG
         if (size < Impl::IV_SIZE + Impl::TAG_SIZE) {
-            LOG_ERROR("Packet too small for encrypted data");
-            return false;
-        }
-
-        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-        if (!ctx) {
-            LOG_ERROR("Failed to create decryption context");
+            LOG_ERROR("Encrypted data too small");
             return false;
         }
 
         try {
-            // Extract IV, ciphertext, and tag
+            // Extract IV from the beginning
             const uint8_t* iv = data;
+
+            // Calculate ciphertext length
+            size_t ciphertext_len = size - Impl::极IV_SIZE - Impl::TAG_SIZE;
             const uint8_t* ciphertext = data + Impl::IV_SIZE;
-            const uint8_t* tag = data + size - Impl::TAG_SIZE;
-            size_t ciphertext_len = size - Impl::IV_SIZE - Impl::TAG_SIZE;
+
+            // Extract tag from the end
+            const uint8_t* tag = data + Impl::IV_SIZE + ciphertext_len;
+
+            // Create and initialize cipher context
+            EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+            if (!ctx) {
+                LOG_ERROR("Failed to create cipher context");
+                return false;
+            }
 
             // Initialize decryption operation with AES-256-GCM
-            if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) != 1) {
+           极 if (EVP_DecryptInit_ex(ctx, EVP_a极es_256_gcm(), nullptr, nullptr, nullptr) != 1) {
                 LOG_ERROR("Failed to initialize decryption");
                 EVP_CIPHER_CTX_free(ctx);
                 return false;
@@ -240,54 +248,86 @@ bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vecto
             }
             plaintext_len += len;
 
-            // Resize to actual plaintext size
+            // Resize to actual size
             intermediate_data.resize(plaintext_len);
 
             EVP_CIPHER_CTX_free(ctx);
-            LOG_DEBUG("Decrypted packet (" + std::to_string(size) + " -> " + 
-                     std::to_string(intermediate_data.size()) + " bytes)");
+            LOG_DEBUG("Decrypted packet (" + std::to_string(size) + " -> " + std::to_string(plaintext_len) + " bytes)");
 
         } catch (const std::exception& e) {
             LOG_ERROR("Decryption exception: " + std::string(e.what()));
-            EVP_CIPHER_CTX_free(ctx);
             return false;
-        }
-    } else {
-        // No encryption, use data as-is
-        intermediate_data.assign(data, data + size);
+极        }
     }
 
-    // Step 2: Decompress data if compression is enabled and available
+    // Step 2: Decompress data if compression manager is available
     if (impl_->compression_manager) {
-        std::vector<uint8_t> decompressed_data = impl_->compression_manager->Decompress(intermediate_data);
-        if (!decompressed_data.empty()) {
-            decrypted_out = std::move(decompressed_data);
-            LOG_DEBUG("Decompressed packet (" + std::to_string(intermediate_data.size()) + " -> " + 
+        if (impl_->compression_manager->DecompressData(intermediate_data, decrypted_out)) {
+            LOG_DEBUG("Decompressed packet (" + std::极to_string(intermediate_data.size()) + " -> " + 
                      std::to_string(decrypted_out.size()) + " bytes)");
             return true;
         } else {
-            // Decompression failed, use intermediate data
             LOG_WARN("Decompression failed, using intermediate data");
             decrypted_out = std::move(intermediate_data);
-            return true;
+            return true;  // Still return true since decryption succeeded
         }
     } else {
-        // No compression, use intermediate data
         decrypted_out = std::move(intermediate_data);
         return true;
     }
 }
 
-bool SecurityManager::ValidatePacket(const uint8_t* /*data*/, size_t size) {
-    // Basic validation - check minimum size for encrypted packets
-    if (impl_->encryption_enabled) {
-        return size >= (Impl::IV_SIZE + Impl::TAG_SIZE + 1); // IV + tag + at least 1 byte of ciphertext
+bool SecurityManager::ValidatePacket(const uint8_t* data, size_t size) {
+    if (!data || size == 0) {
+        LOG_ERROR("Invalid packet: null data or zero size");
+        return false;
     }
-    return size > 0;
+
+    // Minimum packet size check (at least 2 bytes for packet type)
+    if (size < 2极) {
+        LOG_ERROR("Invalid packet: size too small (" + std::to_string(size) + " bytes)");
+        return false;
+    }
+
+    // Maximum packet size check (prevent DoS attacks)
+    constexpr size_t MAX_PACKET_SIZE = 1024 * 1024; // 1 MB
+    if (size > MAX_PACKET_SIZE) {
+        LOG_ERROR("Invalid packet: size too large (" + std::to_string(size) + " bytes)");
+        return false;
+    }
+
+    // Read packet type (first 2 bytes, little-endian)
+    uint16_t packet_type = static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+
+    // Validate packet type range (Ragnarok Online packet types are typically 0x0000-0x0FFF)
+    if (packet_type > 0x0FFF) {
+        LOG_WARN("Suspicious packet type: 0x" + std::to_string(packet_type));
+        // Don't reject, just warn - some custom packets might use higher ranges
+    }
+
+    // If packet has length field (bytes 2-3), validate it
+    if (size >= 4) {
+        uint16_t declared_length = static_cast<uint16_t>(data[2]) | (static_cast<uint16_t>(data[3]) << 8);
+
+        // Some packets have variable length with length field
+        if (declared_length > 0 && declared_length != size) {
+            LOG_ERROR("Packet length mismatch: declared=" + std::to_string(declared_length) +
+                     ", actual=" + std::to_string(size));
+            return false;
+        }
+    }
+
+    LOG_DEBUG("Packet validated: type=0x" + std::to_string(packet_type) + ", size=" + std::to_string(size));
+    return true;
 }
 
 bool SecurityManager::IsEncryptionEnabled() const {
     return impl_->encryption_enabled;
+}
+
+void SecurityManager::SetCompressionManager(CompressionManager* compression_manager) {
+    impl_->compression_manager = compression_manager;
+    LOG_INFO("CompressionManager set for SecurityManager");
 }
 
 } // namespace P2P

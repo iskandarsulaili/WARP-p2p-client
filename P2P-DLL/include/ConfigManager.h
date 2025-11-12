@@ -80,6 +80,16 @@ public:
     const ZonesConfig& GetZonesConfig() const;
 
     /**
+     * Get bandwidth configuration
+     */
+    const BandwidthConfig& GetBandwidthConfig() const;
+
+    /**
+     * Get compression configuration
+     */
+    const CompressionConfig& GetCompressionConfig() const;
+
+    /**
      * Get performance configuration
      */
     const PerformanceConfig& GetPerformanceConfig() const;

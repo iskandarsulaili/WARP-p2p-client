@@ -71,6 +71,27 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
             config_.p2p.packet_queue_size = p2p.value("packet_queue_size", 1000);
         }
 
+        if (j.contains("bandwidth")) {
+            auto& bandwidth = j["bandwidth"];
+            config_.bandwidth.bandwidth_update_interval_ms = bandwidth.value("bandwidth_update_interval_ms", 1000);
+            config_.bandwidth.congestion_threshold_percent = bandwidth.value("congestion_threshold_percent", 70.0f);
+            config_.bandwidth.min_bitrate_kbps = bandwidth.value("min_bitrate_kbps", 100.0f);
+            config_.bandwidth.max_bitrate_kbps = bandwidth.value("max_bitrate_kbps", 10000.0f);
+            config_.bandwidth.enable_adaptive_bitrate = bandwidth.value("enable_adaptive_bitrate", true);
+            config_.bandwidth.packet_priority_enabled = bandwidth.value("packet_priority_enabled", true);
+        }
+
+        // Parse compression config
+        if (j.contains("compression")) {
+            auto& compression = j["compression"];
+            config_.compression.enabled = compression.value("enabled", true);
+            config_.compression.algorithm = compression.value("algorithm", "lz4");
+            config_.compression.compression_level = compression.value("compression_level", 6);
+            config_.compression.min_size_for_compression = compression.value("min_size_for_compression", 100);
+            config_.compression.compression_ratio_threshold = compression.value("compression_ratio_threshold", 0.8f);
+            config_.compression.enable_metrics = compression.value("enable_metrics", true);
+        }
+
         // Parse security config
         if (j.contains("security")) {
             auto& security = j["security"];
@@ -184,6 +205,14 @@ const ZonesConfig& ConfigManager::GetZonesConfig() const {
 
 const PerformanceConfig& ConfigManager::GetPerformanceConfig() const {
     return config_.performance;
+}
+
+const BandwidthConfig& ConfigManager::GetBandwidthConfig() const {
+    return config_.bandwidth;
+}
+
+const CompressionConfig& ConfigManager::GetCompressionConfig() const {
+    return config_.compression;
 }
 
 const HostConfig& ConfigManager::GetHostConfig() const {

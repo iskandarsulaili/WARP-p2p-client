@@ -4,6 +4,12 @@
 #include <memory>
 #include <string>
 
+// Forward declaration
+namespace P2P {
+class WebRTCManager;
+class BandwidthManager;
+}
+
 namespace P2P {
 
 /**
@@ -70,6 +76,18 @@ public:
      * @return true if P2P is enabled
      */
     bool IsP2PEnabled() const;
+
+    /**
+     * Set the WebRTC manager for P2P routing
+     * @param webrtc_manager The WebRTC manager instance
+     */
+    void SetWebRTCManager(WebRTCManager* webrtc_manager);
+
+    /**
+     * Set BandwidthManager for bandwidth control
+     * @param bandwidth_manager The BandwidthManager instance
+     */
+    void SetBandwidthManager(BandwidthManager* bandwidth_manager);
 
 private:
     /**

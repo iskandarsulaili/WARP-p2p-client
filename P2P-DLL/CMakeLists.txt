@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+﻿cmake_minimum_required(VERSION 3.25)
 project(P2PNetworkDLL VERSION 1.0.0 LANGUAGES CXX)
 
 # C++ Standard
@@ -38,6 +38,10 @@ find_package(httplib CONFIG REQUIRED)
 # WebRTC library
 find_package(LibDataChannel CONFIG REQUIRED)
 
+# Detours for function hooking (manual configuration since vcpkg doesn't provide CMake files)
+find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
+find_library(DETOURS_LIBRARY detours REQUIRED)
+
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -52,10 +56,13 @@ set(SOURCES
     src/network/SignalingClient.cpp
     src/network/HttpClient.cpp
     src/network/PacketRouter.cpp
+    src/network/NetworkHooks.cpp
     src/webrtc/WebRTCManager.cpp
     src/webrtc/WebRTCPeerConnection.cpp
     src/security/SecurityManager.cpp
     src/security/AuthManager.cpp
+    src/bandwidth/BandwidthManager.cpp
+    src/compression/CompressionManager.cpp
     src/utils/Logger.cpp
     src/DllMain.cpp
 )
@@ -68,9 +75,11 @@ set(HEADERS
     include/HttpClient.h
     include/AuthManager.h
     include/PacketRouter.h
+    include/NetworkHooks.h
     include/WebRTCManager.h
     include/WebRTCPeerConnection.h
     include/SecurityManager.h
+    include/BandwidthManager.h
     include/Logger.h
     include/Types.h
 )
@@ -91,7 +100,11 @@ target_link_libraries(p2p_network PRIVATE
     Boost::chrono
     # Boost.Beast is header-only, no linking needed
     LibDataChannel::LibDataChannel
+    ${DETOURS_LIBRARY}
 )
+
+# Add include directories
+target_include_directories(p2p_network PRIVATE ${DETOURS_INCLUDE_DIRS})
 
 # Compiler options
 if(MSVC)
@@ -105,6 +118,7 @@ if(MSVC)
         _WIN32_WINNT=0x0A00  # Windows 10
         WIN32_LEAN_AND_MEAN
         NOMINMAX
+        _AMD64_  # For detours architecture detection
     )
 else()
     target_compile_options(p2p_network PRIVATE

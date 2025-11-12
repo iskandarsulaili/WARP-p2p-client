@@ -11,6 +11,8 @@ class SignalingClient;
 class WebRTCManager;
 class PacketRouter;
 class SecurityManager;
+class BandwidthManager;
+class CompressionManager;
 
 /**
  * Network Manager
@@ -70,11 +72,35 @@ public:
      */
     bool SendPacket(const Packet& packet);
 
+    /**
+     * Get BandwidthManager instance
+     *
+     * @return Reference to BandwidthManager
+     */
+    BandwidthManager& GetBandwidthManager();
+
+    /**
+     * Get CompressionManager instance
+     *
+     * @return Reference to CompressionManager
+     */
+    CompressionManager& GetCompressionManager();
+
 private:
     NetworkManager();
     ~NetworkManager();
     NetworkManager(const NetworkManager&) = delete;
     NetworkManager& operator=(const NetworkManager&) = delete;
+
+    /**
+     * Handle signaling messages from coordinator
+     */
+    void HandleSignalingMessage(const std::string& message);
+
+    /**
+     * Send session request to coordinator
+     */
+    void SendSessionRequest();
 
     struct Impl;
     std::unique_ptr<Impl> impl_;

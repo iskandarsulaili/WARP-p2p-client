@@ -9,5 +9,11 @@
 -
   Name: p2p_network.dll
   Funcs:
-    - Name: "InitializeP2P"
+    - Name: "P2P_Initialize"
+    - Name: "P2P_Start"
+    - Name: "P2P_Shutdown"
+    - Name: "P2P_IsEnabled"
+    - Name: "P2P_IsActive"
+    - Name: "P2P_GetStatus"
+    - Name: "P2P_GetLastError"
 

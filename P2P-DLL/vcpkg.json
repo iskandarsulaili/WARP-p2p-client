@@ -19,7 +19,8 @@
       "name": "gtest",
       "host": true
     },
-    "detours"
+    "detours",
+    "zlib"
   ],
   "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36"
 }

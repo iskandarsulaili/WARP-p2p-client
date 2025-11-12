@@ -27,10 +27,13 @@ public:
      * Initialize the WebRTC manager
      * @param stun STUN server URLs
      * @param turn TURN server URLs
+     * @param turn_username TURN server username
+     * @param turn_credential TURN server credential
      * @param max Maximum number of peer connections
      * @return true if initialization succeeded
      */
-    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn, int max);
+    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
+                   const std::string& turn_username, const std::string& turn_credential, int max);
 
     /**
      * Shutdown the WebRTC manager
@@ -68,6 +71,32 @@ public:
      * @return Number of peers
      */
     int GetPeerCount() const;
+
+    /**
+     * Check if any peer is connected
+     * @return true if at least one peer is connected
+     */
+    bool IsConnected() const;
+
+    /**
+     * Send data to all connected peers
+     * @极 data The data to send
+     * @param size The size of the data
+     * @return true if data was sent successfully
+     */
+    bool SendData(const void* data, size_t size);
+
+    /**
+     * Process a WebRTC offer from a peer
+     * @param offer The SDP offer string
+     */
+    void ProcessOffer(const std::string& offer);
+
+    /**
+     * Add an ICE candidate from a peer
+     * @param candidate The ICE candidate string
+     */
+    void AddIceCandidate(const std::string& candidate);
 
 private:
     // Pimpl idiom for implementation details

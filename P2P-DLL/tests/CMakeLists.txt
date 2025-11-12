@@ -11,7 +11,7 @@ include_directories(
 
 # Test sources
 set(TEST_SOURCES
-    test_config.cpp
+    clean_test.cpp
 )
 
 # Create test executable

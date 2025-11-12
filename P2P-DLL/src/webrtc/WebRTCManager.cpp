@@ -11,6 +11,8 @@ struct WebRTCManager::Impl {
     std::mutex mutex;
     std::vector<std::string> stun_servers;
     std::vector<std::string> turn_servers;
+    std::string turn_username;
+    std::string turn_credential;
     bool initialized = false;
     int max_peers = 50;
 };
@@ -23,9 +25,12 @@ WebRTCManager::~WebRTCManager() {
     Shutdown();
 }
 
-bool WebRTCManager::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn, int max) {
+bool WebRTCManager::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
+                              const std::string& turn_username, const std::string& turn_credential, int max) {
     impl_->stun_servers = stun;
     impl_->turn_servers = turn;
+    impl_->turn_username = turn_username;
+    impl_->turn_credential = turn_credential;
     impl_->max_peers = max;
     impl_->initialized = true;
     LOG_INFO("WebRTCManager initialized");
@@ -41,7 +46,8 @@ void WebRTCManager::Shutdown() {
 std::shared_ptr<WebRTCPeerConnection> WebRTCManager::CreatePeerConnection(const std::string& peer_id) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
     auto peer = std::make_shared<WebRTCPeerConnection>(peer_id);
-    peer->Initialize(impl_->stun_servers, impl_->turn_servers);
+    peer->Initialize(impl_->stun_servers, impl_->turn_servers,
+                    impl_->turn_username, impl_->turn_credential);
     impl_->peers.push_back(peer);
     return peer;
 }
@@ -74,6 +80,37 @@ std::vector<std::string> WebRTCManager::GetConnectedPeers() const {
 int WebRTCManager::GetPeerCount() const {
     std::lock_guard<std::mutex> lock(impl_->mutex);
     return static_cast<int>(impl_->peers.size());
+}
+
+bool WebRTCManager::IsConnected() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    for (const auto& p : impl_->peers) {
+        if (p->IsConnected()) return true;
+    }
+    return false;
+}
+
+bool WebRTCManager::SendData(const void* data, size_t size) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    bool success = false;
+    for (const auto& p : impl_->peers) {
+        if (p->IsConnected()) {
+            if (p->SendData(static_cast<const uint8_t*>(data), size)) {
+                success = true;
+            }
+        }
+    }
+    return success;
+}
+
+void WebRTCManager::ProcessOffer(const std::string& offer) {
+    // TODO: Implement offer processing logic
+    LOG_WARN("ProcessOffer not implemented yet: " + offer.substr(0, 50));
+}
+
+void WebRTCManager::AddIceCandidate(const std::string& candidate) {
+    // TODO: Implement ICE candidate processing logic
+    LOG_WARN("AddIceCandidate not implemented yet: " + candidate.substr(0, 50));
 }
 
 } // namespace P2P

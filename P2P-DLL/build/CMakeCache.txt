@@ -24,7 +24,7 @@ BUILD_TESTS:BOOL=ON
 CMAKE_AR:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib.exe
 
 //No help, variable specified on the command line.
-CMAKE_BUILD_TYPE:UNINITIALIZED=Release
+CMAKE_BUILD_TYPE:UNINITIALIZED=Debug
 
 //Semicolon separated list of supported configuration types, only
 // supports Debug, Release, MinSizeRel, and RelWithDebInfo, anything
@@ -194,6 +194,9 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 //No help, variable specified on the command line.
 CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=D:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
+//No help, variable specified on the command line.
+CMAKE_TOOL极速赛车开奖结果历史记录CHAIN_FILE:UNINITIALIZED=D:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
 // during the make.  This is useful for debugging only. With Visual
@@ -206,11 +209,23 @@ CPACK_SOURCE_7Z:BOOL=ON
 //Enable to build ZIP source packages
 CPACK_SOURCE_ZIP:BOOL=ON
 
+//Path to a file.
+DETOURS_INCLUDE_DIRS:PATH=D:/vcpkg/installed/x64-windows/include
+
+//Path to a library.
+DETOURS_LIBRARY:FILEPATH=D:/vcpkg/installed/x64-windows/lib/detours.lib
+
 //The directory containing a CMake configuration file for GTest.
 GTest_DIR:PATH=D:/vcpkg/installed/x64-windows/share/gtest
 
 //Path to a library.
 LIB_EAY_DEBUG:FILEPATH=D:/vcpkg/installed/x64-windows/lib/libcrypto.lib
+
+//Path to a library.
+LIB_EAY_LIBRARY_DEBUG:FILEPATH=LIB_EAY_LIBRARY_DEBUG-NOTFOUND
+
+//Path to a library.
+LIB_EAY_LIBRARY_RELEASE:FILEPATH=LIB_EAY_LIBRARY_RELEASE-NOTFOUND
 
 //Path to a library.
 LIB_EAY_RELEASE:FILEPATH=D:/vcpkg/installed/x64-windows/lib/libcrypto.lib
@@ -240,10 +255,13 @@ P2PNetworkDLL_SOURCE_DIR:STATIC=D:/RO/patcher/WARP-p2p-client/P2P-DLL
 SSL_EAY_DEBUG:FILEPATH=D:/vcpkg/installed/x64-windows/lib/libssl.lib
 
 //Path to a library.
-SSL_EAY_RELEASE:FILEPATH=D:/vcpkg/installed/x64-windows/lib/libssl.lib
+SSL_EAY_LIBRARY_DEBUG:FILEPATH=SSL_EAY_LIBRARY_DEBUG-NOTFOUND
 
-//No help, variable specified on the command line.
-VCPKG_MANIFEST_MODE:UNINITIALIZED=ON
+//Path to a library.
+SSL_EAY_LIBRARY_RELEASE:FILEPATH=SSL_EAY_LIBRARY_RELEASE-NOTFOUND
+
+//Path to a library.
+SSL_EAY_RELEASE:FILEPATH=D:/vcpkg/installed/x64-windows/lib/libssl.lib
 
 //No help, variable specified on the command line.
 VCPKG_TARGET_TRIPLET:UNINITIALIZED=x64-windows
@@ -413,20 +431,20 @@ boost_variant2_DIR:PATH=D:/vcpkg/installed/x64-windows/share/boost_variant2
 //The directory containing a CMake configuration file for boost_winapi.
 boost_winapi_DIR:PATH=D:/vcpkg/installed/x64-windows/share/boost_winapi
 
-//The directory containing a CMake configuration file for fmt.
-fmt_DIR:PATH=D:/vcpkg/installed/x64-windows/share/fmt
+//No help, variable specified on the command line.
+fmt_DIR:UNINITIALIZED=D:/vcpkg/installed/x64-windows/share/fmt
 
 //The directory containing a CMake configuration file for httplib.
 httplib_DIR:PATH=D:/vcpkg/installed/x64-windows/share/httplib
 
-//The directory containing a CMake configuration file for nlohmann_json.
-nlohmann_json_DIR:PATH=D:/vcpkg/installed/x64-windows/share/nlohmann_json
+//No help, variable specified on the command line.
+nlohmann_json_DIR:UNINITIALIZED=D:/vcpkg/installed/x64-windows/share/nlohmann_json
 
 //The directory containing a CMake configuration file for plog.
 plog_DIR:PATH=D:/vcpkg/installed/x64-windows/share/plog
 
-//The directory containing a CMake configuration file for spdlog.
-spdlog_DIR:PATH=D:/vcpkg/installed/x64-windows/share/spdlog
+//No help, variable specified on the command line.
+spdlog_DIR:UNINITIALIZED=D:/vcpkg/installed/x64-windows/share/spdlog
 
 //The directory containing a CMake configuration file for unofficial-brotli.
 unofficial-brotli_DIR:PATH=D:/vcpkg/installed/x64-windows/share/unofficial-brotli
@@ -573,6 +591,14 @@ FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 FIND_PACKAGE_MESSAGE_DETAILS_httplib:INTERNAL=[D:/vcpkg/installed/x64-windows/include/httplib.h]
 //Details about finding nlohmann_json
 FIND_PACKAGE_MESSAGE_DETAILS_nlohmann_json:INTERNAL=[D:/vcpkg/installed/x64-windows/share/nlohmann_json/nlohmann_jsonConfig.cmake][v3.12.0()]
+//ADVANCED property for variable: LIB_EAY_LIBRARY_DEBUG
+LIB_EAY_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: LIB_EAY_LIBRARY_RELEASE
+LIB_EAY_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENSSL_INCLUDE_DIR
 OPENSSL_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: SSL_EAY_LIBRARY_DEBUG
+SSL_EAY_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: SSL_EAY_LIBRARY_RELEASE
+SSL_EAY_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 
