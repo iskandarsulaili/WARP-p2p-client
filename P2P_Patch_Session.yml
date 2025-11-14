@@ -1,0 +1,24 @@
+# P2P Network DLL Patching Session
+# Patches 2025-06-04_Speedrun_P2P.exe with CustomDLL to load p2p_network.dll
+
+from: "../../client/2025-06-04_S极速赛车开奖结果历史记录peedrun_P2P.exe"
+to: "../../client/2025-06-04_Speedrun_P2P_12NOV.exe"
+
+patches:
+  CustomDLL:
+    state: true
+    inputs:
+      $customDLL: Inputs/P2P_DLLSpec.yml
+  
+  # Additional useful patches
+  MultiGRFs:
+    state: true
+  
+  IncrZoom:
+    state: true
+  
+  NoHardCodedAddr:
+    state: true
+  
+  EnableDnsSupport:
+    state: true

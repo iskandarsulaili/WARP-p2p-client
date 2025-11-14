@@ -1,19 +1,30 @@
-############################################################################
-#                                                                          #
-#   P2P Network DLL Specification for WARP Patcher                         #
-#                                                                          #
-#   This file tells WARP to inject p2p_network.dll into the RO client     #
-#                                                                          #
-############################################################################
+﻿# P2P Network DLL Specification for WARP CustomDLL Patch
+# This file configures the CustomDLL patch to load p2p_network.dll
 
--
-  Name: p2p_network.dll
-  Funcs:
-    - Name: "P2P_Initialize"
-    - Name: "P2P_Start"
-    - Name: "P2P_Shutdown"
-    - Name: "P2P_IsEnabled"
-    - Name: "P2P_IsActive"
-    - Name: "P2P_GetStatus"
-    - Name: "P2P_GetLastError"
+dlls:
+  - name: p2p_network.dll
+    load_order: normal
+    description: "P2P Network functionality for Ragnarok Online"
+    dependencies:
+      - spdlog.dll
+      - WebView2Loader.dll
+    funcs:
+      - name: "P2P_Initialize"
+        description: "Initialize P2P network subsystem"
+      - name: "P2P_Start"
+        description: "Start P2P networking"
+      - name: "P2P_Shutdown"
+        description: "Shutdown P2P network subsystem"
+      - name: "P2P_IsEnabled"
+        description: "Check if P2P is enabled"
+      - name: "P2P_IsActive"
+        description: "Check if P2P is currently active"
+      - name: "P2P_GetStatus"
+        description: "Get current P2P status"
+      - name: "P2P_GetLastError"
+        description: "Get last error code"
 
+# Optional: Additional DLLs can be specified
+# - name: another_dll.dll
+#   load_order: after_main
+#   description: "Additional functionality"

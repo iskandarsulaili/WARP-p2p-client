@@ -130,3 +130,84 @@ WARP/
 - Windows (Only this version is available as of now but will be extended to other platforms later)
 
 ## Quick Links
+
+## P2P Network DLL Integration
+
+This project includes support for integrating a custom P2P Network DLL (`p2p_network.dll`) with Ragnarok Online clients. There are two primary methods available:
+
+### Method 1: WARP CustomDLL Patch (Recommended)
+
+The preferred method uses WARP's built-in CustomDLL patch to automatically load `p2p_network.dll` when the client starts.
+
+**Configuration:**
+1. Ensure `p2p_network.dll` is placed in the client directory
+2. Use the provided `P2P_Session.yml` session file
+3. Apply patches using WARP GUI or command line
+
+**Session File (`P2P_Session.yml`):**
+```yaml
+patches:
+  CustomDLL:
+    state: true
+    inputs:
+      $customDLL: Inputs/P2P_DLLSpec.yml
+```
+
+**DLL Specification (`Inputs/P2P_DLLSpec.yml`):**
+```yaml
+dlls:
+  - name: p2p_network.dll
+    load_order: normal
+```
+
+### Method 2: Alternative DLL Injector (Fallback)
+
+If the WARP CustomDLL patch encounters issues, an alternative C++ DLL injector is available as a fallback solution.
+
+**Features:**
+- Launches game executable in suspended mode
+- Injects `p2p_network.dll` using CreateRemoteThread and LoadLibraryA
+- Automatic admin privilege elevation
+- Comprehensive error handling and logging
+
+**Usage:**
+1. Compile the injector: `.\build_injector.ps1` or `.\build_injector.bat`
+2. Run the injector: `p2p_injector.exe`
+3. The injector will automatically launch the game and inject the DLL
+
+**Build Scripts:**
+- `build_injector.ps1` - PowerShell build script
+- `build_injector.bat` - Batch file build script
+
+**Testing:**
+- `test_dll_injection.ps1` - Comprehensive injection test script
+- `test_dll_load.ps1` - DLL loading verification script
+
+### Troubleshooting
+
+**Common Issues:**
+1. **DLL Not Loading**: Verify the DLL is in the client directory and has proper dependencies
+2. **Admin Privileges**: The injector requires admin rights for process manipulation
+3. **Anti-Cheats**: Some anti-cheat systems may block DLL injection
+
+**Verification:**
+- Check for `p2p_dll.log` file creation
+- Look for DLL initialization messages in the log
+- Verify P2P network functionality in-game
+
+### File Structure
+
+```
+client/
+├── p2p_network.dll          # P2P Network DLL
+├── p2p_injector.exe         # Compiled injector
+├── p2p_config.json          # Configuration file
+└── p2p_dll.log              # Log file (created at runtime)
+
+patcher/WARP-p2p-client/
+├── P2P_Session.yml          # WARP session configuration
+├── Inputs/P2P_DLLSpec.yml   # DLL specification for CustomDLL patch
+└── Scripts/Patches/CustomDLL.qjs  # CustomDLL patch script
+```
+
+For detailed implementation and technical details, refer to the P2P Network DLL documentation.
