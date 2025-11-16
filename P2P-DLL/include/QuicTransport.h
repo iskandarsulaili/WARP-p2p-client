@@ -23,9 +23,18 @@ public:
     bool IsConnected() const override;
 
 private:
-    // Internal state for QUIC connection (stub)
+    // Internal state for QUIC connection
     bool connected_;
+    void* quic_session_; // Opaque pointer to QUIC session/context
     std::function<void(const std::vector<uint8_t>&)> on_receive_;
+    std::mutex conn_mutex_;
+    std::string remote_addr_;
+    uint16_t remote_port_;
+    // Security: session keys, validation, etc.
+    std::vector<uint8_t> session_key_;
+    bool validate_and_decrypt(const uint8_t* data, size_t size, std::vector<uint8_t>& out);
+    void handle_receive(const uint8_t* data, size_t size);
+    void cleanup();
 };
 
 } // namespace P2P
