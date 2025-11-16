@@ -5,6 +5,8 @@ from: "../../client/2025-06-04_Speedrun_P2P.exe"
 to: "../../client/2025-06-04_Speedrun_P2P_12NOV.exe"
 
 patches:
+  P2PConfigManager:
+    state: true
   CustomDLL:
     state: true
     inputs:

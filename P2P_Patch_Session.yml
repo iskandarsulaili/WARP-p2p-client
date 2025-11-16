@@ -5,6 +5,8 @@ from: "../../client/2025-06-04_S极速赛车开奖结果历史记录peedrun_P2P.
 to: "../../client/2025-06-04_Speedrun_P2P_12NOV.exe"
 
 patches:
+  P2PConfigManager:
+    state: true
   CustomDLL:
     state: true
     inputs:

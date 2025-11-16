@@ -409,7 +409,16 @@ Test project C:/Users/.../P2P-DLL/build
 
 ## 📦 Deployment
 
-✅ **Everything is already deployed and patched!**
+### Patch and Configuration Workflow
+
+1. **Start a patch session using WARP patcher (e.g., with `P2P_Session.yml`).**
+2. **The patcher will prompt you to:**
+   - Enable/disable P2P networking
+   - Set mesh parameters (max peers)
+   - Enable/disable fallback to server
+   - Select legacy or new server endpoints
+3. **Your selections are written to `p2p_config.json` and used for patching/injection.**
+4. **All errors and important actions are logged to `patcher.log` and shown in the patcher UI.**
 
 ### Just Run Your Patched Client
 
@@ -506,6 +515,12 @@ Licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 ---
 
 ## 🆘 Support
+
+### Patch/Injection Error Handling
+
+- All patcher errors (e.g., missing DLL, config write failure, admin rights) are logged to `patcher.log` in the patcher directory.
+- The patcher UI will display error messages and guidance if patching or injection fails.
+- If you encounter issues, check both the patcher UI and `patcher.log` for details.
 
 ### Documentation
 

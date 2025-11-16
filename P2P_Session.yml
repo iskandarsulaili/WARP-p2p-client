@@ -9,6 +9,8 @@
 ############################################################################
 
 patches:
+  P2PConfigManager:
+    state: true
   CustomDLL:
     state: true
     inputs:

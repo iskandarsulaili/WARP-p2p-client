@@ -102,65 +102,53 @@ This guide covers two deployment methods:
 
 ## Deployment Methods
 
-### Step 1: Prepare NEMO Patch Script
+### Step 1: Configure P2P Patch Options (WARP Patch UI)
 
-The P2P DLL injection is handled by the `LoadP2PDLL.qs` patch script.
+The WARP patcher now provides a user interface for configuring P2P and server compatibility options before patching or injection:
 
-**Location:** `Patches/LoadP2PDLL.qs`
+- **Enable/Disable P2P Networking:** Toggle P2P (WebRTC) support for the client.
+- **Mesh Parameters:** Set the maximum number of mesh peers.
+- **Fallback:** Enable or disable fallback to server if P2P fails.
+- **Server Compatibility:** Select between legacy and new (hybrid) server/coordinator endpoints.
 
-**Script Overview:**
+When you start a patch session (e.g., using `P2P_Session.yml`), the patcher will prompt you for these options. Your selections will be written to `p2p_config.json` and used for the patch/injection process.
 
-```javascript
-function LoadP2PDLL() {
-  // Finds RO client entry point
-  // Injects LoadLibrary("p2p_network.dll") call
-  // Stores DLL handle for later use
-}
-```
+All errors and important actions are logged to `patcher.log` and surfaced in the patcher UI.
 
-### Step 2: Add Patch to NEMO
+### Step 2: Patch RO Client
 
-1. **Copy patch script** to NEMO's `Patches/` directory:
-
-   ```
-   NEMO/
-   ├── Patches/
-   │   └── LoadP2PDLL.qs  ← Copy here
-   ```
-
-2. **Register patch** in NEMO's patch list (if not auto-detected)
-
-3. **Verify patch appears** in NEMO's patch selection UI
-
-### Step 3: Patch RO Client
-
-1. **Launch NEMO Patcher**
+1. **Launch WARP Patcher**
 
    ```powershell
-   cd NEMO
-   .\Nemo.exe
+   cd patcher/WARP-p2p-client/win32
+   .\WARP.exe
    ```
 
 2. **Load RO client executable**
 
    - Click "Load Client"
-   - Select your RO client (e.g., `Ragnarok.exe`, `2018-06-20aRagexe.exe`)
+   - Select your RO client (e.g., `Ragnarok.exe`, `2025-06-04_Speedrun_P2P.exe`)
 
-3. **Select patches**
+3. **Configure P2P Options**
 
-   - ✅ Enable "Load P2P Network DLL"
-   - ✅ Enable other desired patches (e.g., "Disable 1rag1 type parameters", "Enable Multiple GRFs")
+   - The patcher will prompt for P2P, mesh, fallback, and server type.
+   - Confirm your selections.
 
-4. **Apply patches**
+4. **Select patches**
+
+   - ✅ Enable "CustomDLL" (loads P2P DLL)
+   - ✅ Enable other desired patches
+
+5. **Apply patches**
 
    - Click "Apply Selected Patches"
    - Save patched client (e.g., `Ragnarok_P2P.exe`)
 
-5. **Verify patch**
-   - Check NEMO output for success message
-   - Patched client should be created
+6. **Verify patch**
+   - Check patcher UI and `patcher.log` for success or error messages.
+   - Patched client should be created.
 
-### Step 4: Deploy Patched Client
+### Step 3: Deploy Patched Client
 
 **Directory Structure:**
 
@@ -766,6 +754,12 @@ See [Troubleshooting](#troubleshooting) section below.
 ---
 
 ## Troubleshooting
+
+### Patch/Injection Error Handling and User Feedback
+
+- All patcher errors (e.g., missing DLL, config write failure, admin rights) are logged to `patcher.log` in the patcher directory.
+- The patcher UI will display error messages and guidance if patching or injection fails.
+- If you encounter issues, check both the patcher UI and `patcher.log` for details.
 
 ### Issue 1: DLL Not Loading
 
