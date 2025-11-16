@@ -168,9 +168,16 @@ bool WebRTCManager::SendData(const void* data, size_t size) {
 
 void WebRTCManager::ProcessOffer(const std::string& offer) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    // Parse offer and create/attach to peer connection
-    // For demo, assume peer_id is embedded in offer (production: parse SDP for peer_id)
-    std::string peer_id = "peer_from_offer"; // TODO: extract real peer_id
+    // Extract peer_id from SDP offer using regex (look for "a=mid:peerid-<id>" or "a=msid-semantic: WMS <id>")
+    std::string peer_id = "unknown_peer";
+    std::smatch match;
+    std::regex mid_regex(R"(a=mid:peerid-([^\r\n]+))");
+    std::regex wms_regex(R"(a=msid-semantic: WMS ([^\r\n]+))");
+    if (std::regex_search(offer, match, mid_regex) && match.size() > 1) {
+        peer_id = match[1];
+    } else if (std::regex_search(offer, match, wms_regex) && match.size() > 1) {
+        peer_id = match[1];
+    }
     auto peer = GetPeerConnection(peer_id);
     if (!peer) {
         peer = CreatePeerConnection(peer_id);
@@ -191,8 +198,13 @@ void WebRTCManager::ProcessOffer(const std::string& offer) {
 
 void WebRTCManager::AddIceCandidate(const std::string& candidate) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    // For demo, assume peer_id is embedded in candidate (production: parse candidate for peer_id)
-    std::string peer_id = "peer_from_candidate"; // TODO: extract real peer_id
+    // Try to extract peer_id from candidate string (look for "ufrag" or "username" fields)
+    std::string peer_id = "unknown_peer";
+    std::smatch match;
+    std::regex ufrag_regex(R"(ufrag ([^\s\r\n]+))");
+    if (std::regex_search(candidate, match, ufrag_regex) && match.size() > 1) {
+        peer_id = match[1];
+    }
     auto peer = GetPeerConnection(peer_id);
     if (peer) {
         if (peer->AddIceCandidate(candidate)) {

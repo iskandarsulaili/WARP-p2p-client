@@ -179,8 +179,26 @@ bool WebRTCPeerConnection::CreateOffer(std::string& sdp_out) {
             }
             impl_->total_packet_count++;
             bool suspicious = false;
+            // Anti-cheat: check for suspicious packet size
             if (packet_size > 2048 || packet_size == 0) suspicious = true;
-            // TODO: Add more anomaly checks (e.g., invalid headers, repeated patterns, etc.)
+
+            // Anti-cheat: check for valid packet header (first 2 bytes = packet type)
+            if (packet_size >= 2) {
+                uint16_t packet_type = static_cast<uint16_t>(packet_data[0]) | (static_cast<uint16_t>(packet_data[1]) << 8);
+                if (packet_type > 0x0FFF) suspicious = true;
+            } else {
+                suspicious = true;
+            }
+
+            // Anti-cheat: check for repeated patterns (low entropy)
+            if (packet_size > 8) {
+                size_t repeats = 0;
+                for (size_t i = 1; i < packet_size; ++i) {
+                    if (packet_data[i] == packet_data[i-1]) repeats++;
+                }
+                if (repeats > packet_size / 2) suspicious = true;
+            }
+
             if (suspicious) {
                 impl_->suspicious_packet_count++;
                 LOG_WARN("AntiCheat: Suspicious packet detected from peer " + impl_->peer_id +

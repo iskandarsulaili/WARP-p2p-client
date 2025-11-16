@@ -56,9 +56,9 @@ public:
     int current_reconnect_delay_ms = 1000;
 
     Impl() {
-        // Configure SSL context to skip certificate verification for now
-        // TODO: Implement proper certificate validation
-        ssl_ctx.set_verify_mode(ssl::verify_none);
+        // Configure SSL context for production: verify peer certificates
+        ssl_ctx.set_verify_mode(ssl::verify_peer);
+        ssl_ctx.set_default_verify_paths();
     }
 };
 

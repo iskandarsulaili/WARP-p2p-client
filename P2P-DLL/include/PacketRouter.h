@@ -89,6 +89,18 @@ public:
      */
     void SetBandwidthManager(BandwidthManager* bandwidth_manager);
 
+public:
+    /**
+     * Set the SecurityManager for signing/encryption
+     */
+    void SetSecurityManager(SecurityManager* security_manager);
+
+    /**
+     * Set the server send function (for actual server routing)
+     * The function should return true if the packet was sent successfully.
+     */
+    void SetServerSendFunction(std::function<bool(const Packet&)> send_func);
+
 private:
     /**
      * Route packet to server

@@ -18,6 +18,8 @@ struct PacketRouter::Impl {
     std::string current_zone;
     WebRTCManager* webrtc_manager = nullptr;
     BandwidthManager* bandwidth_manager = nullptr;
+    SecurityManager* security_manager = nullptr;
+    std::function<bool(const Packet&)> server_send_func;
     
     // Statistics
     uint64_t packets_routed_to_server = 0;
@@ -71,6 +73,7 @@ RouteDecision PacketRouter::DecideRoute(const Packet& packet) {
     }
 }
 
+
 bool PacketRouter::RoutePacket(const Packet& packet, RouteDecision decision) {
     LOG_DEBUG("Routing packet: id=" + std::to_string(packet.packet_id) +
               " type=0x" + std::to_string(packet.type) +
@@ -84,8 +87,9 @@ bool PacketRouter::RoutePacket(const Packet& packet, RouteDecision decision) {
             LOG_INFO("Routing to server: packet_id=" + std::to_string(packet.packet_id));
             return RouteToServer(packet);
         case RouteDecision::BROADCAST:
-            LOG_WARN("Broadcast routing not implemented: packet_id=" + std::to_string(packet.packet_id));
-            return false;
+            // Broadcast: send to both P2P and server, return true if both succeed
+            LOG_INFO("Broadcast routing: packet_id=" + std::to_string(packet.packet_id));
+            return RouteToP2P(packet) & RouteToServer(packet);
         case RouteDecision::DROP:
             impl_->packets_dropped++;
             LOG_WARN("Packet dropped: packet_id=" + std::to_string(packet.packet_id));
@@ -95,7 +99,6 @@ bool PacketRouter::RoutePacket(const Packet& packet, RouteDecision decision) {
             return false;
     }
 }
-
 void PacketRouter::SetCurrentZone(const std::string& zone) {
     impl_->current_zone = zone;
     LOG_DEBUG("Current zone set to: " + zone);
@@ -127,14 +130,19 @@ bool PacketRouter::RouteToServer(const Packet& packet) {
         LOG_ERROR("Invalid packet data for server routing");
         return false;
     }
-    
-    // TODO: Implement actual server routing logic
-    // For now, simulate successful routing
-    impl_->packets_routed_to_server++;
-    
-    LOG_DEBUG("Packet routed to server: type=0x" + 
-             std::to_string(packet.type) + ", size=" + std::to_string(packet.length));
-    return true;
+    if (!impl_->server_send_func) {
+        LOG_ERROR("No server send function set for PacketRouter");
+        return false;
+    }
+    bool result = impl_->server_send_func(packet);
+    if (result) {
+        impl_->packets_routed_to_server++;
+        LOG_DEBUG("Packet routed to server: type=0x" +
+                 std::to_string(packet.type) + ", size=" + std::to_string(packet.length));
+    } else {
+        LOG_ERROR("Failed to send packet to server: type=0x" + std::to_string(packet.type));
+    }
+    return result;
 }
 
 bool PacketRouter::RouteToP2P(const Packet& packet) {
@@ -154,17 +162,7 @@ bool PacketRouter::RouteToP2P(const Packet& packet) {
     std::vector<uint8_t> signed_packet;
     std::vector<uint8_t> signature(64, 0);
     bool signature_ok = false;
-    SecurityManager* sec_mgr = nullptr;
-    {
-        // Try to get SecurityManager from global or singleton (production: inject properly)
-        static SecurityManager* cached_sec_mgr = nullptr;
-        if (!cached_sec_mgr) {
-            // TODO: Replace with proper dependency injection
-            cached_sec_mgr = new SecurityManager();
-            cached_sec_mgr->Initialize(false);
-        }
-        sec_mgr = cached_sec_mgr;
-    }
+    SecurityManager* sec_mgr = impl_->security_manager;
     if (sec_mgr && sec_mgr->IsSignatureEnabled()) {
         signature_ok = sec_mgr->SignPacketED25519(packet.data.data(), packet.length, signature);
         if (signature_ok) {
@@ -191,6 +189,14 @@ bool PacketRouter::RouteToP2P(const Packet& packet) {
         LOG_ERROR("Failed to send packet via P2P, falling back to server");
         return RouteToServer(packet);
     }
+}
+
+void PacketRouter::SetSecurityManager(SecurityManager* security_manager) {
+    impl_->security_manager = security_manager;
+}
+
+void PacketRouter::SetServerSendFunction(std::function<bool(const Packet&)> send_func) {
+    impl_->server_send_func = std::move(send_func);
 }
 
 } // namespace P2P
