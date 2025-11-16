@@ -88,6 +88,11 @@ public:
      * @param bandwidth_manager The BandwidthManager instance
      */
     void SetBandwidthManager(BandwidthManager* bandwidth_manager);
+    /**
+     * Set the active transport (QUIC or WebRTC).
+     * @param transport Pointer to ITransport implementation.
+     */
+    void SetTransport(ITransport* transport);
 
 public:
     /**

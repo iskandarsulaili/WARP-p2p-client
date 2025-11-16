@@ -9,6 +9,8 @@ namespace P2P {
 class Logger::Impl {
 public:
     std::shared_ptr<spdlog::logger> logger;
+    bool debug_enabled = false;
+    std::string correlation_id;
 };
 
 Logger& Logger::GetInstance() {
@@ -88,40 +90,53 @@ void Logger::Shutdown() {
     }
 }
 
-void Logger::Trace(const std::string& message) {
+void Logger::Trace(const std::string& message, const std::string& correlation_id) {
     if (impl_ && impl_->logger) {
-        impl_->logger->trace(message);
+        impl_->logger->trace("[CID:{}] {}", correlation_id, message);
     }
 }
 
-void Logger::Debug(const std::string& message) {
-    if (impl_ && impl_->logger) {
-        impl_->logger->debug(message);
+void Logger::Debug(const std::string& message, const std::string& correlation_id) {
+    if (impl_ && impl_->logger && impl_->debug_enabled) {
+        impl_->logger->debug("[CID:{}] {}", correlation_id, message);
     }
 }
 
-void Logger::Info(const std::string& message) {
+void Logger::Info(const std::string& message, const std::string& correlation_id) {
     if (impl_ && impl_->logger) {
-        impl_->logger->info(message);
+        impl_->logger->info("[CID:{}] {}", correlation_id, message);
     }
 }
 
-void Logger::Warn(const std::string& message) {
+void Logger::Warn(const std::string& message, const std::string& correlation_id) {
     if (impl_ && impl_->logger) {
-        impl_->logger->warn(message);
+        impl_->logger->warn("[CID:{}] {}", correlation_id, message);
     }
 }
 
-void Logger::Error(const std::string& message) {
+void Logger::Error(const std::string& message, const std::string& correlation_id) {
     if (impl_ && impl_->logger) {
-        impl_->logger->error(message);
+        impl_->logger->error("[CID:{}] {}", correlation_id, message);
     }
 }
 
-void Logger::Fatal(const std::string& message) {
+void Logger::Fatal(const std::string& message, const std::string& correlation_id) {
     if (impl_ && impl_->logger) {
-        impl_->logger->critical(message);
+        impl_->logger->critical("[CID:{}] {}", correlation_id, message);
     }
+}
+
+void Logger::SetDebugEnabled(bool enabled) {
+    if (impl_) impl_->debug_enabled = enabled;
+}
+bool Logger::IsDebugEnabled() const {
+    return impl_ ? impl_->debug_enabled : false;
+}
+void Logger::SetCorrelationId(const std::string& id) {
+    if (impl_) impl_->correlation_id = id;
+}
+std::string Logger::GetCorrelationId() const {
+    return impl_ ? impl_->correlation_id : "";
 }
 
 } // namespace P2P

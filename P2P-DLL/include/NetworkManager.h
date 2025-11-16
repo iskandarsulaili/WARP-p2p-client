@@ -14,6 +14,9 @@ class SecurityManager;
 class BandwidthManager;
 class CompressionManager;
 
+// Forward declaration for QUIC transport
+class QuicTransport;
+class ITransport;
 /**
  * Network Manager
  * 
@@ -82,6 +85,16 @@ public:
     /**
      * Get CompressionManager instance
      *
+    /**
+     * Select transport protocol (QUIC or WebRTC) based on configuration and server capabilities.
+     * @param prefer_quic If true, prefer QUIC over WebRTC.
+     */
+    void SelectTransport(bool prefer_quic);
+
+    /**
+     * Get current transport (ITransport).
+     */
+    ITransport* GetTransport() const;
      * @return Reference to CompressionManager
      */
     CompressionManager& GetCompressionManager();

@@ -11,7 +11,6 @@
 #include <mutex>
 #include <chrono>
 
-// Undefine Windows macros that conflict with our method names
 #ifdef SendMessage
 #undef SendMessage
 #endif
@@ -54,9 +53,10 @@ public:
     int reconnect_delay_ms = 1000;
     int max_reconnect_delay_ms = 30000;
     int current_reconnect_delay_ms = 1000;
+    int max_retries = 10;
+    int retry_count = 0;
 
     Impl() {
-        // Configure SSL context for production: verify peer certificates
         ssl_ctx.set_verify_mode(ssl::verify_peer);
         ssl_ctx.set_default_verify_paths();
     }
@@ -82,6 +82,8 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
     impl_->peer_id = peer_id;
     impl_->session_id = session_id;
     impl_->should_reconnect = true;
+    impl_->retry_count = 0;
+    impl_->current_reconnect_delay_ms = impl_->reconnect_delay_ms;
 
     try {
         // Parse WebSocket URL (wss://host:port/path)
@@ -98,7 +100,6 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
         size_t slash_pos = url_copy.find('/');
         std::string host_port = (slash_pos != std::string::npos) ? url_copy.substr(0, slash_pos) : url_copy;
         impl_->path = (slash_pos != std::string::npos) ? url_copy.substr(slash_pos) : "/";
-
         size_t colon_pos = host_port.find(':');
         if (colon_pos != std::string::npos) {
             impl_->host = host_port.substr(0, colon_pos);
@@ -112,75 +113,106 @@ bool SignalingClient::Connect(const std::string& url, const std::string& peer_id
         if (!impl_->running) {
             impl_->running = true;
             impl_->io_thread = std::thread([this]() {
-                try {
-                    // Resolve hostname
-                    tcp::resolver resolver(impl_->ioc);
-                    auto const results = resolver.resolve(impl_->host, impl_->port);
+                while (impl_->should_reconnect && impl_->retry_count < impl_->max_retries) {
+                    try {
+                        LOG_INFO("SignalingClient: Attempting connection (try " + std::to_string(impl_->retry_count + 1) + ")");
+                        // Resolve hostname
+                        tcp::resolver resolver(impl_->ioc);
+                        auto const results = resolver.resolve(impl_->host, impl_->port);
 
-                    // Create WebSocket stream
-                    impl_->ws = std::make_unique<websocket::stream<ssl::stream<tcp::socket>>>(
-                        impl_->ioc, impl_->ssl_ctx);
+                        // Create WebSocket stream
+                        impl_->ws = std::make_unique<websocket::stream<ssl::stream<tcp::socket>>>(
+                            impl_->ioc, impl_->ssl_ctx);
 
-                    // Connect to server
-                    auto ep = net::connect(beast::get_lowest_layer(*impl_->ws), results);
+                        // Connect to server
+                        auto ep = net::connect(beast::get_lowest_layer(*impl_->ws), results);
 
-                    // Perform SSL handshake
-                    impl_->ws->next_layer().handshake(ssl::stream_base::client);
+                        // Perform SSL handshake
+                        impl_->ws->next_layer().handshake(ssl::stream_base::client);
 
-                    // Set WebSocket options
-                    impl_->ws->set_option(websocket::stream_base::decorator(
-                        [](websocket::request_type& req) {
-                            req.set(http::field::user_agent, "P2P-Network-Client/1.0");
-                        }));
+                        // Set WebSocket options
+                        impl_->ws->set_option(websocket::stream_base::decorator(
+                            [](websocket::request_type& req) {
+                                req.set(http::field::user_agent, "P2P-Network-Client/1.0");
+                            }));
 
-                    // Perform WebSocket handshake
-                    impl_->ws->handshake(impl_->host, impl_->path);
+                        // Perform WebSocket handshake
+                        impl_->ws->handshake(impl_->host, impl_->path);
 
-                    impl_->connected = true;
-                    LOG_INFO("Connected to: " + impl_->server_url);
+                        impl_->connected = true;
+                        impl_->retry_count = 0;
+                        LOG_INFO("Connected to: " + impl_->server_url);
 
-                    // Call connected callback
-                    {
-                        std::lock_guard<std::mutex> lock(impl_->callback_mutex);
-                        if (impl_->on_connected) {
-                            impl_->on_connected();
-                        }
-                    }
-
-                    // Start read loop
-                    while (impl_->running && impl_->connected) {
-                        try {
-                            impl_->buffer.clear();
-                            impl_->ws->read(impl_->buffer);
-
-                            std::string message = beast::buffers_to_string(impl_->buffer.data());
-
-                            // Call message callback
+                        // Call connected callback
+                        {
                             std::lock_guard<std::mutex> lock(impl_->callback_mutex);
-                            if (impl_->on_message) {
-                                impl_->on_message(message);
+                            if (impl_->on_connected) {
+                                impl_->on_connected();
                             }
-                        } catch (const beast::system_error& se) {
-                            if (se.code() != websocket::error::closed) {
-                                LOG_ERROR("Read error: " + std::string(se.what()));
+                        }
+
+                        // Start read loop
+                        while (impl_->running && impl_->connected) {
+                            try {
+                                impl_->buffer.clear();
+                                impl_->ws->read(impl_->buffer);
+
+                                std::string message = beast::buffers_to_string(impl_->buffer.data());
+
+                                // Call message callback
+                                std::lock_guard<std::mutex> lock(impl_->callback_mutex);
+                                if (impl_->on_message) {
+                                    impl_->on_message(message);
+                                }
+                            } catch (const beast::system_error& se) {
+                                if (se.code() != websocket::error::closed) {
+                                    LOG_ERROR("Read error: " + std::string(se.what()));
+                                }
+                                break;
                             }
-                            break;
                         }
-                    }
 
-                    impl_->connected = false;
+                        impl_->connected = false;
 
-                    // Call disconnected callback
-                    {
-                        std::lock_guard<std::mutex> lock(impl_->callback_mutex);
-                        if (impl_->on_disconnected) {
-                            impl_->on_disconnected();
+                        // Call disconnected callback
+                        {
+                            std::lock_guard<std::mutex> lock(impl_->callback_mutex);
+                            if (impl_->on_disconnected) {
+                                impl_->on_disconnected();
+                            }
                         }
-                    }
 
-                } catch (const std::exception& e) {
-                    LOG_ERROR("Connection thread error: " + std::string(e.what()));
+                        // If we should reconnect, wait and try again
+                        if (impl_->should_reconnect) {
+                            impl_->retry_count++;
+                            LOG_WARN("SignalingClient: Disconnected, will retry in " +
+                                     std::to_string(impl_->current_reconnect_delay_ms) + " ms (attempt " +
+                                     std::to_string(impl_->retry_count) + "/" + std::to_string(impl_->max_retries) + ")");
+                            std::this_thread::sleep_for(std::chrono::milliseconds(impl_->current_reconnect_delay_ms));
+                            impl_->current_reconnect_delay_ms = std::min(impl_->current_reconnect_delay_ms * 2, impl_->max_reconnect_delay_ms);
+                        }
+                    } catch (const std::exception& e) {
+                        LOG_ERROR("Connection thread error: " + std::string(e.what()));
+                        impl_->connected = false;
+                        impl_->retry_count++;
+                        LOG_WARN("SignalingClient: Connection failed, will retry in " +
+                                 std::to_string(impl_->current_reconnect_delay_ms) + " ms (attempt " +
+                                 std::to_string(impl_->retry_count) + "/" + std::to_string(impl_->max_retries) + ")");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(impl_->current_reconnect_delay_ms));
+                        impl_->current_reconnect_delay_ms = std::min(impl_->current_reconnect_delay_ms * 2, impl_->max_reconnect_delay_ms);
+                    }
+                }
+                // Exceeded max retries
+                if (impl_->retry_count >= impl_->max_retries) {
+                    LOG_ERROR("SignalingClient: Exceeded maximum reconnection attempts (" +
+                              std::to_string(impl_->max_retries) + "). Giving up.");
+                    impl_->should_reconnect = false;
                     impl_->connected = false;
+                    // Call disconnected callback one last time
+                    std::lock_guard<std::mutex> lock(impl_->callback_mutex);
+                    if (impl_->on_disconnected) {
+                        impl_->on_disconnected();
+                    }
                 }
             });
         }

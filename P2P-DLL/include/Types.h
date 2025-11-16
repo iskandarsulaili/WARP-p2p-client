@@ -134,6 +134,8 @@ struct LoggingConfig {
     int max_files;
     bool console_output;
     bool async_logging;
+    bool debug_enabled = false; // Runtime debug toggle
+    std::string correlation_id; // Optional correlation/request/session ID
 };
 
 struct ZonesConfig {

@@ -379,3 +379,23 @@ extern "C" __declspec(dllexport) const char* P2P_GetLastError() {
     return g_last_error.c_str();
 }
 
+/**
+ * Exported function to set correlation ID for tracing/logging
+ * @param correlation_id Correlation/request/session ID string
+ */
+extern "C" __declspec(dllexport) void P2P_SetCorrelationId(const char* correlation_id) {
+    if (correlation_id) {
+        P2P::Logger::GetInstance().SetCorrelationId(correlation_id);
+        LOG_INFO(std::string("Set correlation ID: ") + correlation_id);
+    }
+}
+
+/**
+ * Exported function to enable/disable debug logging at runtime
+ * @param enabled 1 to enable, 0 to disable
+ */
+extern "C" __declspec(dllexport) void P2P_SetDebugEnabled(int enabled) {
+    P2P::Logger::GetInstance().SetDebugEnabled(enabled != 0);
+    LOG_INFO(std::string("Debug logging ") + (enabled ? "ENABLED" : "DISABLED"));
+}
+
