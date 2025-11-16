@@ -82,6 +82,11 @@ struct P2PConfig {
     int target_bitrate_kbps;
     bool enable_congestion_control;
     int packet_queue_size;
+    // Mesh/AOI extensions
+    float aoi_radius = 100.0f; // Area of interest radius (meters)
+    int mesh_refresh_interval_ms = 5000; // Mesh refresh interval
+    float peer_score_threshold = 0.5f; // Minimum score to keep peer
+    int prune_interval_ms = 10000; // Peer pruning interval
 };
 
 /**
@@ -117,6 +122,9 @@ struct SecurityConfig {
     std::string jwt_token;
     bool certificate_validation;
     std::string tls_version;
+    // ED25519 signature extensions
+    std::string ed25519_private_key_path;
+    bool enable_signature = true;
 };
 
 struct LoggingConfig {
@@ -132,6 +140,8 @@ struct ZonesConfig {
     std::vector<std::string> p2p_enabled_zones;
     bool fallback_on_failure;
     int zone_transition_timeout_ms;
+    // Per-zone max peers
+    std::map<std::string, int> max_peers_per_zone;
 };
 
 struct PerformanceConfig {
@@ -212,6 +222,9 @@ struct PeerInfo {
     float latency_ms;
     float packet_loss_percent;
     BandwidthMetrics bandwidth;
+    // Peer scoring extensions
+    float score = 1.0f;
+    std::chrono::steady_clock::time_point last_score_update;
 };
 
 /**

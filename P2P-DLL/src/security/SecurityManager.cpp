@@ -17,7 +17,12 @@ struct SecurityManager::Impl {
     bool encryption_enabled = false;
     std::vector<uint8_t> encryption_key;
     std::shared_ptr<CompressionManager> compression_manager;
-    
+
+    // ED25519
+    bool signature_enabled = true;
+    std::vector<uint8_t> ed25519_private_key; // 64 bytes (seed + key)
+    std::mutex ed25519_mutex;
+
     static constexpr size_t IV_SIZE = 12;
     static constexpr size_t TAG_SIZE = 16;
 };
@@ -288,6 +293,55 @@ bool SecurityManager::ValidatePacket(const uint8_t* /*data*/, size_t size) {
 
 bool SecurityManager::IsEncryptionEnabled() const {
     return impl_->encryption_enabled;
+}
+
+bool SecurityManager::LoadED25519Key(const std::string& key_path) {
+    std::lock_guard<std::mutex> lock(impl_->ed25519_mutex);
+    try {
+        std::ifstream key_file(key_path, std::ios::binary);
+        if (!key_file.is_open()) {
+            LOG_ERROR("Failed to open ED25519 key file: " + key_path);
+            return false;
+        }
+        impl_->ed25519_private_key.resize(64);
+        key_file.read(reinterpret_cast<char*>(impl_->ed25519_private_key.data()), 64);
+        if (key_file.gcount() != 64) {
+            LOG_ERROR("ED25519 key file size invalid: " + key_path);
+            return false;
+        }
+        LOG_INFO("Loaded ED25519 private key from: " + key_path);
+        return true;
+    } catch (const std::exception& e) {
+        LOG_ERROR("Exception loading ED25519 key: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool SecurityManager::SignPacketED25519(const uint8_t* data, size_t size, std::vector<uint8_t>& signature_out) {
+    std::lock_guard<std::mutex> lock(impl_->ed25519_mutex);
+    if (!impl_->signature_enabled || impl_->ed25519_private_key.size() != 64) {
+        LOG_ERROR("ED25519 signature not enabled or key not loaded");
+        return false;
+    }
+    LOG_DEBUG("Signing packet with ED25519: size=" + std::to_string(size));
+    // Use libsodium for ED25519 signing
+    #ifdef HAVE_SODIUM
+    signature_out.resize(64);
+    if (crypto_sign_detached(signature_out.data(), nullptr, data, size, impl_->ed25519_private_key.data()) == 0) {
+        LOG_INFO("ED25519 signature generated for packet (" + std::to_string(size) + " bytes)");
+        return true;
+    } else {
+        LOG_ERROR("ED25519 signature generation failed");
+        return false;
+    }
+    #else
+    LOG_ERROR("Libsodium not available for ED25519 signing");
+    return false;
+    #endif
+}
+
+bool SecurityManager::IsSignatureEnabled() const {
+    return impl_->signature_enabled;
 }
 
 } // namespace P2P

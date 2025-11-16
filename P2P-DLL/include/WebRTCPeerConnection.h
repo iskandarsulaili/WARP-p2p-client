@@ -21,6 +21,21 @@ public:
     explicit WebRTCPeerConnection(const std::string& peer_id);
     ~WebRTCPeerConnection();
 
+    // AOI/mesh: Set and get peer position (for AOI/interest-based mesh)
+    void SetPeerPosition(float x, float y, float z);
+    void GetPeerPosition(float& x, float& y, float& z) const;
+
+    // AOI/mesh: Check if peer is within AOI radius
+    bool IsWithinAOI(float x, float y, float z, float radius) const;
+
+    // Protocol: Set packet handler callback
+    using OnPacketCallback = std::function<void(const uint8_t*, size_t)>;
+    void SetOnPacketCallback(OnPacketCallback callback);
+
+    // Mesh: Set/get peer score
+    void SetPeerScore(float score);
+    float GetPeerScore() const;
+
     // Disable copy and move
     WebRTCPeerConnection(const WebRTCPeerConnection&) = delete;
     WebRTCPeerConnection& operator=(const WebRTCPeerConnection&) = delete;

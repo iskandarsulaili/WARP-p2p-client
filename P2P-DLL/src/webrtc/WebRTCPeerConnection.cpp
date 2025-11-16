@@ -14,9 +14,21 @@ struct WebRTCPeerConnection::Impl {
     bool connected = false;
     bool initialized = false;
 
+    // AOI/mesh
+    float pos_x = 0.0f, pos_y = 0.0f, pos_z = 0.0f;
+    float score = 1.0f;
+
     OnDataCallback on_data;
     OnStateChangeCallback on_state_change;
     OnIceCandidateCallback on_ice_candidate;
+    // Protocol
+    OnPacketCallback on_packet;
+
+    // Anti-cheat/reputation
+    float anomaly_score = 0.0f;
+    int suspicious_packet_count = 0;
+    int total_packet_count = 0;
+    std::chrono::steady_clock::time_point last_anomaly_check = std::chrono::steady_clock::now();
 
     std::mutex mutex;
     std::string local_sdp;
@@ -153,14 +165,49 @@ bool WebRTCPeerConnection::CreateOffer(std::string& sdp_out) {
         });
 
         impl_->dc->onMessage([this](auto data) {
-            if (impl_->on_data) {
-                if (std::holds_alternative<std::string>(data)) {
-                    auto& str = std::get<std::string>(data);
-                    impl_->on_data(reinterpret_cast<const uint8_t*>(str.data()), str.size());
-                } else {
-                    auto& bytes = std::get<rtc::binary>(data);
-                    impl_->on_data(reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
+            // Anti-cheat: anomaly detection
+            size_t packet_size = 0;
+            const uint8_t* packet_data = nullptr;
+            if (std::holds_alternative<std::string>(data)) {
+                auto& str = std::get<std::string>(data);
+                packet_data = reinterpret_cast<const uint8_t*>(str.data());
+                packet_size = str.size();
+            } else {
+                auto& bytes = std::get<rtc::binary>(data);
+                packet_data = reinterpret_cast<const uint8_t*>(bytes.data());
+                packet_size = bytes.size();
+            }
+            impl_->total_packet_count++;
+            bool suspicious = false;
+            if (packet_size > 2048 || packet_size == 0) suspicious = true;
+            // TODO: Add more anomaly checks (e.g., invalid headers, repeated patterns, etc.)
+            if (suspicious) {
+                impl_->suspicious_packet_count++;
+                LOG_WARN("AntiCheat: Suspicious packet detected from peer " + impl_->peer_id +
+                         " size=" + std::to_string(packet_size));
+            }
+            // Periodically update anomaly score and prune if needed
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - impl_->last_anomaly_check).count() > 10) {
+                float ratio = impl_->total_packet_count > 0
+                    ? static_cast<float>(impl_->suspicious_packet_count) / impl_->total_packet_count
+                    : 0.0f;
+                impl_->anomaly_score = ratio;
+                LOG_DEBUG("AntiCheat: Updated anomaly score for peer " + impl_->peer_id +
+                          " score=" + std::to_string(impl_->anomaly_score));
+                if (impl_->anomaly_score > 0.2f) {
+                    LOG_WARN("AntiCheat: Peer " + impl_->peer_id + " flagged for pruning (anomaly score=" +
+                             std::to_string(impl_->anomaly_score) + ")");
+                    SetPeerScore(0.0f); // Prune in mesh refresh
                 }
+                impl_->last_anomaly_check = now;
+                impl_->suspicious_packet_count = 0;
+                impl_->total_packet_count = 0;
+            }
+            // Normal protocol handling
+            if (impl_->on_data) {
+                impl_->on_data(packet_data, packet_size);
+                if (impl_->on_packet) impl_->on_packet(packet_data, packet_size);
             }
         });
 
@@ -311,6 +358,47 @@ void WebRTCPeerConnection::SetOnStateChangeCallback(OnStateChangeCallback callba
 void WebRTCPeerConnection::SetOnIceCandidateCallback(OnIceCandidateCallback callback) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
     impl_->on_ice_candidate = callback;
+}
+
+void WebRTCPeerConnection::SetPeerPosition(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->pos_x = x;
+    impl_->pos_y = y;
+    impl_->pos_z = z;
+    LOG_DEBUG("SetPeerPosition for " + impl_->peer_id + ": (" +
+              std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")");
+}
+
+void WebRTCPeerConnection::GetPeerPosition(float& x, float& y, float& z) const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    x = impl_->pos_x;
+    y = impl_->pos_y;
+    z = impl_->pos_z;
+}
+
+bool WebRTCPeerConnection::IsWithinAOI(float x, float y, float z, float radius) const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    float dx = impl_->pos_x - x;
+    float dy = impl_->pos_y - y;
+    float dz = impl_->pos_z - z;
+    float dist_sq = dx*dx + dy*dy + dz*dz;
+    return dist_sq <= radius * radius;
+}
+
+void WebRTCPeerConnection::SetOnPacketCallback(OnPacketCallback callback) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->on_packet = callback;
+}
+
+void WebRTCPeerConnection::SetPeerScore(float score) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->score = score;
+    LOG_DEBUG("SetPeerScore for " + impl_->peer_id + ": " + std::to_string(score));
+}
+
+float WebRTCPeerConnection::GetPeerScore() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    return impl_->score;
 }
 
 } // namespace P2P

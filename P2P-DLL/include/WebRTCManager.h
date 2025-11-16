@@ -17,6 +17,18 @@ public:
     WebRTCManager();
     ~WebRTCManager();
 
+    // AOI/mesh: Set local player position
+    void SetLocalPosition(float x, float y, float z);
+
+    // AOI/mesh: Refresh mesh (prune, score, AOI)
+    void RefreshMesh();
+
+    // AOI/mesh: Set AOI radius
+    void SetAOIRadius(float radius);
+
+    // AOI/mesh: Get AOI radius
+    float GetAOIRadius() const;
+
     // Disable copy and move
     WebRTCManager(const WebRTCManager&) = delete;
     WebRTCManager& operator=(const WebRTCManager&) = delete;

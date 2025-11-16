@@ -15,10 +15,73 @@ struct WebRTCManager::Impl {
     std::string turn_credential;
     bool initialized = false;
     int max_peers = 50;
+
+    // AOI/mesh
+    float local_x = 0.0f, local_y = 0.0f, local_z = 0.0f;
+    float aoi_radius = 100.0f;
+    int mesh_refresh_interval_ms = 5000;
+    float peer_score_threshold = 0.5f;
+    int prune_interval_ms = 10000;
+    std::chrono::steady_clock::time_point last_refresh = std::chrono::steady_clock::now();
 };
 
 WebRTCManager::WebRTCManager() : impl_(std::make_unique<Impl>()) {
     LOG_DEBUG("WebRTCManager created");
+}
+
+void WebRTCManager::SetLocalPosition(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->local_x = x;
+    impl_->local_y = y;
+    impl_->local_z = z;
+    LOG_DEBUG("SetLocalPosition: (" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")");
+}
+
+void WebRTCManager::SetAOIRadius(float radius) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->aoi_radius = radius;
+    LOG_DEBUG("SetAOIRadius: " + std::to_string(radius));
+}
+
+float WebRTCManager::GetAOIRadius() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    return impl_->aoi_radius;
+}
+
+void WebRTCManager::RefreshMesh() {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - impl_->last_refresh).count() < impl_->mesh_refresh_interval_ms) {
+        return;
+    }
+    impl_->last_refresh = now;
+
+    for (auto it = impl_->peers.begin(); it != impl_->peers.end(); ) {
+        auto& peer = *it;
+        float px, py, pz;
+        peer->GetPeerPosition(px, py, pz);
+        bool in_aoi = peer->IsWithinAOI(impl_->local_x, impl_->local_y, impl_->local_z, impl_->aoi_radius);
+        float score = peer->GetPeerScore();
+
+        LOG_DEBUG("MeshRefresh: PeerId=" + peer->GetPeerId() +
+                  " Position=(" + std::to_string(px) + "," + std::to_string(py) + "," + std::to_string(pz) + ")" +
+                  " InAOI=" + (in_aoi ? "true" : "false") +
+                  " Score=" + std::to_string(score));
+
+        // AOI/interest-based pruning
+        if (!in_aoi || score < impl_->peer_score_threshold) {
+            LOG_INFO("Pruning peer: PeerId=" + peer->GetPeerId() +
+                     " InAOI=" + (in_aoi ? "true" : "false") +
+                     " Score=" + std::to_string(score));
+            peer->Close();
+            it = impl_->peers.erase(it);
+            continue;
+        }
+        ++it;
+    }
+    LOG_INFO("MeshRefresh complete. Peer count: " + std::to_string(impl_->peers.size()));
+    // Telemetry: mesh refresh event
+    LOG_DEBUG("Telemetry: Mesh refreshed, peer count: " + std::to_string(impl_->peers.size()));
 }
 
 WebRTCManager::~WebRTCManager() {
@@ -104,13 +167,44 @@ bool WebRTCManager::SendData(const void* data, size_t size) {
 }
 
 void WebRTCManager::ProcessOffer(const std::string& offer) {
-    // TODO: Implement offer processing logic
-    LOG_WARN("ProcessOffer not implemented yet: " + offer.substr(0, 50));
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    // Parse offer and create/attach to peer connection
+    // For demo, assume peer_id is embedded in offer (production: parse SDP for peer_id)
+    std::string peer_id = "peer_from_offer"; // TODO: extract real peer_id
+    auto peer = GetPeerConnection(peer_id);
+    if (!peer) {
+        peer = CreatePeerConnection(peer_id);
+    }
+    if (peer->SetRemoteDescription(offer)) {
+        std::string answer;
+        if (peer->CreateAnswer(answer)) {
+            LOG_INFO("Processed offer and created answer for peer: " + peer_id);
+            // Telemetry: log event
+            LOG_DEBUG("Telemetry: Offer processed, answer created for peer " + peer_id);
+        } else {
+            LOG_ERROR("Failed to create answer for peer: " + peer_id);
+        }
+    } else {
+        LOG_ERROR("Failed to set remote description for offer from peer: " + peer_id);
+    }
 }
 
 void WebRTCManager::AddIceCandidate(const std::string& candidate) {
-    // TODO: Implement ICE candidate processing logic
-    LOG_WARN("AddIceCandidate not implemented yet: " + candidate.substr(0, 50));
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    // For demo, assume peer_id is embedded in candidate (production: parse candidate for peer_id)
+    std::string peer_id = "peer_from_candidate"; // TODO: extract real peer_id
+    auto peer = GetPeerConnection(peer_id);
+    if (peer) {
+        if (peer->AddIceCandidate(candidate)) {
+            LOG_INFO("Added ICE candidate for peer: " + peer_id);
+            // Telemetry: log event
+            LOG_DEBUG("Telemetry: ICE candidate added for peer " + peer_id);
+        } else {
+            LOG_ERROR("Failed to add ICE candidate for peer: " + peer_id);
+        }
+    } else {
+        LOG_ERROR("No peer connection found for ICE candidate: " + peer_id);
+    }
 }
 
 } // namespace P2P

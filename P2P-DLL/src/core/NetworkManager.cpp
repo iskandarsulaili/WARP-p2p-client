@@ -266,31 +266,47 @@ void NetworkManager::OnZoneChange(const std::string& zone) {
                 });
                 
                 impl_->signaling_client->SetOnDisconnectedCallback([this]() {
-                    LOG_WARN("Signaling connection lost");
-                    // Handle disconnection - will be handled by reconnection logic
+                    LOG_WARN("Signaling connection lost, switching to server-only mode");
+                    if (impl_->packet_router) {
+                        impl_->packet_router->EnableP2P(false);
+                    }
+                    LOG_INFO("Server-only mode enabled due to signaling disconnect");
                 });
             } else {
                 LOG_ERROR("Failed to connect to signaling server for zone: " + zone);
                 if (config.GetZonesConfig().fallback_on_failure) {
                     LOG_INFO("Falling back to server-only mode for zone: " + zone);
+                    if (impl_->packet_router) {
+                        impl_->packet_router->EnableP2P(false);
+                    }
+                    LOG_INFO("Server-only mode enabled due to signaling connection failure");
                 }
             }
         }
     } else {
-        LOG_INFO("P2P disabled for zone: " + zone);
+        LOG_INFO("P2P disabled for zone: " + zone + ", switching to server-only mode");
         // Disconnect from P2P
         if (impl_->signaling_client) {
             impl_->signaling_client->Disconnect();
         }
+        if (impl_->packet_router) {
+            impl_->packet_router->EnableP2P(false);
+        }
+        LOG_INFO("Server-only mode enabled for zone: " + zone);
     }
 }
 
 bool NetworkManager::SendPacket(const Packet& packet) {
     if (!impl_->packet_router) {
+        LOG_ERROR("SendPacket failed: PacketRouter not initialized");
         return false;
     }
     
     auto decision = impl_->packet_router->DecideRoute(packet);
+    LOG_DEBUG("SendPacket: packet_id=" + std::to_string(packet.packet_id) +
+              " type=0x" + std::to_string(packet.type) +
+              " length=" + std::to_string(packet.length) +
+              " decision=" + std::to_string(static_cast<int>(decision)));
     return impl_->packet_router->RoutePacket(packet, decision);
 }
 

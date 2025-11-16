@@ -59,17 +59,22 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
             config_.webrtc.enable_rtp_data_channels = webrtc.value("enable_rtp_data_channels", false);
         }
 
-        // Parse P2P config
-        if (j.contains("p2p")) {
-            auto& p2p = j["p2p"];
-            config_.p2p.enabled = p2p.value("enabled", true);
-            config_.p2p.max_peers = p2p.value("max_peers", 50);
-            config_.p2p.max_packet_size_bytes = p2p.value("max_packet_size_bytes", 65536);
-            config_.p2p.max_bandwidth_mbps = p2p.value("max_bandwidth_mbps", 100);
-            config_.p2p.target_bitrate_kbps = p2p.value("target_bitrate_kbps", 5000);
-            config_.p2p.enable_congestion_control = p2p.value("enable_congestion_control", true);
-            config_.p2p.packet_queue_size = p2p.value("packet_queue_size", 1000);
-        }
+            // Parse P2P config
+            if (j.contains("p2p")) {
+                auto& p2p = j["p2p"];
+                config_.p2p.enabled = p2p.value("enabled", true);
+                config_.p2p.max_peers = p2p.value("max_peers", 50);
+                config_.p2p.max_packet_size_bytes = p2p.value("max_packet_size_bytes", 65536);
+                config_.p2p.max_bandwidth_mbps = p2p.value("max_bandwidth_mbps", 100);
+                config_.p2p.target_bitrate_kbps = p2p.value("target_bitrate_kbps", 5000);
+                config_.p2p.enable_congestion_control = p2p.value("enable_congestion_control", true);
+                config_.p2p.packet_queue_size = p2p.value("packet_queue_size", 1000);
+                // Mesh/AOI extensions
+                config_.p2p.aoi_radius = p2p.value("aoi_radius", 100.0f);
+                config_.p2p.mesh_refresh_interval_ms = p2p.value("mesh_refresh_interval_ms", 5000);
+                config_.p2p.peer_score_threshold = p2p.value("peer_score_threshold", 0.5f);
+                config_.p2p.prune_interval_ms = p2p.value("prune_interval_ms", 10000);
+            }
 
         if (j.contains("bandwidth")) {
             auto& bandwidth = j["bandwidth"];
@@ -92,16 +97,19 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
             config_.compression.enable_metrics = compression.value("enable_metrics", true);
         }
 
-        // Parse security config
-        if (j.contains("security")) {
-            auto& security = j["security"];
-            config_.security.enable_encryption = security.value("enable_encryption", true);
-            config_.security.enable_authentication = security.value("enable_authentication", true);
-            config_.security.api_key = security.value("api_key", "");
-            config_.security.jwt_token = security.value("jwt_token", "");
-            config_.security.certificate_validation = security.value("certificate_validation", true);
-            config_.security.tls_version = security.value("tls_version", "1.3");
-        }
+            // Parse security config
+            if (j.contains("security")) {
+                auto& security = j["security"];
+                config_.security.enable_encryption = security.value("enable_encryption", true);
+                config_.security.enable_authentication = security.value("enable_authentication", true);
+                config_.security.api_key = security.value("api_key", "");
+                config_.security.jwt_token = security.value("jwt_token", "");
+                config_.security.certificate_validation = security.value("certificate_validation", true);
+                config_.security.tls_version = security.value("tls_version", "1.3");
+                // ED25519 signature extensions
+                config_.security.ed25519_private_key_path = security.value("ed25519_private_key_path", "");
+                config_.security.enable_signature = security.value("enable_signature", true);
+            }
 
         // Parse logging config
         if (j.contains("logging")) {
@@ -114,15 +122,21 @@ bool ConfigManager::LoadFromString(const std::string& json_str) {
             config_.logging.async_logging = logging.value("async_logging", true);
         }
 
-        // Parse zones config
-        if (j.contains("zones")) {
-            auto& zones = j["zones"];
-            if (zones.contains("p2p_enabled_zones")) {
-                config_.zones.p2p_enabled_zones = zones["p2p_enabled_zones"].get<std::vector<std::string>>();
+            // Parse zones config
+            if (j.contains("zones")) {
+                auto& zones = j["zones"];
+                if (zones.contains("p2p_enabled_zones")) {
+                    config_.zones.p2p_enabled_zones = zones["p2p_enabled_zones"].get<std::vector<std::string>>();
+                }
+                config_.zones.fallback_on_failure = zones.value("fallback_on_failure", true);
+                config_.zones.zone_transition_timeout_ms = zones.value("zone_transition_timeout_ms", 5000);
+                // Per-zone max peers
+                if (zones.contains("max_peers_per_zone")) {
+                    for (auto& el : zones["max_peers_per_zone"].items()) {
+                        config_.zones.max_peers_per_zone[el.key()] = el.value().get<int>();
+                    }
+                }
             }
-            config_.zones.fallback_on_failure = zones.value("fallback_on_failure", true);
-            config_.zones.zone_transition_timeout_ms = zones.value("zone_transition_timeout_ms", 5000);
-        }
 
         // Parse performance config
         if (j.contains("performance")) {

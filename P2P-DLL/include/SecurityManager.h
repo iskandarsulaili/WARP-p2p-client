@@ -25,6 +25,15 @@ public:
     SecurityManager(SecurityManager&&) = delete;
     SecurityManager& operator=(SecurityManager&&) = delete;
 
+    // ED25519: Load private key from file
+    bool LoadED25519Key(const std::string& key_path);
+
+    // ED25519: Sign outbound packet
+    bool SignPacketED25519(const uint8_t* data, size_t size, std::vector<uint8_t>& signature_out);
+
+    // ED25519: Check if signature is enabled
+    bool IsSignatureEnabled() const;
+
     /**
      * Initialize the security manager
      * @param encryption_enabled Whether encryption is enabled

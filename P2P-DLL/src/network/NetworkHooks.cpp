@@ -143,7 +143,13 @@ bool NetworkHooks::ProcessOutgoingPacket(const char* data, int length) {
 
             // Let the packet router decide where to send it
             auto decision = packet_router_->DecideRoute(packet);
-            return packet_router_->RoutePacket(packet, decision);
+            bool routed = packet_router_->RoutePacket(packet, decision);
+            // Telemetry: log routing event
+            LOG_DEBUG("Telemetry: Outgoing packet routed, type=0x" + std::to_string(packet.type) +
+                      ", length=" + std::to_string(packet.length) +
+                      ", decision=" + std::to_string(static_cast<int>(decision)) +
+                      ", routed=" + (routed ? "true" : "false"));
+            return routed;
         }
     } catch (const std::exception& e) {
         LOG_ERROR("Error processing outgoing packet: " + std::string(e.what()));
