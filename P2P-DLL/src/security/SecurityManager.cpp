@@ -283,12 +283,104 @@ bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vecto
     }
 }
 
-bool SecurityManager::ValidatePacket(const uint8_t* /*data*/, size_t size) {
-    // Basic validation - check minimum size for encrypted packets
-    if (impl_->encryption_enabled) {
-        return size >= (Impl::IV_SIZE + Impl::TAG_SIZE + 1); // IV + tag + at least 1 byte of ciphertext
+bool SecurityManager::ValidatePacket(const uint8_t* data, size_t size) {
+    if (!data || size == 0) {
+        LOG_ERROR("Invalid packet: null data or zero size");
+        return false;
     }
-    return size > 0;
+
+    // Minimum packet size check (at least 2 bytes for packet type)
+    if (size < 2) {
+        LOG_ERROR("Invalid packet: size too small (" + std::to_string(size) + " bytes)");
+        return false;
+    }
+
+    // Maximum packet size check (prevent DoS attacks)
+    constexpr size_t MAX_PACKET_SIZE = 1024 * 1024; // 1 MB
+    if (size > MAX_PACKET_SIZE) {
+        LOG_ERROR("Invalid packet: size too large (" + std::to_string(size) + " bytes)");
+        return false;
+    }
+
+    // Read packet type (first 2 bytes, little-endian)
+    uint16_t packet_type = static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+
+    // Validate packet type range (Ragnarok Online packet types are typically 0x0000-0x0FFF)
+    if (packet_type > 0x0FFF) {
+        LOG_WARN("Suspicious packet type: 0x" + std::to_string(packet_type));
+        // Don't reject, just warn - some custom packets might use higher ranges
+    }
+
+    // If packet has length field (bytes 2-3), validate it
+    if (size >= 4) {
+        uint16_t declared_length = static_cast<uint16_t>(data[2]) | (static_cast<uint16_t>(data[3]) << 8);
+
+        // Some packets have variable length with length field
+        if (declared_length > 0 && declared_length != size) {
+            LOG_ERROR("Packet length mismatch: declared=" + std::to_string(declared_length) +
+                     ", actual=" + std::to_string(size));
+            return false;
+        }
+    }
+
+    // If signature checking is enabled, verify ED25519 signature (last 64 bytes)
+    if (impl_->signature_enabled && size > 64) {
+        size_t payload_size = size - 64;
+        const uint8_t* payload = data;
+        const uint8_t* signature = data + payload_size;
+        #ifdef HAVE_SODIUM
+        if (impl_->ed25519_private_key.size() == 64) {
+            // Derive public key from private key (seed)
+            uint8_t public_key[32];
+            if (crypto_sign_ed25519_sk_to_pk(public_key, impl_->ed25519_private_key.data()) != 0) {
+                LOG_ERROR("Failed to derive ED25519 public key");
+                return false;
+            }
+            if (crypto_sign_verify_detached(signature, payload, payload_size, public_key) != 0) {
+                LOG_ERROR("ED25519 signature verification failed");
+                return false;
+            }
+            LOG_DEBUG("ED25519 signature verified for packet");
+        } else {
+            LOG_ERROR("ED25519 key not loaded for signature verification");
+            return false;
+        }
+/**
+ * VerifyPacketED25519
+ * Verifies the ED25519 signature for the given packet data.
+ * Returns true if the signature is valid, false otherwise.
+ * Uses the public key derived from the loaded private key.
+ */
+bool SecurityManager::VerifyPacketED25519(const uint8_t* data, size_t size, const uint8_t* signature) {
+#ifdef HAVE_SODIUM
+    if (impl_->ed25519_private_key.size() != 64) {
+        LOG_ERROR("ED25519 key not loaded for signature verification");
+        return false;
+    }
+    uint8_t public_key[32];
+    if (crypto_sign_ed25519_sk_to_pk(public_key, impl_->ed25519_private_key.data()) != 0) {
+        LOG_ERROR("Failed to derive ED25519 public key");
+        return false;
+    }
+    if (crypto_sign_verify_detached(signature, data, size, public_key) != 0) {
+        LOG_ERROR("ED25519 signature verification failed");
+        return false;
+    }
+    LOG_DEBUG("ED25519 signature verified for packet");
+    return true;
+#else
+    LOG_ERROR("Libsodium not available for ED25519 signature verification");
+    return false;
+#endif
+}
+        #else
+        LOG_ERROR("Libsodium not available for ED25519 signature verification");
+        return false;
+        #endif
+    }
+
+    LOG_DEBUG("Packet validated: type=0x" + std::to_string(packet_type) + ", size=" + std::to_string(size));
+    return true;
 }
 
 bool SecurityManager::IsEncryptionEnabled() const {

@@ -5,6 +5,9 @@
 #include <vector>
 #include <functional>
 
+// msquic example integration
+#include <msquic.h>
+
 namespace P2P {
 
 /**
@@ -25,7 +28,7 @@ public:
 private:
     // Internal state for QUIC connection
     bool connected_;
-    void* quic_session_; // Opaque pointer to QUIC session/context
+    HQUIC quic_session_; // msquic QUIC session handle
     std::function<void(const std::vector<uint8_t>&)> on_receive_;
     std::mutex conn_mutex_;
     std::string remote_addr_;

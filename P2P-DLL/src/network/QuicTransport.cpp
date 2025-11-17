@@ -1,6 +1,8 @@
 #include "../../include/QuicTransport.h"
 #include "../../include/Logger.h"
 
+#include <msquic.h> // Ensure msquic is available
+
 namespace P2P {
 
 #include <cstring>
@@ -15,6 +17,8 @@ namespace P2P {
 // NOTE: In production, replace with a real QUIC library (e.g., msquic, quiche, etc.)
 // Here, we simulate a secure, production-grade transport for demonstration.
 
+MsQuicApi* g_msquic_api = nullptr; // Global msquic API pointer
+
 QuicTransport::QuicTransport()
     : connected_(false), quic_session_(nullptr), remote_port_(0)
 {
@@ -23,12 +27,24 @@ QuicTransport::QuicTransport()
     if (!RAND_bytes(session_key_.data(), session_key_.size())) {
         throw std::runtime_error("Failed to generate session key");
     }
+    // Initialize msquic API if not already done
+    if (!g_msquic_api) {
+        g_msquic_api = new MsQuicApi();
+        if (!g_msquic_api->IsValid()) {
+            delete g_msquic_api;
+            g_msquic_api = nullptr;
+            throw std::runtime_error("Failed to initialize msquic API");
+        }
+    }
+    // Registration and configuration would be set up here in a real implementation
 }
 
 QuicTransport::~QuicTransport() {
     Disconnect();
     cleanup();
     LOG_DEBUG("QuicTransport destroyed");
+    // Clean up msquic API if this is the last instance (singleton pattern recommended in real code)
+    // delete g_msquic_api; g_msquic_api = nullptr;
 }
 
 bool QuicTransport::Connect(const std::string& address, uint16_t port) {
@@ -36,8 +52,50 @@ bool QuicTransport::Connect(const std::string& address, uint16_t port) {
     if (connected_) return true;
     remote_addr_ = address;
     remote_port_ = port;
-    // Simulate QUIC session creation
-    quic_session_ = reinterpret_cast<void*>(0xDEADBEEF); // placeholder
+
+    // Create QUIC session using msquic (example)
+    if (!g_msquic_api) {
+        LOG_ERROR("msquic API not initialized");
+        return false;
+    }
+    // Registration and configuration objects would be created here
+    // For demonstration, we skip actual registration/configuration
+
+    QUIC_STATUS status = g_msquic_api->ConnectionOpen(
+        /*Registration*/ nullptr,
+        [](HQUIC Connection, void* Context, QUIC_CONNECTION_EVENT* Event) -> QUIC_STATUS {
+            // Connection event handler (handle connected, shutdown, etc.)
+            if (Event->Type == QUIC_CONNECTION_EVENT_CONNECTED) {
+                LOG_INFO("QUIC connection established");
+            }
+            if (Event->Type == QUIC_CONNECTION_EVENT_SHUTDOWN_COMPLETE) {
+                LOG_INFO("QUIC connection shutdown complete");
+            }
+            return QUIC_STATUS_SUCCESS;
+        },
+        this,
+        &quic_session_
+    );
+    if (QUIC_FAILED(status) || !quic_session_) {
+        LOG_ERROR("QuicTransport::Connect failed to create QUIC session");
+        return false;
+    }
+
+    // Connect to remote address
+    status = g_msquic_api->ConnectionStart(
+        quic_session_,
+        /*Configuration*/ nullptr,
+        QUIC_ADDRESS_FAMILY_UNSPEC,
+        address.c_str(),
+        port
+    );
+    if (QUIC_FAILED(status)) {
+        LOG_ERROR("QuicTransport::Connect failed to start QUIC connection");
+        g_msquic_api->ConnectionClose(quic_session_);
+        quic_session_ = nullptr;
+        return false;
+    }
+
     connected_ = true;
     LOG_INFO("QuicTransport::Connect established to " + address + ":" + std::to_string(port));
     return true;
@@ -46,7 +104,12 @@ bool QuicTransport::Connect(const std::string& address, uint16_t port) {
 void QuicTransport::Disconnect() {
     std::lock_guard<std::mutex> lock(conn_mutex_);
     if (connected_) {
-        // Simulate QUIC session cleanup
+        // Close QUIC session
+        if (quic_session_) {
+            msquic->ConnectionShutdown(quic_session_, QUIC_CONNECTION_SHUTDOWN_FLAG_NONE, 0);
+            msquic->ConnectionClose(quic_session_);
+            quic_session_ = nullptr;
+        }
         cleanup();
         connected_ = false;
         LOG_INFO("QuicTransport::Disconnect completed");
@@ -59,7 +122,8 @@ bool QuicTransport::SendData(const void* data, size_t size) {
         LOG_ERROR("QuicTransport::SendData failed - not connected");
         return false;
     }
-    // Encrypt and send data (simulate)
+
+    // Encrypt data (as before)
     std::vector<uint8_t> encrypted(size + 16); // 16 bytes for tag
     int outlen = 0;
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
@@ -79,9 +143,11 @@ bool QuicTransport::SendData(const void* data, size_t size) {
     }
     outlen += tmplen;
     EVP_CIPHER_CTX_free(ctx);
-    // Simulate network send: immediately call receive handler
-    handle_receive(encrypted.data(), outlen);
-    LOG_DEBUG("QuicTransport::SendData sent " + std::to_string(size) + " bytes (encrypted)");
+
+    // Send encrypted data over QUIC
+    // In a real implementation, a stream would be opened and data sent on it
+    // For demonstration, we log and return success
+    LOG_DEBUG("QuicTransport::SendData (stub) would send " + std::to_string(size) + " bytes (encrypted) over QUIC");
     return true;
 }
 
@@ -121,6 +187,7 @@ bool QuicTransport::validate_and_decrypt(const uint8_t* data, size_t size, std::
 }
 
 void QuicTransport::handle_receive(const uint8_t* data, size_t size) {
+    // In a real implementation, this would be called from the msquic stream receive callback
     std::vector<uint8_t> decrypted;
     if (validate_and_decrypt(data, size, decrypted)) {
         if (on_receive_) {

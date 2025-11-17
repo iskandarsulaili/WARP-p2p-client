@@ -1,6 +1,10 @@
 #include "../../include/WebRTCPeerConnection.h"
 #include "../../include/Logger.h"
-#include <rtc/rtc.hpp>
+#include <api/peer_connection_interface.h>
+#include <api/create_peerconnection_factory.h>
+#include <api/data_channel_interface.h>
+#include <rtc_base/thread.h>
+#include <rtc_base/logging.h>
 #include <mutex>
 #include <memory>
 
@@ -8,8 +12,12 @@ namespace P2P {
 
 struct WebRTCPeerConnection::Impl {
     std::string peer_id;
-    std::shared_ptr<rtc::PeerConnection> pc;
-    std::shared_ptr<rtc::DataChannel> dc;
+    rtc::scoped_refptr<rtc::Thread> network_thread;
+    rtc::scoped_refptr<rtc::Thread> worker_thread;
+    rtc::scoped_refptr<rtc::Thread> signaling_thread;
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> pc;
+    rtc::scoped_refptr<webrtc::DataChannelInterface> dc;
 
     bool connected = false;
     bool initialized = false;
@@ -48,74 +56,109 @@ WebRTCPeerConnection::~WebRTCPeerConnection() {
 bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
                                      const std::string& turn_username, const std::string& turn_credential) {
     try {
+        // Create threads for libwebrtc
+        impl_->network_thread = rtc::Thread::CreateWithSocketServer();
+        impl_->worker_thread = rtc::Thread::Create();
+        impl_->signaling_thread = rtc::Thread::Create();
+        impl_->network_thread->Start();
+        impl_->worker_thread->Start();
+        impl_->signaling_thread->Start();
+
+        // Create PeerConnectionFactory
+        impl_->factory = webrtc::CreatePeerConnectionFactory(
+            impl_->network_thread.get(),
+            impl_->worker_thread.get(),
+            impl_->signaling_thread.get(),
+            nullptr, nullptr, nullptr, nullptr
+        );
+        if (!impl_->factory) {
+            LOG_ERROR("Failed to create PeerConnectionFactory");
+            return false;
+        }
+
         // Configure ICE servers
-        rtc::Configuration config;
+        webrtc::PeerConnectionInterface::RTCConfiguration config;
 
         // Add STUN servers
         for (const auto& server : stun) {
-            config.iceServers.emplace_back(server);
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            ice_server.uri = server;
+            config.servers.push_back(ice_server);
             LOG_DEBUG("Added STUN server: " + server);
         }
 
         // Add TURN servers with credentials
         for (const auto& server : turn) {
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            ice_server.uri = server;
             if (!turn_username.empty() && !turn_credential.empty()) {
-                // Add TURN server with credentials in URL format: turn:username:password@server:port
-                std::string turn_url = server;
-                // Extract the server part if it already has turn: prefix
-                if (turn_url.find("turn:") == 0) {
-                    size_t at_pos = turn_url.find('@');
-                    if (at_pos != std::string::npos) {
-                        // Remove existing credentials if present
-                        turn_url = turn_url.substr(at_pos + 1);
-                    }
-                }
-                // Construct URL with credentials
-                std::string credentialed_turn = "turn:" + turn_username + ":" + turn_credential + "@" + turn_url;
-                config.iceServers.emplace_back(credentialed_turn);
-                LOG_DEBUG("Added TURN server with credentials: " + credentialed_turn);
+                ice_server.username = turn_username;
+                ice_server.password = turn_credential;
+                LOG_DEBUG("Added TURN server with credentials: " + server);
             } else {
-                // Add TURN server without credentials
-                config.iceServers.emplace_back(server);
                 LOG_DEBUG("Added TURN server: " + server);
             }
+            config.servers.push_back(ice_server);
         }
 
         // Create peer connection
-        impl_->pc = std::make_shared<rtc::PeerConnection>(config);
+        webrtc::PeerConnectionDependencies dependencies(this);
+        impl_->pc = impl_->factory->CreatePeerConnection(config, std::move(dependencies));
+        if (!impl_->pc) {
+            LOG_ERROR("Failed to create PeerConnection");
+            return false;
+        }
 
-        // Set up callbacks
-        impl_->pc->onLocalDescription([this](rtc::Description description) {
-            std::lock_guard<std::mutex> lock(impl_->mutex);
-            impl_->local_sdp = std::string(description);
-            LOG_DEBUG("Local description created for: " + impl_->peer_id);
-        });
-
-        impl_->pc->onLocalCandidate([this](rtc::Candidate candidate) {
-            std::lock_guard<std::mutex> lock(impl_->mutex);
-            if (impl_->on_ice_candidate) {
-                impl_->on_ice_candidate(std::string(candidate));
+        // Set up libwebrtc observer classes for signaling, ICE, and data channel events
+        class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
+        public:
+            PeerConnectionObserver(WebRTCPeerConnection::Impl* impl) : impl_(impl) {}
+            void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override {
+                LOG_DEBUG("Signaling state changed for: " + impl_->peer_id);
             }
-            LOG_DEBUG("ICE candidate generated for: " + impl_->peer_id);
-        });
-
-        impl_->pc->onStateChange([this](rtc::PeerConnection::State state) {
-            bool was_connected = impl_->connected;
-            impl_->connected = (state == rtc::PeerConnection::State::Connected);
-
-            LOG_INFO("Connection state changed for " + impl_->peer_id + ": " +
-                     std::to_string(static_cast<int>(state)));
-
-            if (impl_->on_state_change && was_connected != impl_->connected) {
-                impl_->on_state_change(impl_->connected);
+            void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
+            void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
+            void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+                impl_->dc = data_channel;
+                LOG_INFO("Data channel received for: " + impl_->peer_id);
+                // Set up data channel observer
+                class DataChannelObserver : public webrtc::DataChannelObserver {
+                public:
+                    DataChannelObserver(WebRTCPeerConnection::Impl* impl) : impl_(impl) {}
+                    void OnStateChange() override {
+                        LOG_INFO("Data channel state changed for: " + impl_->peer_id);
+                    }
+                    void OnMessage(const webrtc::DataBuffer& buffer) override {
+                        if (impl_->on_data) {
+                            impl_->on_data(buffer.data.data(), buffer.data.size());
+                        }
+                    }
+                private:
+                    WebRTCPeerConnection::Impl* impl_;
+                };
+                impl_->dc->RegisterObserver(new DataChannelObserver(impl_));
             }
-        });
+            void OnRenegotiationNeeded() override {}
+            void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override {
+                LOG_DEBUG("ICE connection state changed for: " + impl_->peer_id);
+            }
+            void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override {
+                impl_->gathering_complete = (new_state == webrtc::PeerConnectionInterface::kIceGatheringComplete);
+                LOG_DEBUG("ICE gathering state changed for: " + impl_->peer_id);
+            }
+            void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override {
+                std::string candidate_str;
+                candidate->ToString(&candidate_str);
+                if (impl_->on_ice_candidate) {
+                    impl_->on_ice_candidate(candidate_str);
+                }
+                LOG_DEBUG("ICE candidate generated for: " + impl_->peer_id);
+            }
+        private:
+            WebRTCPeerConnection::Impl* impl_;
+        };
 
-        impl_->pc->onGatheringStateChange([this](rtc::PeerConnection::GatheringState state) {
-            impl_->gathering_complete = (state == rtc::PeerConnection::GatheringState::Complete);
-            LOG_DEBUG("Gathering state changed for " + impl_->peer_id + ": " +
-                     std::to_string(static_cast<int>(state)));
-        });
+        impl_->pc->RegisterObserver(new PeerConnectionObserver(impl_.get()));
 
         impl_->initialized = true;
         LOG_INFO("WebRTCPeerConnection initialized for: " + impl_->peer_id);

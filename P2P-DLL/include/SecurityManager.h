@@ -34,6 +34,9 @@ public:
     // ED25519: Check if signature is enabled
     bool IsSignatureEnabled() const;
 
+    // ED25519: Verify packet signature
+    bool VerifyPacketED25519(const uint8_t* data, size_t size, const uint8_t* signature);
+
     /**
      * Initialize the security manager
      * @param encryption_enabled Whether encryption is enabled
