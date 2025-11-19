@@ -4,15 +4,19 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <mutex>
 
-// msquic example integration
+// MsQuic header
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
 #include <msquic.h>
 
 namespace P2P {
 
 /**
- * QuicTransport - Stub for QUIC protocol transport.
- * To be implemented with a QUIC library (e.g., msquic, quiche, etc.)
+ * QuicTransport - Production implementation using MsQuic.
  */
 class QuicTransport : public ITransport {
 public:
@@ -26,18 +30,40 @@ public:
     bool IsConnected() const override;
 
 private:
-    // Internal state for QUIC connection
+    // MsQuic Callbacks
+    static QUIC_STATUS QUIC_API ClientConnectionCallback(
+        _In_ HQUIC Connection,
+        _In_opt_ void* Context,
+        _Inout_ QUIC_CONNECTION_EVENT* Event
+    );
+
+    static QUIC_STATUS QUIC_API ClientStreamCallback(
+        _In_ HQUIC Stream,
+        _In_opt_ void* Context,
+        _Inout_ QUIC_STREAM_EVENT* Event
+    );
+
+    // Internal helpers
+    void Cleanup();
+    bool InitializeMsQuic();
+    bool LoadConfiguration();
+
+    // State
+    const QUIC_API_TABLE* msquic_api_;
+    HQUIC registration_;
+    HQUIC configuration_;
+    HQUIC connection_;
+    HQUIC stream_; // Primary stream for data transmission
+
     bool connected_;
-    HQUIC quic_session_; // msquic QUIC session handle
-    std::function<void(const std::vector<uint8_t>&)> on_receive_;
-    std::mutex conn_mutex_;
     std::string remote_addr_;
     uint16_t remote_port_;
-    // Security: session keys, validation, etc.
+    
+    std::mutex mutex_;
+    std::function<void(const std::vector<uint8_t>&)> on_receive_;
+    
+    // Security/Session
     std::vector<uint8_t> session_key_;
-    bool validate_and_decrypt(const uint8_t* data, size_t size, std::vector<uint8_t>& out);
-    void handle_receive(const uint8_t* data, size_t size);
-    void cleanup();
 };
 
 } // namespace P2P

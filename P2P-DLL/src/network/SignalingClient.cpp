@@ -6,6 +6,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <nlohmann/json.hpp>
+// Compatibility: ensure correct namespace and API usage for latest Boost/Beast and nlohmann/json
 #include <thread>
 #include <atomic>
 #include <mutex>

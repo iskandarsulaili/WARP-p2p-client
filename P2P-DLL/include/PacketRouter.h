@@ -3,6 +3,9 @@
 #include "Types.h"
 #include <memory>
 #include <string>
+#include <functional>
+#include "ITransport.h"
+#include "SecurityManager.h"
 
 // Forward declaration
 namespace P2P {

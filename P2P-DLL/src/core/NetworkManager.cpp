@@ -396,7 +396,7 @@ bool NetworkManager::SendPacket(const Packet& packet) {
 
     // Log bandwidth metrics for performance monitoring
     if (impl_->bandwidth_manager) {
-        const auto& metrics = impl_->bandwidth_manager->GetMetrics();
+        const auto& metrics = impl_->bandwidth_manager->GetOverallMetrics();
         LOG_INFO("Bandwidth: sent=" + std::to_string(metrics.bytes_sent) +
                  "B, recv=" + std::to_string(metrics.bytes_received) +
                  "B, loss=" + std::to_string(metrics.packet_loss_percent) +

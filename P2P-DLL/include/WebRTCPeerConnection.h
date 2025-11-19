@@ -125,14 +125,7 @@ public:
 private:
     // Pimpl idiom for implementation details
     // Forward declarations for libwebrtc types
-    namespace webrtc {
-        class PeerConnectionFactoryInterface;
-        class PeerConnectionInterface;
-        class DataChannelInterface;
-    }
-    namespace rtc {
-        class Thread;
-    }
+    // (These should be in the .cpp, not in the header, and not as a namespace block)
 
     struct Impl;
     std::unique_ptr<Impl> impl_;

@@ -3,6 +3,8 @@
 #include "Types.h"
 #include <memory>
 #include <string>
+#include "ITransport.h"
+#include "CompressionManager.h"
 
 namespace P2P {
 
@@ -95,8 +97,6 @@ public:
      * Get current transport (ITransport).
      */
     ITransport* GetTransport() const;
-     * @return Reference to CompressionManager
-     */
     CompressionManager& GetCompressionManager();
 
 private:

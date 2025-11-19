@@ -4,6 +4,21 @@
 
 # Ignore Outputs folder and everything inside
 /Outputs/
+# Ignore Wiki submodule
+/Wiki/
+# Ignore vcpkg artifacts
+/vcpkg_installed/
+# Ignore win32 build artifacts
+/win32/
+# Ignore generated folders (if applicable)
+/Fonts/
+/Images/
+/Inputs/
+/Languages/
+/Patches/
+/Scripts/
+/Styles/
+/Tables/
 
 # Ignore root-level config files
 /Settings.yml
@@ -40,10 +55,14 @@
 # DLL files (compiled output)
 /P2P-DLL/*.dll
 /P2P-DLL/build/**/*.dll
+*.dll
+win32/**/*.dll
 
 # Executable files
 /P2P-DLL/*.exe
 /P2P-DLL/build/**/*.exe
+*.exe
+win32/**/*.exe
 
 # Static libraries
 /P2P-DLL/*.lib
@@ -180,6 +199,8 @@ $RECYCLE.BIN/
 # Keep configuration templates
 !/P2P-DLL/config/p2p_config.json
 !/P2P-DLL/config/*.json.example
+!/Inputs/*.yml
+!/Languages/template_yml
 
 # Keep CMake configuration
 !/P2P-DLL/CMakeLists.txt

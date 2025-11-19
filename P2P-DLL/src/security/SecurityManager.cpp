@@ -1,4 +1,4 @@
-﻿#include "../../include/SecurityManager.h"
+#include "../../include/SecurityManager.h"
 #include "../../include/CompressionManager.h"
 #include "../../include/Logger.h"
 #include "../../include/Types.h"
@@ -6,9 +6,12 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#include <sodium.h>
 #include <cstring>
 #include <vector>
 #include <memory>
+#include <mutex>
+#include <fstream>
 
 namespace P2P {
 
@@ -21,19 +24,27 @@ struct SecurityManager::Impl {
     // ED25519
     bool signature_enabled = true;
     std::vector<uint8_t> ed25519_private_key; // 64 bytes (seed + key)
+    std::vector<uint8_t> ed25519_public_key;  // 32 bytes
     std::mutex ed25519_mutex;
 
     static constexpr size_t IV_SIZE = 12;
     static constexpr size_t TAG_SIZE = 16;
+    static constexpr size_t ED25519_SIG_SIZE = 64;
+    static constexpr size_t ED25519_PUBKEY_SIZE = 32;
+    static constexpr size_t ED25519_PRIVKEY_SIZE = 64;
 };
 
-SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {}
+SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {
+    if (sodium_init() < 0) {
+        LOG_ERROR("Failed to initialize libsodium");
+    }
+}
 
 SecurityManager::~SecurityManager() = default;
 
 bool SecurityManager::Initialize(bool encryption_enabled) {
     impl_->encryption_enabled = encryption_enabled;
-    
+
     if (encryption_enabled) {
         // Generate random encryption key (32 bytes for AES-256)
         impl_->encryption_key.resize(32);
@@ -42,7 +53,7 @@ bool SecurityManager::Initialize(bool encryption_enabled) {
             return false;
         }
     }
-    
+
     impl_->initialized = true;
     LOG_INFO("SecurityManager initialized (encryption: " + std::string(encryption_enabled ? "ON" : "OFF") + ")");
     return true;
@@ -59,7 +70,7 @@ void SecurityManager::SetCompressionManager(CompressionManager* compression_mana
 
 bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vector<uint8_t>& encrypted_out) {
     std::vector<uint8_t> processed_data;
-    
+
     // Step 1: Compress data if compression is enabled and available
     if (impl_->compression_manager) {
         std::vector<uint8_t> temp_data(data, data + size);
@@ -132,7 +143,7 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
 
         // Encrypt data
         int len = 0;
-        if (EVP_EncryptUpdate(ctx, encrypted_out.data() + Impl::IV_SIZE, &len, 
+        if (EVP_EncryptUpdate(ctx, encrypted_out.data() + Impl::IV_SIZE, &len,
                              processed_data.data(), static_cast<int>(processed_data.size())) != 1) {
             LOG_ERROR("Encryption failed");
             EVP_CIPHER_CTX_free(ctx);
@@ -157,7 +168,7 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
         }
 
         EVP_CIPHER_CTX_free(ctx);
-        LOG_DEBUG("Encrypted packet (" + std::to_string(processed_data.size()) + " -> " + 
+        LOG_DEBUG("Encrypted packet (" + std::to_string(processed_data.size()) + " -> " +
                  std::to_string(encrypted_out.size()) + " bytes)");
         return true;
 
@@ -171,7 +182,7 @@ bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vecto
 bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vector<uint8_t>& decrypted_out) {
     // Step 1: Decrypt data if encryption is enabled
     std::vector<uint8_t> intermediate_data;
-    
+
     if (impl_->encryption_enabled) {
         if (!impl_->initialized || impl_->encryption_key.empty()) {
             LOG_ERROR("SecurityManager not initialized or no encryption key");
@@ -249,7 +260,7 @@ bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vecto
             intermediate_data.resize(plaintext_len);
 
             EVP_CIPHER_CTX_free(ctx);
-            LOG_DEBUG("Decrypted packet (" + std::to_string(size) + " -> " + 
+            LOG_DEBUG("Decrypted packet (" + std::to_string(size) + " -> " +
                      std::to_string(intermediate_data.size()) + " bytes)");
 
         } catch (const std::exception& e) {
@@ -267,7 +278,7 @@ bool SecurityManager::DecryptPacket(const uint8_t* data, size_t size, std::vecto
         std::vector<uint8_t> decompressed_data = impl_->compression_manager->Decompress(intermediate_data);
         if (!decompressed_data.empty()) {
             decrypted_out = std::move(decompressed_data);
-            LOG_DEBUG("Decompressed packet (" + std::to_string(intermediate_data.size()) + " -> " + 
+            LOG_DEBUG("Decompressed packet (" + std::to_string(intermediate_data.size()) + " -> " +
                      std::to_string(decrypted_out.size()) + " bytes)");
             return true;
         } else {
@@ -324,59 +335,22 @@ bool SecurityManager::ValidatePacket(const uint8_t* data, size_t size) {
     }
 
     // If signature checking is enabled, verify ED25519 signature (last 64 bytes)
-    if (impl_->signature_enabled && size > 64) {
-        size_t payload_size = size - 64;
+    if (impl_->signature_enabled && size > Impl::ED25519_SIG_SIZE) {
+        size_t payload_size = size - Impl::ED25519_SIG_SIZE;
         const uint8_t* payload = data;
         const uint8_t* signature = data + payload_size;
-        #ifdef HAVE_SODIUM
-        if (impl_->ed25519_private_key.size() == 64) {
-            // Derive public key from private key (seed)
-            uint8_t public_key[32];
-            if (crypto_sign_ed25519_sk_to_pk(public_key, impl_->ed25519_private_key.data()) != 0) {
-                LOG_ERROR("Failed to derive ED25519 public key");
-                return false;
-            }
-            if (crypto_sign_verify_detached(signature, payload, payload_size, public_key) != 0) {
-                LOG_ERROR("ED25519 signature verification failed");
-                return false;
-            }
-            LOG_DEBUG("ED25519 signature verified for packet");
-        } else {
-            LOG_ERROR("ED25519 key not loaded for signature verification");
+
+        std::lock_guard<std::mutex> lock(impl_->ed25519_mutex);
+        if (impl_->ed25519_public_key.size() != Impl::ED25519_PUBKEY_SIZE) {
+            LOG_ERROR("ED25519 public key not loaded");
             return false;
         }
-/**
- * VerifyPacketED25519
- * Verifies the ED25519 signature for the given packet data.
- * Returns true if the signature is valid, false otherwise.
- * Uses the public key derived from the loaded private key.
- */
-bool SecurityManager::VerifyPacketED25519(const uint8_t* data, size_t size, const uint8_t* signature) {
-#ifdef HAVE_SODIUM
-    if (impl_->ed25519_private_key.size() != 64) {
-        LOG_ERROR("ED25519 key not loaded for signature verification");
-        return false;
-    }
-    uint8_t public_key[32];
-    if (crypto_sign_ed25519_sk_to_pk(public_key, impl_->ed25519_private_key.data()) != 0) {
-        LOG_ERROR("Failed to derive ED25519 public key");
-        return false;
-    }
-    if (crypto_sign_verify_detached(signature, data, size, public_key) != 0) {
-        LOG_ERROR("ED25519 signature verification failed");
-        return false;
-    }
-    LOG_DEBUG("ED25519 signature verified for packet");
-    return true;
-#else
-    LOG_ERROR("Libsodium not available for ED25519 signature verification");
-    return false;
-#endif
-}
-        #else
-        LOG_ERROR("Libsodium not available for ED25519 signature verification");
-        return false;
-        #endif
+        int result = crypto_sign_verify_detached(signature, payload, payload_size, impl_->ed25519_public_key.data());
+        if (result != 0) {
+            LOG_ERROR("ED25519 signature verification failed");
+            return false;
+        }
+        LOG_DEBUG("ED25519 signature verified for packet (" + std::to_string(payload_size) + " bytes)");
     }
 
     LOG_DEBUG("Packet validated: type=0x" + std::to_string(packet_type) + ", size=" + std::to_string(size));
@@ -395,13 +369,19 @@ bool SecurityManager::LoadED25519Key(const std::string& key_path) {
             LOG_ERROR("Failed to open ED25519 key file: " + key_path);
             return false;
         }
-        impl_->ed25519_private_key.resize(64);
-        key_file.read(reinterpret_cast<char*>(impl_->ed25519_private_key.data()), 64);
-        if (key_file.gcount() != 64) {
+        impl_->ed25519_private_key.resize(Impl::ED25519_PRIVKEY_SIZE);
+        key_file.read(reinterpret_cast<char*>(impl_->ed25519_private_key.data()), Impl::ED25519_PRIVKEY_SIZE);
+        if (key_file.gcount() != Impl::ED25519_PRIVKEY_SIZE) {
             LOG_ERROR("ED25519 key file size invalid: " + key_path);
             return false;
         }
-        LOG_INFO("Loaded ED25519 private key from: " + key_path);
+        // Derive public key from private key
+        impl_->ed25519_public_key.resize(Impl::ED25519_PUBKEY_SIZE);
+        if (crypto_sign_ed25519_sk_to_pk(impl_->ed25519_public_key.data(), impl_->ed25519_private_key.data()) != 0) {
+            LOG_ERROR("Failed to derive ED25519 public key from private key");
+            return false;
+        }
+        LOG_INFO("Loaded ED25519 private key and derived public key from: " + key_path);
         return true;
     } catch (const std::exception& e) {
         LOG_ERROR("Exception loading ED25519 key: " + std::string(e.what()));
@@ -411,14 +391,11 @@ bool SecurityManager::LoadED25519Key(const std::string& key_path) {
 
 bool SecurityManager::SignPacketED25519(const uint8_t* data, size_t size, std::vector<uint8_t>& signature_out) {
     std::lock_guard<std::mutex> lock(impl_->ed25519_mutex);
-    if (!impl_->signature_enabled || impl_->ed25519_private_key.size() != 64) {
+    if (!impl_->signature_enabled || impl_->ed25519_private_key.size() != Impl::ED25519_PRIVKEY_SIZE) {
         LOG_ERROR("ED25519 signature not enabled or key not loaded");
         return false;
     }
-    LOG_DEBUG("Signing packet with ED25519: size=" + std::to_string(size));
-    // Use libsodium for ED25519 signing
-    #ifdef HAVE_SODIUM
-    signature_out.resize(64);
+    signature_out.resize(Impl::ED25519_SIG_SIZE);
     if (crypto_sign_detached(signature_out.data(), nullptr, data, size, impl_->ed25519_private_key.data()) == 0) {
         LOG_INFO("ED25519 signature generated for packet (" + std::to_string(size) + " bytes)");
         return true;
@@ -426,10 +403,6 @@ bool SecurityManager::SignPacketED25519(const uint8_t* data, size_t size, std::v
         LOG_ERROR("ED25519 signature generation failed");
         return false;
     }
-    #else
-    LOG_ERROR("Libsodium not available for ED25519 signing");
-    return false;
-    #endif
 }
 
 bool SecurityManager::IsSignatureEnabled() const {

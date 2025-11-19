@@ -1,5 +1,3 @@
-# Test CMakeLists.txt
-
 # Find Google Test
 find_package(GTest CONFIG REQUIRED)
 
@@ -21,10 +19,6 @@ add_executable(p2p_tests ${TEST_SOURCES})
 target_link_libraries(p2p_tests PRIVATE
     GTest::gtest
     GTest::gtest_main
-    nlohmann_json::nlohmann_json
-    spdlog::spdlog
-    OpenSSL::SSL
-    OpenSSL::Crypto
 )
 
 # Add ConfigManager source directly to tests (since we don't have a static lib yet)
@@ -34,7 +28,7 @@ target_sources(p2p_tests PRIVATE
 
 # Compiler options
 if(MSVC)
-    target_compile_options(p2p_tests PRIVATE /W4)
+    target_compile_options(p2p_tests PRIVATE /W4 /EHsc)
 else()
     target_compile_options(p2p_tests PRIVATE -Wall -Wextra)
 endif()

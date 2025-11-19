@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <chrono>
+#include <map>
 
 namespace P2P {
 
@@ -60,6 +61,9 @@ struct CoordinatorConfig {
     int timeout_ms;  // Timeout in milliseconds (for compatibility)
     int reconnect_max_attempts;
     int reconnect_backoff_ms;
+    // QUIC support
+    std::string quic_address;
+    uint16_t quic_port = 0;
 };
 
 struct WebRTCConfig {
@@ -82,6 +86,9 @@ struct P2PConfig {
     int target_bitrate_kbps;
     bool enable_congestion_control;
     int packet_queue_size;
+    // QUIC support
+    bool prefer_quic = false;
+    bool quic_enabled = false;
     // Mesh/AOI extensions
     float aoi_radius = 100.0f; // Area of interest radius (meters)
     int mesh_refresh_interval_ms = 5000; // Mesh refresh interval

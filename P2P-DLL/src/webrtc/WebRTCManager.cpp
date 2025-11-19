@@ -3,6 +3,7 @@
 #include "../../include/Logger.h"
 #include <algorithm>
 #include <mutex>
+#include <regex>
 
 namespace P2P {
 
@@ -109,9 +110,13 @@ void WebRTCManager::Shutdown() {
 std::shared_ptr<WebRTCPeerConnection> WebRTCManager::CreatePeerConnection(const std::string& peer_id) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
     auto peer = std::make_shared<WebRTCPeerConnection>(peer_id);
-    peer->Initialize(impl_->stun_servers, impl_->turn_servers,
-                    impl_->turn_username, impl_->turn_credential);
+    if (!peer->Initialize(impl_->stun_servers, impl_->turn_servers,
+                         impl_->turn_username, impl_->turn_credential)) {
+        LOG_ERROR("Failed to initialize WebRTCPeerConnection for peer: " + peer_id);
+        return nullptr;
+    }
     impl_->peers.push_back(peer);
+    LOG_INFO("Created and initialized peer connection for: " + peer_id);
     return peer;
 }
 
@@ -182,41 +187,37 @@ void WebRTCManager::ProcessOffer(const std::string& offer) {
     if (!peer) {
         peer = CreatePeerConnection(peer_id);
     }
-    if (peer->SetRemoteDescription(offer)) {
+    if (peer && peer->SetRemoteDescription(offer)) {
         std::string answer;
         if (peer->CreateAnswer(answer)) {
             LOG_INFO("Processed offer and created answer for peer: " + peer_id);
             // Telemetry: log event
             LOG_DEBUG("Telemetry: Offer processed, answer created for peer " + peer_id);
+            // TODO: Send answer back to signaling server here if needed
         } else {
             LOG_ERROR("Failed to create answer for peer: " + peer_id);
         }
     } else {
         LOG_ERROR("Failed to set remote description for offer from peer: " + peer_id);
+        if (peer) {
+            peer->Close();
+            RemovePeerConnection(peer_id);
+        }
     }
 }
 
 void WebRTCManager::AddIceCandidate(const std::string& candidate) {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    // Try to extract peer_id from candidate string (look for "ufrag" or "username" fields)
-    std::string peer_id = "unknown_peer";
-    std::smatch match;
-    std::regex ufrag_regex(R"(ufrag ([^\s\r\n]+))");
-    if (std::regex_search(candidate, match, ufrag_regex) && match.size() > 1) {
-        peer_id = match[1];
-    }
-    auto peer = GetPeerConnection(peer_id);
-    if (peer) {
+    // In modern WebRTC, ICE candidates are associated by MID or ufrag, but here we use a simple mapping.
+    for (const auto& peer : impl_->peers) {
         if (peer->AddIceCandidate(candidate)) {
-            LOG_INFO("Added ICE candidate for peer: " + peer_id);
+            LOG_INFO("Added ICE candidate for peer: " + peer->GetPeerId());
             // Telemetry: log event
-            LOG_DEBUG("Telemetry: ICE candidate added for peer " + peer_id);
-        } else {
-            LOG_ERROR("Failed to add ICE candidate for peer: " + peer_id);
+            LOG_DEBUG("Telemetry: ICE candidate added for peer " + peer->GetPeerId());
+            return;
         }
-    } else {
-        LOG_ERROR("No peer connection found for ICE candidate: " + peer_id);
     }
+    LOG_ERROR("No peer connection accepted the ICE candidate: " + candidate);
 }
 
 } // namespace P2P
