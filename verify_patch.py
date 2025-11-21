@@ -1,7 +1,7 @@
 import lief
 import os
 
-exe_path = r"d:\RO\client\2025-06-04_Speedrun_P2P.exe"
+exe_path = r"d:\RO\patcher\WARP-p2p-client\test_patch.exe"
 dll_name = "p2p_network.dll"
 
 if not os.path.exists(exe_path):

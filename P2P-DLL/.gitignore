@@ -120,3 +120,7 @@ doc/
 **/x86/
 
 # End of .gitignore
+# End of .gitignore
+P2P_Patcher.exe
+!Patcher.exe
+*.dll
