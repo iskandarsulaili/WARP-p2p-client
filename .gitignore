@@ -34,6 +34,10 @@
 /P2P-DLL/Build/
 /P2P-DLL/BUILD/
 /P2P-DLL/out/
+/P2P-DLL/build_x86_manifest/
+/P2P-DLL/build_x64_manifest/
+/build_x86_manifest/
+/build_x64_manifest/
 
 # CMake cache and generated files
 /P2P-DLL/CMakeCache.txt
@@ -108,6 +112,13 @@ vcpkg_install.log
 *.bak
 *.backup
 *.orig
+
+# Temporary Debug Scripts
+inspect_lief.py
+build_target_log.txt
+
+# Patched Executables
+*_P2P.exe
 
 # WARP patch intermediate files
 *.epi

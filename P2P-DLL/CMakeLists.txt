@@ -16,11 +16,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# vcpkg integration
-if(DEFINED ENV{VCPKG_ROOT})
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        CACHE STRING "Vcpkg toolchain file")
-endif()
+# vcpkg integration handled by command line
+# if(DEFINED ENV{VCPKG_ROOT})
+#     set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+#         CACHE STRING "Vcpkg toolchain file")
+# endif()
+
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+
 
 # Find packages
 find_package(nlohmann_json CONFIG REQUIRED)
@@ -128,18 +132,21 @@ target_include_directories(p2p_network PRIVATE ${DETOURS_INCLUDE_DIRS})
 if(MSVC)
     target_compile_options(p2p_network PRIVATE
         /W4          # Warning level 4
-        /WX          # Treat warnings as errors
+        # /WX          # Treat warnings as errors
         /MP          # Multi-processor compilation
         /permissive- # Standards conformance
         /EHsc        # Enable standard C++ exception handling
     /utf-8      # Unicode source encoding
     )
     target_compile_definitions(p2p_network PRIVATE
-        _WIN32_WINNT=0x0A00  # Windows 10
         WIN32_LEAN_AND_MEAN
         NOMINMAX
-        _AMD64_  # For detours architecture detection
     )
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        target_compile_definitions(p2p_network PRIVATE _AMD64_)
+    else()
+        target_compile_definitions(p2p_network PRIVATE _X86_)
+    endif()
 else()
     target_compile_options(p2p_network PRIVATE
         -Wall

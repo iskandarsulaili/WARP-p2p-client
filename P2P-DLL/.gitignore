@@ -3,6 +3,8 @@
 # Build directories
 build/
 build_vs2022/
+build_x86_manifest/
+build_x64_manifest/
 CMakeFiles/
 cmake-build-*/
 out/

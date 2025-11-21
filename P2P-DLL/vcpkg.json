@@ -15,10 +15,7 @@
     "boost-asio",
     "boost-chrono",
     "boost-random",
-    {
-      "name": "gtest",
-      "host": true
-    },
+    "gtest",
     "detours",
     "zlib",
     "msquic",
