@@ -6,6 +6,8 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#include <openssl/ec.h>
+#include <openssl/kdf.h>
 #include <sodium.h>
 #include <cstring>
 #include <vector>
@@ -27,11 +29,17 @@ struct SecurityManager::Impl {
     std::vector<uint8_t> ed25519_public_key;  // 32 bytes
     std::mutex ed25519_mutex;
 
+    // ECDHE Key Exchange
+    EVP_PKEY* ecdh_keypair = nullptr;
+    bool key_derived = false;
+    std::mutex ecdhe_mutex;
+
     static constexpr size_t IV_SIZE = 12;
     static constexpr size_t TAG_SIZE = 16;
     static constexpr size_t ED25519_SIG_SIZE = 64;
     static constexpr size_t ED25519_PUBKEY_SIZE = 32;
     static constexpr size_t ED25519_PRIVKEY_SIZE = 64;
+    static constexpr size_t AES_KEY_SIZE = 32; // AES-256
 };
 
 SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {
@@ -40,7 +48,42 @@ SecurityManager::SecurityManager() : impl_(std::make_unique<Impl>()) {
     }
 }
 
-SecurityManager::~SecurityManager() = default;
+SecurityManager::~SecurityManager() noexcept {
+    try {
+        // Securely wipe ED25519 private key from memory
+        if (!impl_->ed25519_private_key.empty()) {
+            sodium_memzero(impl_->ed25519_private_key.data(),
+                          impl_->ed25519_private_key.size());
+            impl_->ed25519_private_key.clear();
+        }
+        
+        // Securely wipe AES encryption key from memory
+        if (!impl_->encryption_key.empty()) {
+            sodium_memzero(impl_->encryption_key.data(),
+                          impl_->encryption_key.size());
+            impl_->encryption_key.clear();
+        }
+        
+        // Free ECDH keypair
+        if (impl_->ecdh_keypair) {
+            EVP_PKEY_free(impl_->ecdh_keypair);
+            impl_->ecdh_keypair = nullptr;
+        }
+    } catch (const std::exception& e) {
+        // Cannot propagate exception from destructor
+        // Still attempt to free ECDH keypair if exception occurred
+        if (impl_->ecdh_keypair) {
+            EVP_PKEY_free(impl_->ecdh_keypair);
+            impl_->ecdh_keypair = nullptr;
+        }
+    } catch (...) {
+        // Suppress all exceptions in destructor
+        if (impl_->ecdh_keypair) {
+            EVP_PKEY_free(impl_->ecdh_keypair);
+            impl_->ecdh_keypair = nullptr;
+        }
+    }
+}
 
 bool SecurityManager::Initialize(bool encryption_enabled) {
     impl_->encryption_enabled = encryption_enabled;
@@ -64,8 +107,8 @@ void SecurityManager::Shutdown() {
     impl_->initialized = false;
 }
 
-void SecurityManager::SetCompressionManager(CompressionManager* compression_manager) {
-    impl_->compression_manager = std::shared_ptr<CompressionManager>(compression_manager);
+void SecurityManager::SetCompressionManager(std::shared_ptr<CompressionManager> compression_manager) {
+    impl_->compression_manager = compression_manager;
 }
 
 bool SecurityManager::EncryptPacket(const uint8_t* data, size_t size, std::vector<uint8_t>& encrypted_out) {
@@ -407,6 +450,206 @@ bool SecurityManager::SignPacketED25519(const uint8_t* data, size_t size, std::v
 
 bool SecurityManager::IsSignatureEnabled() const {
     return impl_->signature_enabled;
+}
+
+// ECDHE Key Exchange Implementation
+
+bool SecurityManager::GenerateECDHKeypair() {
+    std::lock_guard<std::mutex> lock(impl_->ecdhe_mutex);
+    
+    // Free existing keypair if any
+    if (impl_->ecdh_keypair) {
+        EVP_PKEY_free(impl_->ecdh_keypair);
+        impl_->ecdh_keypair = nullptr;
+    }
+
+    // Create context for key generation
+    EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
+    if (!pctx) {
+        LOG_ERROR("Failed to create ECDH context: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        return false;
+    }
+
+    // Initialize key generation
+    if (EVP_PKEY_keygen_init(pctx) <= 0) {
+        LOG_ERROR("Failed to initialize ECDH keygen: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(pctx);
+        return false;
+    }
+
+    // Set curve to secp256r1 (NIST P-256)
+    if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, NID_X9_62_prime256v1) <= 0) {
+        LOG_ERROR("Failed to set EC curve: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(pctx);
+        return false;
+    }
+
+    // Generate keypair
+    if (EVP_PKEY_keygen(pctx, &impl_->ecdh_keypair) <= 0) {
+        LOG_ERROR("Failed to generate ECDH keypair: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(pctx);
+        return false;
+    }
+
+    EVP_PKEY_CTX_free(pctx);
+    LOG_INFO("Generated ECDHE keypair (secp256r1)");
+    return true;
+}
+
+std::vector<uint8_t> SecurityManager::GetPublicKey() const {
+    std::lock_guard<std::mutex> lock(impl_->ecdhe_mutex);
+    
+    if (!impl_->ecdh_keypair) {
+        LOG_ERROR("ECDH keypair not generated");
+        return {};
+    }
+
+    // Serialize public key to DER format
+    unsigned char* der = nullptr;
+    int der_len = i2d_PUBKEY(impl_->ecdh_keypair, &der);
+    
+    if (der_len <= 0) {
+        LOG_ERROR("Failed to serialize public key: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        return {};
+    }
+
+    std::vector<uint8_t> pubkey(der, der + der_len);
+    OPENSSL_free(der);
+    
+    LOG_INFO("Serialized public key (" + std::to_string(pubkey.size()) + " bytes)");
+    return pubkey;
+}
+
+bool SecurityManager::DeriveSharedKey(const std::vector<uint8_t>& peer_public_key) {
+    std::lock_guard<std::mutex> lock(impl_->ecdhe_mutex);
+    
+    if (!impl_->ecdh_keypair) {
+        LOG_ERROR("ECDH keypair not generated");
+        return false;
+    }
+
+    if (peer_public_key.empty()) {
+        LOG_ERROR("Peer public key is empty");
+        return false;
+    }
+
+    // Deserialize peer's public key from DER format
+    const unsigned char* der_data = peer_public_key.data();
+    EVP_PKEY* peer_key = d2i_PUBKEY(nullptr, &der_data, peer_public_key.size());
+    if (!peer_key) {
+        LOG_ERROR("Failed to deserialize peer public key: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        return false;
+    }
+
+    // Create derivation context
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(impl_->ecdh_keypair, nullptr);
+    if (!ctx) {
+        LOG_ERROR("Failed to create derivation context: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_free(peer_key);
+        return false;
+    }
+
+    // Initialize key derivation
+    if (EVP_PKEY_derive_init(ctx) <= 0) {
+        LOG_ERROR("Failed to initialize key derivation: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(peer_key);
+        return false;
+    }
+
+    // Set peer key
+    if (EVP_PKEY_derive_set_peer(ctx, peer_key) <= 0) {
+        LOG_ERROR("Failed to set peer key: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(peer_key);
+        return false;
+    }
+
+    // Determine shared secret length
+    size_t secret_len = 0;
+    if (EVP_PKEY_derive(ctx, nullptr, &secret_len) <= 0) {
+        LOG_ERROR("Failed to determine shared secret length: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(peer_key);
+        return false;
+    }
+
+    // Derive shared secret
+    std::vector<uint8_t> shared_secret(secret_len);
+    if (EVP_PKEY_derive(ctx, shared_secret.data(), &secret_len) <= 0) {
+        LOG_ERROR("Failed to derive shared secret: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(peer_key);
+        return false;
+    }
+
+    EVP_PKEY_CTX_free(ctx);
+    EVP_PKEY_free(peer_key);
+
+    LOG_INFO("Derived shared secret (" + std::to_string(secret_len) + " bytes)");
+
+    // Derive AES-256 key from shared secret using HKDF-SHA256
+    // Salt and info for domain separation
+    const unsigned char salt[] = "P2P-ECDHE-Salt-v1";
+    const unsigned char info[] = "P2P-AES256-Key-v1";
+
+    EVP_PKEY_CTX* kdf_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!kdf_ctx) {
+        LOG_ERROR("Failed to create HKDF context: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        return false;
+    }
+
+    if (EVP_PKEY_derive_init(kdf_ctx) <= 0) {
+        LOG_ERROR("Failed to initialize HKDF: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    if (EVP_PKEY_CTX_set_hkdf_md(kdf_ctx, EVP_sha256()) <= 0) {
+        LOG_ERROR("Failed to set HKDF hash: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    if (EVP_PKEY_CTX_set1_hkdf_salt(kdf_ctx, salt, sizeof(salt) - 1) <= 0) {
+        LOG_ERROR("Failed to set HKDF salt: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    if (EVP_PKEY_CTX_set1_hkdf_key(kdf_ctx, shared_secret.data(), shared_secret.size()) <= 0) {
+        LOG_ERROR("Failed to set HKDF key: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    if (EVP_PKEY_CTX_add1_hkdf_info(kdf_ctx, info, sizeof(info) - 1) <= 0) {
+        LOG_ERROR("Failed to set HKDF info: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    // Derive AES-256 key (32 bytes)
+    impl_->encryption_key.resize(Impl::AES_KEY_SIZE);
+    size_t key_len = Impl::AES_KEY_SIZE;
+    if (EVP_PKEY_derive(kdf_ctx, impl_->encryption_key.data(), &key_len) <= 0) {
+        LOG_ERROR("Failed to derive AES key: " + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+        EVP_PKEY_CTX_free(kdf_ctx);
+        return false;
+    }
+
+    EVP_PKEY_CTX_free(kdf_ctx);
+
+    impl_->key_derived = true;
+    impl_->encryption_enabled = true;
+    
+    LOG_INFO("Derived AES-256 key from ECDHE shared secret (" + std::to_string(key_len) + " bytes)");
+    return true;
+}
+
+bool SecurityManager::IsKeyReady() const {
+    std::lock_guard<std::mutex> lock(impl_->ecdhe_mutex);
+    return !impl_->encryption_key.empty() && (impl_->key_derived || impl_->initialized);
 }
 
 } // namespace P2P

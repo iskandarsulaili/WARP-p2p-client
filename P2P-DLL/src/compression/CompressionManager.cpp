@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <atomic>
 
 namespace P2P {
 
@@ -17,10 +18,10 @@ struct CompressionManager::Impl {
     bool use_lz4 = true;
     int compression_level = 6;
     
-    // Statistics
-    size_t total_original = 0;
-    size_t total_compressed = 0;
-    size_t compression_count = 0;
+    // Statistics - Thread-safe atomic counters
+    std::atomic<uint64_t> total_original{0};
+    std::atomic<uint64_t> total_compressed{0};
+    std::atomic<uint64_t> compression_count{0};
     
     // LZ4 context
     LZ4_stream_t* lz4_stream = nullptr;
@@ -90,18 +91,21 @@ std::vector<uint8_t> CompressionManager::Compress(const std::vector<uint8_t>& da
         return data;
     }
     
-    std::vector<uint8_t> compressed;
+    // Store original size for decompression (4-byte header)
+    const uint32_t original_size = static_cast<uint32_t>(data.size());
+    
+    std::vector<uint8_t> compressed_data;
     
     if (impl_->use_lz4) {
         // LZ4 compression
         const int max_compressed_size = LZ4_compressBound(static_cast<int>(data.size()));
-        compressed.resize(max_compressed_size);
+        compressed_data.resize(max_compressed_size);
         
         int compressed_size;
         if (impl_->compression_level > 9) {
             compressed_size = LZ4_compress_HC(
                 reinterpret_cast<const char*>(data.data()),
-                reinterpret_cast<char*>(compressed.data()),
+                reinterpret_cast<char*>(compressed_data.data()),
                 static_cast<int>(data.size()),
                 max_compressed_size,
                 impl_->compression_level
@@ -109,7 +113,7 @@ std::vector<uint8_t> CompressionManager::Compress(const std::vector<uint8_t>& da
         } else {
             compressed_size = LZ4_compress_default(
                 reinterpret_cast<const char*>(data.data()),
-                reinterpret_cast<char*>(compressed.data()),
+                reinterpret_cast<char*>(compressed_data.data()),
                 static_cast<int>(data.size()),
                 max_compressed_size
             );
@@ -120,14 +124,14 @@ std::vector<uint8_t> CompressionManager::Compress(const std::vector<uint8_t>& da
             return data;
         }
         
-        compressed.resize(compressed_size);
+        compressed_data.resize(compressed_size);
     } else {
         // Zlib compression
         uLongf compressed_size = compressBound(static_cast<uLong>(data.size()));
-        compressed.resize(compressed_size);
+        compressed_data.resize(compressed_size);
         
         int result = compress2(
-            compressed.data(),
+            compressed_data.data(),
             &compressed_size,
             data.data(),
             static_cast<uLong>(data.size()),
@@ -141,20 +145,27 @@ std::vector<uint8_t> CompressionManager::Compress(const std::vector<uint8_t>& da
             return data;
         }
         
-        compressed.resize(compressed_size);
+        compressed_data.resize(compressed_size);
     }
     
-    // Update statistics
-    impl_->total_original += data.size();
-    impl_->total_compressed += compressed.size();
-    impl_->compression_count++;
+    // Prepend 4-byte header with original size
+    std::vector<uint8_t> result;
+    result.reserve(sizeof(original_size) + compressed_data.size());
+    result.resize(sizeof(original_size));
+    std::memcpy(result.data(), &original_size, sizeof(original_size));
+    result.insert(result.end(), compressed_data.begin(), compressed_data.end());
+    
+    // Update statistics atomically (relaxed ordering sufficient for counters)
+    impl_->total_original.fetch_add(data.size(), std::memory_order_relaxed);
+    impl_->total_compressed.fetch_add(result.size(), std::memory_order_relaxed);
+    impl_->compression_count.fetch_add(1, std::memory_order_relaxed);
     
     std::ostringstream oss;
-    oss << "Compressed " << data.size() << " bytes to " << compressed.size() << " bytes (ratio: ";
-    oss << std::fixed << std::setprecision(2) << (static_cast<double>(data.size()) / compressed.size()) << ")";
+    oss << "Compressed " << data.size() << " bytes to " << result.size() << " bytes (ratio: ";
+    oss << std::fixed << std::setprecision(2) << (static_cast<double>(data.size()) / result.size()) << ")";
     LOG_DEBUG(oss.str());
     
-    return compressed;
+    return result;
 }
 
 std::vector<uint8_t> CompressionManager::Decompress(const std::vector<uint8_t>& data) {
@@ -215,10 +226,13 @@ bool CompressionManager::IsEnabled() const {
 }
 
 double CompressionManager::GetCompressionRatio() const {
-    if (impl_->total_compressed == 0) {
+    // Load atomically for consistent snapshot
+    uint64_t compressed = impl_->total_compressed.load(std::memory_order_relaxed);
+    if (compressed == 0) {
         return 1.0;
     }
-    return static_cast<double>(impl_->total_original) / impl_->total_compressed;
+    uint64_t original = impl_->total_original.load(std::memory_order_relaxed);
+    return static_cast<double>(original) / compressed;
 }
 
 std::string CompressionManager::GetAlgorithmName() const {

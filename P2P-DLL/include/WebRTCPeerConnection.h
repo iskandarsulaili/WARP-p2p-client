@@ -122,6 +122,18 @@ public:
      */
     void SetOnIceCandidateCallback(OnIceCandidateCallback callback);
 
+    /**
+     * Set SecurityManager for encryption key exchange
+     * @param security_manager The SecurityManager instance
+     */
+    void SetSecurityManager(class SecurityManager* security_manager);
+
+    /**
+     * Check if encryption is ready (key exchange completed)
+     * @return true if encryption key has been exchanged and derived
+     */
+    bool IsEncryptionReady() const;
+
 private:
     // Pimpl idiom for implementation details
     // Forward declarations for libwebrtc types
@@ -129,6 +141,11 @@ private:
 
     struct Impl;
     std::unique_ptr<Impl> impl_;
+
+    // ECDHE Key Exchange helper methods
+    void InitiateKeyExchange();
+    void HandleReceivedData(const uint8_t* data, size_t size);
+    void HandleKeyExchangePacket(const uint8_t* data, size_t size);
 };
 
 } // namespace P2P

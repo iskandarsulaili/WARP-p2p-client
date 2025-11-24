@@ -205,11 +205,13 @@ d:\RO\client\
 
 Configuration is already set up in `d:\RO\client\p2p_config.json`:
 
+### Development Configuration (Default)
+
 ```json
 {
   "coordinator": {
-    "rest_api_url": "http://192.168.0.100:8001/api/v1",
-    "websocket_url": "ws://192.168.0.100:8001/api/v1/signaling/ws"
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws"
   },
   "webrtc": {
     "stun_servers": [
@@ -224,12 +226,32 @@ Configuration is already set up in `d:\RO\client\p2p_config.json`:
 }
 ```
 
-**Current settings:**
+**Default settings:**
 
-- ✅ `coordinator.rest_api_url` - **http://192.168.0.100:8001/api/v1**
-- ✅ `coordinator.websocket_url` - **ws://192.168.0.100:8001/api/v1/signaling/ws**
+- ✅ `coordinator.rest_api_url` - **http://localhost:8001/api/v1** (development)
+- ✅ `coordinator.websocket_url` - **ws://localhost:8001/api/v1/signaling/ws** (development)
 - ✅ `webrtc.stun_servers` - Google's public STUN servers
 - ✅ `p2p.enabled` - **true** (P2P is enabled)
+
+### Production Configuration
+
+For production deployment, copy and customize [`p2p_config.production.example.json`](config/p2p_config.production.example.json):
+
+```json
+{
+  "coordinator": {
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws"
+  },
+  "security": {
+    "enable_encryption": true,
+    "enable_authentication": true,
+    "api_key": "YOUR_API_KEY_HERE"
+  }
+}
+```
+
+**Important:** Always use HTTPS/WSS in production for security.
 
 ---
 
@@ -258,8 +280,11 @@ Get-Content p2p_dll.log -Wait
 ### Test 2: Check Coordinator Connection
 
 ```powershell
-# Check if coordinator is running
-Invoke-WebRequest -Uri "http://192.168.0.100:8001/api/v1/health"
+# Check if coordinator is running on localhost (development)
+Invoke-WebRequest -Uri "http://localhost:8001/api/v1/health"
+
+# Or on production server
+Invoke-WebRequest -Uri "https://YOUR_COORDINATOR_DOMAIN/api/v1/health"
 ```
 
 **Expected:** HTTP 200 OK

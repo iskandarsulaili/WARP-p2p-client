@@ -37,14 +37,24 @@ struct NetworkManager::Impl {
     bool active = false;
     std::string peer_id;
     std::string session_id;
+    
+    // Thread safety: protects all state modifications
+    std::mutex mutex;
 };
 
 NetworkManager::NetworkManager() : impl_(std::make_unique<Impl>()) {
     LOG_DEBUG("NetworkManager created");
 }
 
-NetworkManager::~NetworkManager() {
-    Shutdown();
+NetworkManager::~NetworkManager() noexcept {
+    try {
+        Shutdown();
+    } catch (const std::exception& e) {
+        // Cannot propagate exception from destructor
+        LOG_ERROR("Exception in NetworkManager destructor: " + std::string(e.what()));
+    } catch (...) {
+        // Suppress all exceptions in destructor
+    }
 }
 
 NetworkManager& NetworkManager::GetInstance() {
@@ -53,6 +63,8 @@ NetworkManager& NetworkManager::GetInstance() {
 }
 
 bool NetworkManager::Initialize(const std::string& peer_id) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    
     if (impl_->initialized) {
         LOG_WARN("NetworkManager already initialized");
         return true;
@@ -142,8 +154,8 @@ bool NetworkManager::Initialize(const std::string& peer_id) {
     // Set bandwidth manager for packet router
     impl_->packet_router->SetBandwidthManager(impl_->bandwidth_manager.get());
 
-    // Set compression manager for security manager
-    impl_->security_manager->SetCompressionManager(impl_->compression_manager.get());
+    // Set compression manager for security manager (shared ownership)
+    impl_->security_manager->SetCompressionManager(impl_->compression_manager);
 
     // Transport selection: default to WebRTC, allow QUIC if enabled in config
     bool prefer_quic = config.GetP2PConfig().prefer_quic;
@@ -215,6 +227,8 @@ void NetworkManager::Shutdown() {
 }
 
 bool NetworkManager::Start() {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    
     if (!impl_->initialized) {
         LOG_ERROR("NetworkManager not initialized");
         return false;

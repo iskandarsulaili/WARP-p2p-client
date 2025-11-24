@@ -5,18 +5,21 @@
 #include <string>
 #include <filesystem>
 #include <sstream>
+#include <mutex>
+#include <atomic>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-// Global state
+// Global state - Thread-safe
 namespace {
-    bool g_initialized = false;
-    bool g_p2p_active = false;
-    std::string g_last_error;
-    std::string g_status_json;
-    HMODULE g_dll_module = nullptr;
+    std::atomic<bool> g_initialized{false};  // Thread-safe atomic flag
+    std::atomic<bool> g_p2p_active{false};   // Thread-safe atomic flag
+    std::mutex g_api_mutex;                  // Protects strings below
+    std::string g_last_error;                // Protected by g_api_mutex
+    std::string g_status_json;               // Protected by g_api_mutex
+    HMODULE g_dll_module = nullptr;          // Written once in DllMain, read-only after
 }
 
 /**
@@ -35,6 +38,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                 // Get DLL directory
                 char dll_path[MAX_PATH];
                 if (!GetModuleFileNameA(hModule, dll_path, MAX_PATH)) {
+                    std::lock_guard<std::mutex> lock(g_api_mutex);
                     g_last_error = "Failed to get DLL path";
                     return FALSE;
                 }
@@ -46,6 +50,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                 auto& config_mgr = P2P::ConfigManager::GetInstance();
 
                 if (!config_mgr.LoadFromFile(config_path.string())) {
+                    std::lock_guard<std::mutex> lock(g_api_mutex);
                     g_last_error = "Failed to load configuration from: " + config_path.string();
                     return FALSE;
                 }
@@ -60,6 +65,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                 }
 
                 if (!logger.Initialize(log_config)) {
+                    std::lock_guard<std::mutex> lock(g_api_mutex);
                     g_last_error = "Failed to initialize logger";
                     return FALSE;
                 }
@@ -81,13 +87,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                     LOG_INFO("P2P networking is DISABLED in configuration");
                 }
 
-                g_initialized = true;
+                g_initialized.store(true, std::memory_order_release);
                 LOG_INFO("=== P2P Network DLL Initialization Complete ===");
 
             } catch (const std::exception& e) {
+                std::lock_guard<std::mutex> lock(g_api_mutex);
                 g_last_error = std::string("Exception during initialization: ") + e.what();
                 return FALSE;
             } catch (...) {
+                std::lock_guard<std::mutex> lock(g_api_mutex);
                 g_last_error = "Unknown exception during initialization";
                 return FALSE;
             }
@@ -105,15 +113,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
 
         case DLL_PROCESS_DETACH:
             // DLL is being unloaded
-            if (g_initialized) {
+            if (g_initialized.load(std::memory_order_acquire)) {
                 try {
                     LOG_INFO("=== P2P Network DLL Shutting Down ===");
 
                     // Stop P2P networking if active
-                    if (g_p2p_active) {
+                    if (g_p2p_active.load(std::memory_order_acquire)) {
                         auto& net_mgr = P2P::NetworkManager::GetInstance();
                         net_mgr.Stop();
-                        g_p2p_active = false;
+                        g_p2p_active.store(false, std::memory_order_release);
                         LOG_INFO("P2P networking stopped");
                     }
 
@@ -127,12 +135,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                     auto& logger = P2P::Logger::GetInstance();
                     logger.Shutdown();
 
-                    g_initialized = false;
+                    g_initialized.store(false, std::memory_order_release);
 
                 } catch (const std::exception& e) {
                     // Can't log here since logger might be shut down
+                    std::lock_guard<std::mutex> lock(g_api_mutex);
                     g_last_error = std::string("Exception during shutdown: ") + e.what();
                 } catch (...) {
+                    std::lock_guard<std::mutex> lock(g_api_mutex);
                     g_last_error = "Unknown exception during shutdown";
                 }
             }
@@ -151,7 +161,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
  * @return true if initialized successfully, false otherwise
  */
 extern "C" __declspec(dllexport) bool P2P_Initialize(const char* config_path) {
-    if (!g_initialized) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "DLL not initialized. DllMain must be called first.";
         return false;
     }
@@ -161,6 +172,7 @@ extern "C" __declspec(dllexport) bool P2P_Initialize(const char* config_path) {
         if (config_path != nullptr && config_path[0] != '\0') {
             auto& config_mgr = P2P::ConfigManager::GetInstance();
             if (!config_mgr.LoadFromFile(config_path)) {
+                std::lock_guard<std::mutex> lock(g_api_mutex);
                 g_last_error = "Failed to reload configuration from: " + std::string(config_path);
                 LOG_ERROR(g_last_error);
                 return false;
@@ -171,6 +183,7 @@ extern "C" __declspec(dllexport) bool P2P_Initialize(const char* config_path) {
         // Check if P2P is enabled
         auto& config_mgr = P2P::ConfigManager::GetInstance();
         if (!config_mgr.IsP2PEnabled()) {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
             g_last_error = "P2P is disabled in configuration";
             LOG_WARN(g_last_error);
             return false;
@@ -185,10 +198,12 @@ extern "C" __declspec(dllexport) bool P2P_Initialize(const char* config_path) {
         return true;
 
     } catch (const std::exception& e) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = std::string("Exception in P2P_Initialize: ") + e.what();
         LOG_ERROR(g_last_error);
         return false;
     } catch (...) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "Unknown exception in P2P_Initialize";
         LOG_ERROR(g_last_error);
         return false;
@@ -203,12 +218,14 @@ extern "C" __declspec(dllexport) bool P2P_Initialize(const char* config_path) {
  * @return true if started successfully, false otherwise
  */
 extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const char* user_id) {
-    if (!g_initialized) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "DLL not initialized";
         return false;
     }
 
-    if (g_p2p_active) {
+    if (g_p2p_active.load(std::memory_order_acquire)) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "P2P already active";
         LOG_WARN(g_last_error);
         return true; // Already started, not an error
@@ -217,12 +234,14 @@ extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const cha
     try {
         auto& config_mgr = P2P::ConfigManager::GetInstance();
         if (!config_mgr.IsP2PEnabled()) {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
             g_last_error = "P2P is disabled in configuration";
             LOG_WARN(g_last_error);
             return false;
         }
 
         if (player_id == nullptr || user_id == nullptr) {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
             g_last_error = "Invalid player_id or user_id";
             LOG_ERROR(g_last_error);
             return false;
@@ -236,6 +255,7 @@ extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const cha
 
         // Initialize with player_id as peer_id
         if (!net_mgr.Initialize(player_id)) {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
             g_last_error = "NetworkManager failed to initialize";
             LOG_ERROR(g_last_error);
             return false;
@@ -243,20 +263,23 @@ extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const cha
 
         // Start networking
         if (!net_mgr.Start()) {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
             g_last_error = "NetworkManager failed to start";
             LOG_ERROR(g_last_error);
             return false;
         }
 
-        g_p2p_active = true;
+        g_p2p_active.store(true, std::memory_order_release);
         LOG_INFO("P2P networking started successfully");
         return true;
 
     } catch (const std::exception& e) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = std::string("Exception in P2P_Start: ") + e.what();
         LOG_ERROR(g_last_error);
         return false;
     } catch (...) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "Unknown exception in P2P_Start";
         LOG_ERROR(g_last_error);
         return false;
@@ -267,24 +290,26 @@ extern "C" __declspec(dllexport) bool P2P_Start(const char* player_id, const cha
  * Exported function for manual shutdown (optional)
  */
 extern "C" __declspec(dllexport) void P2P_Shutdown() {
-    if (!g_initialized) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
         return;
     }
 
     try {
         LOG_INFO("P2P_Shutdown called");
 
-        if (g_p2p_active) {
+        if (g_p2p_active.load(std::memory_order_acquire)) {
             auto& net_mgr = P2P::NetworkManager::GetInstance();
             net_mgr.Stop();
-            g_p2p_active = false;
+            g_p2p_active.store(false, std::memory_order_release);
             LOG_INFO("P2P networking stopped");
         }
 
     } catch (const std::exception& e) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = std::string("Exception in P2P_Shutdown: ") + e.what();
         LOG_ERROR(g_last_error);
     } catch (...) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
         g_last_error = "Unknown exception in P2P_Shutdown";
         LOG_ERROR(g_last_error);
     }
@@ -294,7 +319,7 @@ extern "C" __declspec(dllexport) void P2P_Shutdown() {
  * Exported function to check if P2P is enabled
  */
 extern "C" __declspec(dllexport) bool P2P_IsEnabled() {
-    if (!g_initialized) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
         return false;
     }
 
@@ -310,7 +335,7 @@ extern "C" __declspec(dllexport) bool P2P_IsEnabled() {
  * Exported function to check if P2P is currently active
  */
 extern "C" __declspec(dllexport) bool P2P_IsActive() {
-    if (!g_initialized) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
         return false;
     }
 
@@ -326,19 +351,26 @@ extern "C" __declspec(dllexport) bool P2P_IsActive() {
  * Exported function to get P2P status as JSON string
  *
  * Returns a JSON string with current status information.
- * The returned pointer is valid until the next call to this function.
+ * Uses thread_local storage for thread-safe pointer lifetime.
  *
  * @return JSON string with status information
  */
 extern "C" __declspec(dllexport) const char* P2P_GetStatus() {
+    // Thread-local copy ensures returned pointer remains valid even if another thread modifies g_status_json
+    static thread_local std::string tls_status_copy;
+    
     try {
         json status;
 
-        status["dll_initialized"] = g_initialized;
-        status["p2p_active"] = g_p2p_active;
-        status["last_error"] = g_last_error;
+        status["dll_initialized"] = g_initialized.load(std::memory_order_acquire);
+        status["p2p_active"] = g_p2p_active.load(std::memory_order_acquire);
+        
+        {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
+            status["last_error"] = g_last_error;
+        }
 
-        if (g_initialized) {
+        if (g_initialized.load(std::memory_order_acquire)) {
             auto& config_mgr = P2P::ConfigManager::GetInstance();
             status["p2p_enabled"] = config_mgr.IsP2PEnabled();
 
@@ -356,27 +388,54 @@ extern "C" __declspec(dllexport) const char* P2P_GetStatus() {
             status["network_active"] = false;
         }
 
-        // Store in global variable to keep pointer valid
-        g_status_json = status.dump();
-        return g_status_json.c_str();
+        // Store in thread-local copy for safe return
+        tls_status_copy = status.dump();
+        
+        // Also update global for logging/debugging purposes
+        {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
+            g_status_json = tls_status_copy;
+        }
+        
+        return tls_status_copy.c_str();
 
     } catch (const std::exception& e) {
-        g_last_error = std::string("Exception in P2P_GetStatus: ") + e.what();
-        g_status_json = "{\"error\":\"" + g_last_error + "\"}";
-        return g_status_json.c_str();
+        {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
+            g_last_error = std::string("Exception in P2P_GetStatus: ") + e.what();
+        }
+        tls_status_copy = "{\"error\":\"" + std::string("Exception in P2P_GetStatus: ") + e.what() + "\"}";
+        {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
+            g_status_json = tls_status_copy;
+        }
+        return tls_status_copy.c_str();
     } catch (...) {
-        g_status_json = "{\"error\":\"Unknown exception in P2P_GetStatus\"}";
-        return g_status_json.c_str();
+        tls_status_copy = "{\"error\":\"Unknown exception in P2P_GetStatus\"}";
+        {
+            std::lock_guard<std::mutex> lock(g_api_mutex);
+            g_status_json = tls_status_copy;
+        }
+        return tls_status_copy.c_str();
     }
 }
 
 /**
  * Exported function to get last error message
+ * Uses thread_local storage for thread-safe pointer lifetime.
  *
  * @return Last error message string
  */
 extern "C" __declspec(dllexport) const char* P2P_GetLastError() {
-    return g_last_error.c_str();
+    // Thread-local copy ensures returned pointer remains valid even if another thread modifies g_last_error
+    static thread_local std::string tls_error_copy;
+    
+    {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
+        tls_error_copy = g_last_error;
+    }
+    
+    return tls_error_copy.c_str();
 }
 
 /**

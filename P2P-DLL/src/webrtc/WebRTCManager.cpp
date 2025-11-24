@@ -85,8 +85,15 @@ void WebRTCManager::RefreshMesh() {
     LOG_DEBUG("Telemetry: Mesh refreshed, peer count: " + std::to_string(impl_->peers.size()));
 }
 
-WebRTCManager::~WebRTCManager() {
-    Shutdown();
+WebRTCManager::~WebRTCManager() noexcept {
+    try {
+        Shutdown();
+    } catch (const std::exception& e) {
+        // Cannot propagate exception from destructor
+        LOG_ERROR("Exception in WebRTCManager destructor: " + std::string(e.what()));
+    } catch (...) {
+        // Suppress all exceptions in destructor
+    }
 }
 
 bool WebRTCManager::Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,

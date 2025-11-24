@@ -253,13 +253,15 @@ P2P-DLL/
 
 The DLL is configured via `p2p_config.json` located in the same directory as the RO client executable.
 
-### Example Configuration
+### Development Configuration (Default)
+
+The default configuration uses `localhost` for local development:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws",
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws",
     "timeout_ms": 5000
   },
   "webrtc": {
@@ -267,46 +269,60 @@ The DLL is configured via `p2p_config.json` located in the same directory as the
       "stun:stun.l.google.com:19302",
       "stun:stun1.l.google.com:19302"
     ],
-    "turn_servers": ["turn:your-turn-server.com:3478"],
     "max_peers": 50
   },
   "p2p": {
+    "enabled": true
+  }
+}
+```
+
+### Production Configuration
+
+For production deployment, copy and customize [`p2p_config.production.example.json`](config/p2p_config.production.example.json):
+
+```json
+{
+  "coordinator": {
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN_HERE/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN_HERE/api/v1/signaling/ws",
+    "timeout_ms": 5000
+  },
+  "webrtc": {
+    "stun_servers": [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302"
+    ],
+    "turn_servers": ["turn:username:password@YOUR_TURN_SERVER_HERE:3478"]
+  },
+  "p2p": {
     "enabled": true,
-    "fallback_to_server": true,
-    "packet_types": {
-      "movement": true,
-      "chat": true,
-      "emotes": true,
-      "skills": false
-    }
+    "max_peers": 50
   },
   "security": {
-    "encryption_enabled": true,
-    "algorithm": "AES-256-GCM"
-  },
-  "logging": {
-    "level": "INFO",
-    "file": "logs/p2p_dll.log",
-    "max_file_size_mb": 10,
-    "max_files": 5
+    "enable_encryption": true,
+    "enable_authentication": true,
+    "api_key": "YOUR_API_KEY_HERE"
   }
 }
 ```
 
 ### Configuration Options
 
-| Section                       | Option | Description                       | Default     |
-| ----------------------------- | ------ | --------------------------------- | ----------- |
-| `coordinator.rest_api_url`    | string | Coordinator REST API endpoint     | Required    |
-| `coordinator.websocket_url`   | string | Signaling WebSocket endpoint      | Required    |
-| `coordinator.timeout_ms`      | int    | HTTP request timeout              | 5000        |
-| `webrtc.stun_servers`         | array  | STUN servers for NAT traversal    | Google STUN |
-| `webrtc.turn_servers`         | array  | TURN servers for relay            | []          |
-| `webrtc.max_peers`            | int    | Maximum concurrent peers          | 50          |
-| `p2p.enabled`                 | bool   | Enable/disable P2P networking     | true        |
-| `p2p.fallback_to_server`      | bool   | Fallback to server if P2P fails   | true        |
-| `security.encryption_enabled` | bool   | Enable packet encryption          | true        |
-| `logging.level`               | string | Log level (DEBUG/INFO/WARN/ERROR) | INFO        |
+| Section                         | Option | Description                            | Default                    |
+| ------------------------------- | ------ | -------------------------------------- | -------------------------- |
+| `coordinator.rest_api_url`      | string | Coordinator REST API endpoint          | `http://localhost:8001/api/v1` (dev)<br>`https://YOUR_DOMAIN/api/v1` (prod) |
+| `coordinator.websocket_url`     | string | Signaling WebSocket endpoint           | `ws://localhost:8001/api/v1/signaling/ws` (dev)<br>`wss://YOUR_DOMAIN/api/v1/signaling/ws` (prod) |
+| `coordinator.timeout_seconds`   | int    | HTTP request timeout in seconds        | 30          |
+| `webrtc.stun_servers`           | array  | STUN servers for NAT traversal         | Google STUN |
+| `webrtc.turn_servers`           | array  | TURN servers for relay                 | []          |
+| `p2p.max_peers`                 | int    | Maximum concurrent peers               | 50          |
+| `p2p.enabled`                   | bool   | Enable/disable P2P networking          | true        |
+| `security.enable_encryption`    | bool   | Enable packet encryption               | true        |
+| `security.enable_authentication`| bool   | Enable authentication                  | true        |
+| `logging.level`                 | string | Log level (debug/info/warn/error)      | info        |
+
+**Note:** For production deployments, always use HTTPS/WSS instead of HTTP/WS for security.
 
 ---
 
@@ -460,16 +476,29 @@ Get-Content d:\RO\client\p2p_dll.log -Tail 20
 
 ### Configure Coordinator
 
-Edit `p2p_config.json` to point to your coordinator server:
+**Development (default):**
+```json
+{
+  "coordinator": {
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws"
+  }
+}
+```
+
+**Production:**
+Edit `p2p_config.json` to point to your production coordinator server:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws"
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws"
   }
 }
 ```
+
+See [`p2p_config.production.example.json`](config/p2p_config.production.example.json) for a complete production configuration template.
 
 ### 4. Launch and Verify
 

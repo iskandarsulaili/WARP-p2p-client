@@ -18,21 +18,26 @@ QuicTransport::QuicTransport()
     , connected_(false)
     , remote_port_(0)
 {
-    if (!InitializeMsQuic()) {
-        LOG_ERROR("Failed to initialize MsQuic");
-        throw std::runtime_error("MsQuic initialization failed");
-    }
-    LOG_INFO("QuicTransport initialized with MsQuic");
+    // Initialization moved to InitializeMsQuic() which is called explicitly
+    // Constructor no longer throws exceptions to fix linker error
 }
 
-QuicTransport::~QuicTransport() {
-    Disconnect();
-    Cleanup();
-    if (msquic_api_) {
-        if (registration_) {
-            msquic_api_->RegistrationClose(registration_);
+QuicTransport::~QuicTransport() noexcept {
+    try {
+        Disconnect();
+        Cleanup();
+        if (msquic_api_) {
+            if (registration_) {
+                msquic_api_->RegistrationClose(registration_);
+            }
+            // msquic_api_->Close(msquic_api_); // No Close method in API table
         }
-        // msquic_api_->Close(msquic_api_); // No Close method in API table
+    } catch (const std::exception& e) {
+        // Cannot propagate exception from destructor
+        // Log error if possible, but don't throw
+        LOG_ERROR("Exception in QuicTransport destructor: " + std::string(e.what()));
+    } catch (...) {
+        // Suppress all exceptions in destructor
     }
 }
 
@@ -170,36 +175,39 @@ bool QuicTransport::SendData(const void* data, size_t size) {
         return false;
     }
 
-    auto* buf = new QUIC_BUFFER();
+    // Use unique_ptr with custom deleter for RAII
+    struct QuicBufferDeleter {
+        void operator()(QUIC_BUFFER* buf) const noexcept {
+            if (buf) {
+                delete[] buf->Buffer;
+                delete buf;
+            }
+        }
+    };
+
+    auto buf = std::unique_ptr<QUIC_BUFFER, QuicBufferDeleter>(new QUIC_BUFFER());
     buf->Length = static_cast<uint32_t>(size);
     buf->Buffer = new uint8_t[size];
-    memcpy(buf->Buffer, data, size);
+    std::memcpy(buf->Buffer, data, size);
 
-    // Send with QUIC_SEND_FLAG_NONE. 
-    // Note: We need to manage the buffer lifetime. 
-    // Usually we pass the buffer context to the callback to delete it.
-    // For this implementation, we'll use a simple wrapper or just leak for a microsecond 
-    // (actually we MUST handle it in the callback).
-    
-    // To handle buffer cleanup, we'll attach it to the context or use a specific pattern.
-    // For simplicity here, we'll assume the callback handles 'SendComplete'.
-    
+    // Send data - ownership will be transferred to callback on success
     QUIC_STATUS status = msquic_api_->StreamSend(
         stream_,
-        buf,
+        buf.get(),
         1,
         QUIC_SEND_FLAG_NONE,
-        buf // Context
+        buf.get() // Context pointer for callback
     );
 
-    if (QUIC_FAILED(status)) {
+    if (QUIC_SUCCEEDED(status)) {
+        // Transfer ownership to QUIC - callback will handle cleanup
+        buf.release();
+        return true;
+    } else {
         LOG_ERROR("StreamSend failed: " + std::to_string(status));
-        delete[] buf->Buffer;
-        delete buf;
+        // unique_ptr will automatically clean up on failure
         return false;
     }
-
-    return true;
 }
 
 void QuicTransport::SetOnReceive(std::function<void(const std::vector<uint8_t>&)> callback) {
@@ -269,11 +277,10 @@ QUIC_STATUS QUIC_API QuicTransport::ClientConnectionCallback(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _Function_class_(QUIC_STREAM_CALLBACK)
 QUIC_STATUS QUIC_API QuicTransport::ClientStreamCallback(
-    _In_ HQUIC Stream,
+    _In_ HQUIC Stream [[maybe_unused]],
     _In_opt_ void* Context,
     _Inout_ QUIC_STREAM_EVENT* Event
 ) {
-    (void)Stream;
     auto* pThis = static_cast<QuicTransport*>(Context);
 
     switch (Event->Type) {

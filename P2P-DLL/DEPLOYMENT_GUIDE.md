@@ -220,15 +220,39 @@ vc_redist.x64.exe /install /quiet /norestart
 
 ## Configuration Setup
 
-### Production Configuration Template
+### Development Configuration (Default)
 
-Create `config/p2p_config.json` in the RO client directory:
+The default configuration uses `localhost` for local development:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws",
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws",
+    "timeout_ms": 5000
+  },
+  "webrtc": {
+    "stun_servers": [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302"
+    ]
+  },
+  "p2p": {
+    "enabled": true,
+    "max_peers": 50
+  }
+}
+```
+
+### Production Configuration Template
+
+For production deployment, create `config/p2p_config.json` in the RO client directory using the template from [`p2p_config.production.example.json`](config/p2p_config.production.example.json):
+
+```json
+{
+  "coordinator": {
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws",
     "timeout_ms": 5000,
     "reconnect_max_attempts": 5,
     "reconnect_backoff_ms": 1000
@@ -250,18 +274,21 @@ Create `config/p2p_config.json` in the RO client directory:
     "api_key": "YOUR_API_KEY_HERE"
   },
   "logging": {
-    "level": "INFO",
-    "file": "logs/p2p_network.log",
+    "level": "info",
+    "file": "p2p_dll.log",
     "max_file_size_mb": 10,
     "max_files": 5,
-    "console_output": false
-  },
-  "zones": {
-    "p2p_enabled_zones": ["prontera", "geffen", "payon", "alberta"],
-    "fallback_on_failure": true
+    "console_output": false,
+    "async_logging": true
   }
 }
 ```
+
+**Important Notes:**
+- Replace `YOUR_COORDINATOR_DOMAIN` with your actual production domain
+- Replace `YOUR_API_KEY_HERE` with a secure API key
+- Replace `YOUR_TURN_SERVER_HERE` with your TURN server address if using one
+- Always use HTTPS/WSS in production for security
 
 ### Configuration Security
 
@@ -533,8 +560,8 @@ sudo ufw allow 49152:65535/udp  # TURN relay ports
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1", // ✅ HTTPS
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws" // ✅ WSS
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1", // ✅ HTTPS
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws" // ✅ WSS
   }
 }
 ```
@@ -544,8 +571,8 @@ sudo ufw allow 49152:65535/udp  # TURN relay ports
 ```json
 {
   "coordinator": {
-    "rest_api_url": "http://your-server.com/api/v1", // ❌ Insecure!
-    "websocket_url": "ws://your-server.com/api/v1/signaling/ws" // ❌ Insecure!
+    "rest_api_url": "http://YOUR_COORDINATOR_DOMAIN/api/v1", // ❌ Insecure!
+    "websocket_url": "ws://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws" // ❌ Insecure!
   }
 }
 ```
@@ -813,8 +840,8 @@ See [Troubleshooting](#troubleshooting) section below.
    ```json
    {
      "coordinator": {
-       "rest_api_url": "https://your-server.com/api/v1", // Check URL
-       "websocket_url": "wss://your-server.com/api/v1/signaling/ws"
+       "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1", // Check URL
+       "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws"
      }
    }
    ```
@@ -822,14 +849,17 @@ See [Troubleshooting](#troubleshooting) section below.
 2. **Test Coordinator Connectivity:**
 
    ```powershell
-   # Test HTTPS
-   curl https://your-server.com/api/v1/health
+   # Test HTTPS (production)
+   curl https://YOUR_COORDINATOR_DOMAIN/api/v1/health
+
+   # Test HTTP (development/localhost)
+   curl http://localhost:8001/api/v1/health
 
    # Test DNS resolution
-   nslookup your-server.com
+   nslookup YOUR_COORDINATOR_DOMAIN
 
    # Test port connectivity
-   Test-NetConnection -ComputerName your-server.com -Port 443
+   Test-NetConnection -ComputerName YOUR_COORDINATOR_DOMAIN -Port 443
    ```
 
 3. **Check Firewall:**
@@ -980,8 +1010,11 @@ See [Troubleshooting](#troubleshooting) section below.
 
 3. **Test Authentication:**
    ```powershell
-   # Test API key
-   curl -H "X-API-Key: your-api-key" https://your-server.com/api/v1/auth/login
+   # Test API key (production)
+   curl -H "X-API-Key: your-api-key" https://YOUR_COORDINATOR_DOMAIN/api/v1/auth/login
+   
+   # Test localhost (development)
+   curl -H "X-API-Key: your-api-key" http://localhost:8001/api/v1/auth/login
    ```
 
 ---

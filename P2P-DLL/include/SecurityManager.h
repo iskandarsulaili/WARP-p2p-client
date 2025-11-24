@@ -84,9 +84,38 @@ public:
 
     /**
      * Set CompressionManager for packet compression
-     * @param compression_manager The CompressionManager instance
+     * @param compression_manager The CompressionManager shared_ptr (does not take ownership)
+     * @note This stores a weak reference to avoid circular dependencies
      */
-    void SetCompressionManager(CompressionManager* compression_manager);
+    void SetCompressionManager(std::shared_ptr<CompressionManager> compression_manager);
+
+    // ECDHE Key Exchange Methods
+    /**
+     * Generate ECDHE keypair for key exchange
+     * Uses secp256r1 (NIST P-256) curve
+     * @return true if keypair generation succeeded
+     */
+    bool GenerateECDHKeypair();
+
+    /**
+     * Get the public key for transmission to peer
+     * @return Public key in DER format, empty if not generated
+     */
+    std::vector<uint8_t> GetPublicKey() const;
+
+    /**
+     * Derive shared encryption key from peer's public key
+     * Uses ECDH to compute shared secret, then HKDF-SHA256 to derive AES-256 key
+     * @param peer_public_key Peer's public key in DER format
+     * @return true if key derivation succeeded
+     */
+    bool DeriveSharedKey(const std::vector<uint8_t>& peer_public_key);
+
+    /**
+     * Check if encryption key is ready (either generated or derived)
+     * @return true if encryption key is available
+     */
+    bool IsKeyReady() const;
 
 private:
     // Pimpl idiom for implementation details

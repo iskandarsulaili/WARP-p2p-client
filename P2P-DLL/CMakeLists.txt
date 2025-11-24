@@ -90,10 +90,13 @@ set(HEADERS
     include/AuthManager.h
     include/PacketRouter.h
     include/NetworkHooks.h
+    include/QuicTransport.h
+    include/ITransport.h
     include/WebRTCManager.h
     include/WebRTCPeerConnection.h
     include/SecurityManager.h
     include/BandwidthManager.h
+    include/CompressionManager.h
     include/Logger.h
     include/Types.h
 )
@@ -117,8 +120,8 @@ target_link_libraries(p2p_network PRIVATE
     msquic
     unofficial-sodium::sodium
     ${DETOURS_LIBRARY}
-    lz4::lz4
     ZLIB::ZLIB
+    lz4::lz4
     ws2_32
     unofficial::brotli::brotlidec
     unofficial::brotli::brotlienc
@@ -132,11 +135,11 @@ target_include_directories(p2p_network PRIVATE ${DETOURS_INCLUDE_DIRS})
 if(MSVC)
     target_compile_options(p2p_network PRIVATE
         /W4          # Warning level 4
-        # /WX          # Treat warnings as errors
+        /WX          # Treat warnings as errors
         /MP          # Multi-processor compilation
         /permissive- # Standards conformance
         /EHsc        # Enable standard C++ exception handling
-    /utf-8      # Unicode source encoding
+        /utf-8       # Unicode source encoding
     )
     target_compile_definitions(p2p_network PRIVATE
         WIN32_LEAN_AND_MEAN

@@ -67,9 +67,16 @@ SignalingClient::SignalingClient() : impl_(std::make_unique<Impl>()) {
     LOG_DEBUG("SignalingClient created");
 }
 
-SignalingClient::~SignalingClient() {
-    Disconnect();
-    LOG_DEBUG("SignalingClient destroyed");
+SignalingClient::~SignalingClient() noexcept {
+    try {
+        Disconnect();
+        LOG_DEBUG("SignalingClient destroyed");
+    } catch (const std::exception& e) {
+        // Cannot propagate exception from destructor
+        LOG_ERROR("Exception in SignalingClient destructor: " + std::string(e.what()));
+    } catch (...) {
+        // Suppress all exceptions in destructor
+    }
 }
 
 bool SignalingClient::Connect(const std::string& url, const std::string& peer_id, const std::string& session_id) {

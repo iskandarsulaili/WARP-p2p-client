@@ -1,5 +1,6 @@
 // WebRTCPeerConnection.cpp - Production implementation using libdatachannel and msquic
 #include "../../include/WebRTCPeerConnection.h"
+#include "../../include/SecurityManager.h"
 #include "../../include/Logger.h"
 #include <rtc/rtc.hpp>
 // #include <msquic.h> // msquic integration is disabled for clean build
@@ -9,6 +10,7 @@
 #include <string>
 #include <thread>
 #include <atomic>
+#include <cstring>
 
 namespace P2P {
 
@@ -35,6 +37,15 @@ struct WebRTCPeerConnection::Impl {
     int suspicious_packet_count = 0;
     int total_packet_count = 0;
     std::chrono::steady_clock::time_point last_anomaly_check = std::chrono::steady_clock::now();
+
+    // ECDHE Key Exchange
+    SecurityManager* security_manager = nullptr;
+    bool encryption_ready = false;
+    bool key_exchange_initiated = false;
+    bool peer_key_received = false;
+
+    // Key exchange packet type
+    static constexpr uint16_t KEY_EXCHANGE_PACKET = 0xFF00;
 
     std::mutex mutex;
     std::string local_sdp;
@@ -81,14 +92,26 @@ bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, cons
 
         // Set up event handlers
         impl_->pc->onStateChange([this](rtc::PeerConnection::State state) {
+            std::lock_guard<std::mutex> lock(impl_->mutex);
+            
             LOG_INFO("PeerConnection state changed: " + std::to_string(static_cast<int>(state)));
+            
             if (state == rtc::PeerConnection::State::Connected) {
                 impl_->connected = true;
-            } else if (state == rtc::PeerConnection::State::Closed || state == rtc::PeerConnection::State::Failed) {
+                LOG_INFO("Peer " + impl_->peer_id + " connected");
+                
+                if (impl_->on_state_change) {
+                    impl_->on_state_change(true);
+                }
+            } else if (state == rtc::PeerConnection::State::Disconnected ||
+                       state == rtc::PeerConnection::State::Failed ||
+                       state == rtc::PeerConnection::State::Closed) {
                 impl_->connected = false;
-            }
-            if (impl_->on_state_change) {
-                impl_->on_state_change(state == rtc::PeerConnection::State::Connected);
+                LOG_WARN("Peer " + impl_->peer_id + " disconnected/failed/closed");
+                
+                if (impl_->on_state_change) {
+                    impl_->on_state_change(false);
+                }
             }
         });
 
@@ -119,22 +142,40 @@ bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, cons
             // Inline SetupDataChannel logic
             if (impl_->dc) {
                 impl_->dc->onOpen([this]() {
+                    std::lock_guard<std::mutex> lock(impl_->mutex);
+                    
                     LOG_INFO("DataChannel open for: " + impl_->peer_id);
                     impl_->connected = true;
-                    if (impl_->on_state_change) impl_->on_state_change(true);
+                    
+                    // Initiate key exchange if SecurityManager is set
+                    if (impl_->security_manager && !impl_->key_exchange_initiated) {
+                        InitiateKeyExchange();
+                    }
+                    
+                    if (impl_->on_state_change) {
+                        impl_->on_state_change(true);
+                    }
                 });
                 impl_->dc->onClosed([this]() {
+                    std::lock_guard<std::mutex> lock(impl_->mutex);
+                    
                     LOG_INFO("DataChannel closed for: " + impl_->peer_id);
                     impl_->connected = false;
-                    if (impl_->on_state_change) impl_->on_state_change(false);
+                    impl_->encryption_ready = false;
+                    impl_->key_exchange_initiated = false;
+                    impl_->peer_key_received = false;
+                    
+                    if (impl_->on_state_change) {
+                        impl_->on_state_change(false);
+                    }
                 });
                 impl_->dc->onMessage([this](rtc::message_variant data) {
                     if (std::holds_alternative<rtc::binary>(data)) {
                         const auto& bin = std::get<rtc::binary>(data);
-                        if (impl_->on_data) impl_->on_data(reinterpret_cast<const uint8_t*>(bin.data()), bin.size());
+                        HandleReceivedData(reinterpret_cast<const uint8_t*>(bin.data()), bin.size());
                     } else if (std::holds_alternative<std::string>(data)) {
                         const auto& str = std::get<std::string>(data);
-                        if (impl_->on_data) impl_->on_data(reinterpret_cast<const uint8_t*>(str.data()), str.size());
+                        HandleReceivedData(reinterpret_cast<const uint8_t*>(str.data()), str.size());
                     }
                 });
             }
@@ -146,22 +187,40 @@ bool WebRTCPeerConnection::Initialize(const std::vector<std::string>& stun, cons
             // Inline SetupDataChannel logic
             if (impl_->dc) {
                 impl_->dc->onOpen([this]() {
+                    std::lock_guard<std::mutex> lock(impl_->mutex);
+                    
                     LOG_INFO("DataChannel open for: " + impl_->peer_id);
                     impl_->connected = true;
-                    if (impl_->on_state_change) impl_->on_state_change(true);
+                    
+                    // Initiate key exchange if SecurityManager is set
+                    if (impl_->security_manager && !impl_->key_exchange_initiated) {
+                        InitiateKeyExchange();
+                    }
+                    
+                    if (impl_->on_state_change) {
+                        impl_->on_state_change(true);
+                    }
                 });
                 impl_->dc->onClosed([this]() {
+                    std::lock_guard<std::mutex> lock(impl_->mutex);
+                    
                     LOG_INFO("DataChannel closed for: " + impl_->peer_id);
                     impl_->connected = false;
-                    if (impl_->on_state_change) impl_->on_state_change(false);
+                    impl_->encryption_ready = false;
+                    impl_->key_exchange_initiated = false;
+                    impl_->peer_key_received = false;
+                    
+                    if (impl_->on_state_change) {
+                        impl_->on_state_change(false);
+                    }
                 });
                 impl_->dc->onMessage([this](rtc::message_variant data) {
                     if (std::holds_alternative<rtc::binary>(data)) {
                         const auto& bin = std::get<rtc::binary>(data);
-                        if (impl_->on_data) impl_->on_data(reinterpret_cast<const uint8_t*>(bin.data()), bin.size());
+                        HandleReceivedData(reinterpret_cast<const uint8_t*>(bin.data()), bin.size());
                     } else if (std::holds_alternative<std::string>(data)) {
                         const auto& str = std::get<std::string>(data);
-                        if (impl_->on_data) impl_->on_data(reinterpret_cast<const uint8_t*>(str.data()), str.size());
+                        HandleReceivedData(reinterpret_cast<const uint8_t*>(str.data()), str.size());
                     }
                 });
             }
@@ -352,6 +411,140 @@ void WebRTCPeerConnection::SetPeerScore(float score) {
 float WebRTCPeerConnection::GetPeerScore() const {
     std::lock_guard<std::mutex> lock(impl_->mutex);
     return impl_->score;
+}
+
+void WebRTCPeerConnection::SetSecurityManager(SecurityManager* security_manager) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->security_manager = security_manager;
+    LOG_INFO("SecurityManager set for peer: " + impl_->peer_id);
+}
+
+bool WebRTCPeerConnection::IsEncryptionReady() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    return impl_->encryption_ready;
+}
+
+// Private helper methods
+
+void WebRTCPeerConnection::InitiateKeyExchange() {
+    if (!impl_->security_manager) {
+        LOG_ERROR("Cannot initiate key exchange: SecurityManager not set");
+        return;
+    }
+
+    if (impl_->key_exchange_initiated) {
+        LOG_WARN("Key exchange already initiated");
+        return;
+    }
+
+    // Generate ECDHE keypair
+    if (!impl_->security_manager->GenerateECDHKeypair()) {
+        LOG_ERROR("Failed to generate ECDHE keypair for: " + impl_->peer_id);
+        return;
+    }
+
+    // Get public key
+    std::vector<uint8_t> public_key = impl_->security_manager->GetPublicKey();
+    if (public_key.empty()) {
+        LOG_ERROR("Failed to get public key for: " + impl_->peer_id);
+        return;
+    }
+
+    // Create key exchange packet: [0xFF00][key_size(2 bytes)][public_key]
+    std::vector<uint8_t> packet;
+    packet.resize(2 + 2 + public_key.size());
+    
+    // Packet type (0xFF00)
+    packet[0] = static_cast<uint8_t>(Impl::KEY_EXCHANGE_PACKET & 0xFF);
+    packet[1] = static_cast<uint8_t>((Impl::KEY_EXCHANGE_PACKET >> 8) & 0xFF);
+    
+    // Key size
+    uint16_t key_size = static_cast<uint16_t>(public_key.size());
+    packet[2] = static_cast<uint8_t>(key_size & 0xFF);
+    packet[3] = static_cast<uint8_t>((key_size >> 8) & 0xFF);
+    
+    // Public key
+    std::memcpy(&packet[4], public_key.data(), public_key.size());
+
+    // Send key exchange packet
+    if (SendData(packet.data(), packet.size())) {
+        impl_->key_exchange_initiated = true;
+        LOG_INFO("Sent ECDHE public key to peer: " + impl_->peer_id +
+                 " (" + std::to_string(public_key.size()) + " bytes)");
+    } else {
+        LOG_ERROR("Failed to send ECDHE public key to: " + impl_->peer_id);
+    }
+}
+
+void WebRTCPeerConnection::HandleReceivedData(const uint8_t* data, size_t size) {
+    if (!data || size < 2) {
+        LOG_ERROR("Invalid data received");
+        return;
+    }
+
+    // Check if this is a key exchange packet
+    uint16_t packet_type = static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+    
+    if (packet_type == Impl::KEY_EXCHANGE_PACKET) {
+        HandleKeyExchangePacket(data, size);
+    } else {
+        // Regular data packet - forward to callback if encryption is ready
+        if (!impl_->security_manager || impl_->encryption_ready) {
+            if (impl_->on_data) {
+                impl_->on_data(data, size);
+            }
+        } else {
+            LOG_WARN("Received data packet before encryption ready - dropping");
+        }
+    }
+}
+
+void WebRTCPeerConnection::HandleKeyExchangePacket(const uint8_t* data, size_t size) {
+    if (!impl_->security_manager) {
+        LOG_ERROR("Cannot handle key exchange: SecurityManager not set");
+        return;
+    }
+
+    if (impl_->peer_key_received) {
+        LOG_WARN("Peer key already received - ignoring duplicate");
+        return;
+    }
+
+    // Parse key exchange packet: [0xFF00][key_size(2 bytes)][public_key]
+    if (size < 4) {
+        LOG_ERROR("Key exchange packet too small: " + std::to_string(size) + " bytes");
+        return;
+    }
+
+    // Extract key size
+    uint16_t key_size = static_cast<uint16_t>(data[2]) | (static_cast<uint16_t>(data[3]) << 8);
+    
+    if (size != 4 + key_size) {
+        LOG_ERROR("Key exchange packet size mismatch: expected " +
+                 std::to_string(4 + key_size) + ", got " + std::to_string(size));
+        return;
+    }
+
+    // Extract peer's public key
+    std::vector<uint8_t> peer_public_key(data + 4, data + 4 + key_size);
+    
+    LOG_INFO("Received ECDHE public key from peer: " + impl_->peer_id +
+             " (" + std::to_string(key_size) + " bytes)");
+
+    // If we haven't initiated key exchange yet, do it now
+    if (!impl_->key_exchange_initiated) {
+        InitiateKeyExchange();
+    }
+
+    // Derive shared key
+    if (impl_->security_manager->DeriveSharedKey(peer_public_key)) {
+        impl_->peer_key_received = true;
+        impl_->encryption_ready = true;
+        LOG_INFO("ECDHE key exchange completed for peer: " + impl_->peer_id +
+                 " - Encryption is ready");
+    } else {
+        LOG_ERROR("Failed to derive shared key for peer: " + impl_->peer_id);
+    }
 }
 
 } // namespace P2P
