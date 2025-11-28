@@ -1,30 +1,17 @@
-﻿# P2P Network DLL Specification for WARP CustomDLL Patch
-# This file configures the CustomDLL patch to load p2p_network.dll
+############################################################################
+#                                                                          #
+#   P2P Network DLL Import Specification for WARP CustomDLL Patch         #
+#                                                                          #
+#   This file specifies the DLL and exported functions to be added        #
+#   to the Ragnarok Online client's Import Table.                         #
+#                                                                          #
+#   The CustomDLL patch will modify the client to load p2p_network.dll    #
+#   and resolve the P2P_Initialize function at runtime.                   #
+#                                                                          #
+############################################################################
 
-dlls:
-  - name: p2p_network.dll
-    load_order: normal
-    description: "P2P Network functionality for Ragnarok Online"
-    dependencies:
-      - spdlog.dll
-      - WebView2Loader.dll
-    funcs:
-      - name: "P2P_Initialize"
-        description: "Initialize P2P network subsystem"
-      - name: "P2P_Start"
-        description: "Start P2P networking"
-      - name: "P2P_Shutdown"
-        description: "Shutdown P2P network subsystem"
-      - name: "P2P_IsEnabled"
-        description: "Check if P2P is enabled"
-      - name: "P2P_IsActive"
-        description: "Check if P2P is currently active"
-      - name: "P2P_GetStatus"
-        description: "Get current P2P status"
-      - name: "P2P_GetLastError"
-        description: "Get last error code"
-
-# Optional: Additional DLLs can be specified
-# - name: another_dll.dll
-#   load_order: after_main
-#   description: "Additional functionality"
+# P2P Network DLL - Main networking library for peer-to-peer functionality
+- Name: p2p_network.dll
+  Funcs:
+    # Primary initialization function called by the RO client on startup
+    - Name: P2P_Initialize
