@@ -2,6 +2,8 @@
 #include "../include/ConfigManager.h"
 #include "../include/Logger.h"
 #include "../include/NetworkManager.h"
+#include "../include/overlay/OverlayRenderer.h"
+#include "../include/overlay/KeyboardHook.h"
 #include <string>
 #include <filesystem>
 #include <sstream>
@@ -87,6 +89,22 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
                     LOG_INFO("P2P networking is DISABLED in configuration");
                 }
 
+                // Initialize overlay system
+                auto& overlay = P2P::OverlayRenderer::GetInstance();
+                if (overlay.Initialize()) {
+                    LOG_INFO("Overlay renderer initialized");
+                } else {
+                    LOG_WARN("Failed to initialize overlay renderer");
+                }
+
+                // Install keyboard hook for F9 overlay cycling
+                auto& kb_hook = P2P::KeyboardHook::GetInstance();
+                if (kb_hook.Install(hModule)) {
+                    LOG_INFO("Keyboard hook installed (F9 to cycle overlay modes)");
+                } else {
+                    LOG_WARN("Failed to install keyboard hook");
+                }
+
                 g_initialized.store(true, std::memory_order_release);
                 LOG_INFO("=== P2P Network DLL Initialization Complete ===");
 
@@ -116,6 +134,16 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID /* lpRes
             if (g_initialized.load(std::memory_order_acquire)) {
                 try {
                     LOG_INFO("=== P2P Network DLL Shutting Down ===");
+
+                    // Uninstall keyboard hook
+                    auto& kb_hook = P2P::KeyboardHook::GetInstance();
+                    kb_hook.Uninstall();
+                    LOG_INFO("Keyboard hook uninstalled");
+
+                    // Shutdown overlay renderer
+                    auto& overlay = P2P::OverlayRenderer::GetInstance();
+                    overlay.Shutdown();
+                    LOG_INFO("Overlay renderer shutdown");
 
                     // Stop P2P networking if active
                     if (g_p2p_active.load(std::memory_order_acquire)) {
@@ -456,5 +484,44 @@ extern "C" __declspec(dllexport) void P2P_SetCorrelationId(const char* correlati
 extern "C" __declspec(dllexport) void P2P_SetDebugEnabled(int enabled) {
     P2P::Logger::GetInstance().SetDebugEnabled(enabled != 0);
     LOG_INFO(std::string("Debug logging ") + (enabled ? "ENABLED" : "DISABLED"));
+}
+
+/**
+ * Exported function to enable/disable overlay
+ * @param enabled 1 to enable, 0 to disable
+ */
+extern "C" __declspec(dllexport) void P2P_SetOverlayEnabled(int enabled) {
+    if (!g_initialized.load(std::memory_order_acquire)) {
+        return;
+    }
+    
+    try {
+        auto& overlay = P2P::OverlayRenderer::GetInstance();
+        overlay.SetEnabled(enabled != 0);
+        LOG_INFO(std::string("Overlay ") + (enabled ? "ENABLED" : "DISABLED"));
+    } catch (const std::exception& e) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
+        g_last_error = std::string("Exception in P2P_SetOverlayEnabled: ") + e.what();
+        LOG_ERROR(g_last_error);
+    }
+}
+
+/**
+ * Exported function to cycle overlay mode (same as pressing F9)
+ */
+extern "C" __declspec(dllexport) void P2P_CycleOverlayMode() {
+    if (!g_initialized.load(std::memory_order_acquire)) {
+        return;
+    }
+    
+    try {
+        auto& overlay = P2P::OverlayRenderer::GetInstance();
+        overlay.CycleMode();
+        LOG_INFO("Overlay mode cycled");
+    } catch (const std::exception& e) {
+        std::lock_guard<std::mutex> lock(g_api_mutex);
+        g_last_error = std::string("Exception in P2P_CycleOverlayMode: ") + e.what();
+        LOG_ERROR(g_last_error);
+    }
 }
 

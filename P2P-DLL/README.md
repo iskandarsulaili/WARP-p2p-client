@@ -75,6 +75,7 @@ This P2P DLL is part of the **WARP-p2p-client** package, which includes:
 | **Security Manager**         | AES-256-GCM encryption for P2P packets                  | ✅ Complete |
 | **HTTP Client**              | REST API client for coordinator communication           | ✅ Complete |
 | **DLL Loading**              | Compatible with WARP patcher and manual injection       | ✅ Complete |
+| **In-Game Overlay**          | DirectX 9 overlay showing P2P status with F9 toggle     | ✅ Complete |
 
 ### 🚧 In Progress
 
@@ -191,6 +192,7 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instr
 | **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**           | Full deployment guide with multiple methods      |
 | **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)**                   | WebRTC implementation details and usage examples |
 | **[API_REFERENCE.md](API_REFERENCE.md)**                 | Complete API documentation for all classes       |
+| **[OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)**                 | In-game P2P status overlay documentation         |
 | **[INTEGRATION_TEST_PLAN.md](INTEGRATION_TEST_PLAN.md)** | Integration testing procedures                   |
 
 ---
@@ -218,7 +220,10 @@ P2P-DLL/
 │   ├── ConfigManager.h         # Configuration management
 │   ├── HttpClient.h            # HTTP REST client
 │   ├── Logger.h                # Logging utilities
-│   └── Types.h                 # Common type definitions
+│   ├── Types.h                 # Common type definitions
+│   └── overlay/                # Overlay system headers
+│       ├── OverlayRenderer.h   # DirectX 9 overlay renderer
+│       └── KeyboardHook.h      # F9 hotkey handling
 ├── src/                        # Implementation files
 │   ├── core/
 │   │   ├── NetworkManager.cpp
@@ -233,6 +238,9 @@ P2P-DLL/
 │   ├── security/
 │   │   ├── SecurityManager.cpp
 │   │   └── AuthManager.cpp
+│   ├── overlay/                # In-game overlay system
+│   │   ├── OverlayRenderer.cpp # DirectX 9 rendering
+│   │   └── KeyboardHook.cpp    # F9 hotkey implementation
 │   ├── utils/
 │   │   └── Logger.cpp
 │   └── DllMain.cpp             # DLL entry point and exports
@@ -350,6 +358,7 @@ For production deployment, copy and customize [`p2p_config.production.example.js
 | **DLL Loading**           | ✅ Complete | WARP patcher compatible      |
 | **Unit Tests**            | ✅ Complete | 13/13 tests passing          |
 | **Integration Tests**     | 📋 Planned  | See INTEGRATION_TEST_PLAN.md |
+| **In-Game Overlay**       | ✅ Complete | DirectX 9 status display     |
 | **Documentation**         | ✅ Complete | All guides written           |
 
 ### Known Limitations
@@ -515,6 +524,55 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instr
 
 ---
 
+## 🖥️ In-Game Overlay
+
+The P2P DLL includes an **in-game overlay** that displays real-time P2P connection status directly in the game window.
+
+### Features
+
+- **Three display modes**: Basic, Connection, and Debug
+- **F9 hotkey** to cycle through modes
+- **DirectX 9 integration** with EndScene hooking
+- **API control** for programmatic enable/disable
+
+### Quick Start
+
+1. **Launch the game** - The overlay appears automatically in the top-left corner
+2. **Press F9** - Cycle through display modes
+3. **Basic mode** shows: `P2P: Connected` or `P2P: Disconnected`
+4. **Connection mode** shows: Status, Peers, Ping, Loss
+5. **Debug mode** shows: Full technical details including bandwidth
+
+### Display Modes Preview
+
+```
+Basic Mode:           Connection Mode:         Debug Mode:
+┌────────────────┐   ┌──────────────────┐     ┌─────────────────────────┐
+│P2P: Connected  │   │=== P2P Status ===│     │=== P2P Debug Info ===   │
+└────────────────┘   │Status: Connected │     │Status: Connected        │
+                     │Peers: 5          │     │Sent: 1.23 MB            │
+                     │Ping: 45ms        │     │Recv: 2.45 MB            │
+                     │Loss: 0.5%        │     │Pkts Sent: 1234          │
+                     └──────────────────┘     │Latency: 45.0ms          │
+                                              │Bitrate: 2048.0 kbps     │
+                                              └─────────────────────────┘
+```
+
+### API Functions
+
+```cpp
+// Enable/disable overlay
+P2P_SetOverlayEnabled(1);  // Enable
+P2P_SetOverlayEnabled(0);  // Disable
+
+// Cycle to next mode (same as pressing F9)
+P2P_CycleOverlayMode();
+```
+
+📖 **For detailed documentation, see [OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)**
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these guidelines:
@@ -556,6 +614,7 @@ Licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 - **[BUILD_GUIDE.md](BUILD_GUIDE.md)** - Build troubleshooting
 - **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)** - WebRTC usage and examples
 - **[API_REFERENCE.md](API_REFERENCE.md)** - API documentation
+- **[OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)** - In-game overlay documentation
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment help
 
 ### Logs
@@ -574,6 +633,8 @@ Get-Content "C:\Program Files (x86)\Gravity\RO\logs\p2p_dll.log" -Tail 100
 | WebRTC connection fails | Verify STUN/TURN server configuration              |
 | Signaling timeout       | Check coordinator server is running and accessible |
 | Encryption errors       | Verify OpenSSL DLLs are present                    |
+| Overlay not showing     | Check DirectX 9 compatibility; see [OVERLAY_GUIDE.md](OVERLAY_GUIDE.md) |
+| F9 not working          | Verify keyboard hook installed; check logs         |
 
 ---
 

@@ -23,5 +23,14 @@
     "lz4",
     "boost-beast"
   ],
-  "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36"
+  "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36",
+  "overrides": [],
+  "$comments": [
+    "DirectX 9 Dependencies:",
+    "- d3d9.lib: Provided by Windows SDK (already available on Windows)",
+    "- d3dx9.lib: Legacy DirectX utility library",
+    "  * Not available in vcpkg",
+    "  * Must be linked from system DirectX SDK or bundled separately",
+    "  * Configured in CMakeLists.txt"
+  ]
 }

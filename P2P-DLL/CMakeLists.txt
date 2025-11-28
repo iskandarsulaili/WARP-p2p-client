@@ -77,6 +77,8 @@ set(SOURCES
     src/security/AuthManager.cpp
     src/bandwidth/BandwidthManager.cpp
     src/compression/CompressionManager.cpp
+    src/overlay/OverlayRenderer.cpp
+    src/overlay/KeyboardHook.cpp
     src/utils/Logger.cpp
     src/DllMain.cpp
 )
@@ -97,6 +99,8 @@ set(HEADERS
     include/SecurityManager.h
     include/BandwidthManager.h
     include/CompressionManager.h
+    include/overlay/OverlayRenderer.h
+    include/overlay/KeyboardHook.h
     include/Logger.h
     include/Types.h
 )
@@ -126,6 +130,9 @@ target_link_libraries(p2p_network PRIVATE
     unofficial::brotli::brotlidec
     unofficial::brotli::brotlienc
     unofficial::brotli::brotlicommon
+    # DirectX 9 libraries for overlay rendering
+    d3d9
+    d3dx9
 )
 
 # Add include directories
