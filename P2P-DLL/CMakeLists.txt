@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+﻿cmake_minimum_required(VERSION 3.25)
 project(P2PNetworkDLL VERSION 1.0.0 LANGUAGES CXX)
 
 # C++ Standard
@@ -16,27 +16,44 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# vcpkg integration
-if(DEFINED ENV{VCPKG_ROOT})
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        CACHE STRING "Vcpkg toolchain file")
-endif()
+# vcpkg integration handled by command line
+# if(DEFINED ENV{VCPKG_ROOT})
+#     set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+#         CACHE STRING "Vcpkg toolchain file")
+# endif()
+
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+
 
 # Find packages
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(ZLIB REQUIRED)
 # Find Boost components needed by Boost.Beast (each is a separate vcpkg package)
-find_package(boost_system CONFIG REQUIRED)
-find_package(boost_regex CONFIG REQUIRED)
-find_package(boost_asio CONFIG REQUIRED)
-find_package(boost_chrono CONFIG REQUIRED)
-find_package(boost_random CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system regex chrono random)
 # Boost.Beast is header-only, included with Boost.Asio
 find_package(httplib CONFIG REQUIRED)
 
 # WebRTC library
 find_package(LibDataChannel CONFIG REQUIRED)
+
+# QUIC protocol (msquic)
+find_package(msquic CONFIG REQUIRED)
+
+# ED25519 cryptography (libsodium)
+find_package(unofficial-sodium CONFIG REQUIRED)
+
+# LZ4 compression
+find_package(lz4 CONFIG REQUIRED)
+
+# Brotli compression (required by cpp-httplib)
+find_package(unofficial-brotli CONFIG REQUIRED)
+
+# Detours for function hooking (manual configuration since vcpkg doesn't provide CMake files)
+find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
+find_library(DETOURS_LIBRARY detours REQUIRED)
 
 # Include directories
 include_directories(
@@ -52,10 +69,16 @@ set(SOURCES
     src/network/SignalingClient.cpp
     src/network/HttpClient.cpp
     src/network/PacketRouter.cpp
+    src/network/NetworkHooks.cpp
+    src/network/QuicTransport.cpp
     src/webrtc/WebRTCManager.cpp
     src/webrtc/WebRTCPeerConnection.cpp
     src/security/SecurityManager.cpp
     src/security/AuthManager.cpp
+    src/bandwidth/BandwidthManager.cpp
+    src/compression/CompressionManager.cpp
+    src/overlay/OverlayRenderer.cpp
+    src/overlay/KeyboardHook.cpp
     src/utils/Logger.cpp
     src/DllMain.cpp
 )
@@ -68,9 +91,16 @@ set(HEADERS
     include/HttpClient.h
     include/AuthManager.h
     include/PacketRouter.h
+    include/NetworkHooks.h
+    include/QuicTransport.h
+    include/ITransport.h
     include/WebRTCManager.h
     include/WebRTCPeerConnection.h
     include/SecurityManager.h
+    include/BandwidthManager.h
+    include/CompressionManager.h
+    include/overlay/OverlayRenderer.h
+    include/overlay/KeyboardHook.h
     include/Logger.h
     include/Types.h
 )
@@ -87,11 +117,26 @@ target_link_libraries(p2p_network PRIVATE
     httplib::httplib
     Boost::system
     Boost::regex
-    Boost::asio
     Boost::chrono
+    Boost::random
     # Boost.Beast is header-only, no linking needed
     LibDataChannel::LibDataChannel
+    msquic
+    unofficial-sodium::sodium
+    ${DETOURS_LIBRARY}
+    ZLIB::ZLIB
+    lz4::lz4
+    ws2_32
+    unofficial::brotli::brotlidec
+    unofficial::brotli::brotlienc
+    unofficial::brotli::brotlicommon
+    # DirectX 9 libraries for overlay rendering
+    d3d9
+    d3dx9
 )
+
+# Add include directories
+target_include_directories(p2p_network PRIVATE ${DETOURS_INCLUDE_DIRS})
 
 # Compiler options
 if(MSVC)
@@ -100,12 +145,18 @@ if(MSVC)
         /WX          # Treat warnings as errors
         /MP          # Multi-processor compilation
         /permissive- # Standards conformance
+        /EHsc        # Enable standard C++ exception handling
+        /utf-8       # Unicode source encoding
     )
     target_compile_definitions(p2p_network PRIVATE
-        _WIN32_WINNT=0x0A00  # Windows 10
         WIN32_LEAN_AND_MEAN
         NOMINMAX
     )
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        target_compile_definitions(p2p_network PRIVATE _AMD64_)
+    else()
+        target_compile_definitions(p2p_network PRIVATE _X86_)
+    endif()
 else()
     target_compile_options(p2p_network PRIVATE
         -Wall
@@ -141,7 +192,7 @@ install(FILES
 option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)
     enable_testing()
-    find_package(GTest CONFIG REQUIRED)
+    # find_package(GTest CONFIG REQUIRED)
     add_subdirectory(tests)
 endif()
 

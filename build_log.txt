@@ -1,0 +1,255 @@
+**********************************************************************
+** Visual Studio 2022 Developer PowerShell v17.14.19
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+
+    Directory: D:\RO\patcher\WARP-p2p-client\P2P-DLL
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----           21-Nov-25  7:29 AM                build_x86_manifest
+-- Running vcpkg install
+warning: cpp-httplib is only supported on '!x86 & !arm32', which does not match x86-windows. This usually means that there are known build failures, or runtime problems, when building other platforms. Proceeding anyway due to `--allow-unsupported`.
+Detecting compiler hash for triplet x64-windows...
+Compiler found: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+Detecting compiler hash for triplet x86-windows...
+Compiler found: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x86/cl.exe
+The following packages are already installed:
+  * boost-algorithm:x86-windows@1.89.0
+  * boost-align:x86-windows@1.89.0
+  * boost-array:x86-windows@1.89.0
+    boost-asio[core,deadline-timer,spawn]:x86-windows@1.89.0
+  * boost-assert:x86-windows@1.89.0
+    boost-beast:x86-windows@1.89.0
+  * boost-bind:x86-windows@1.89.0
+    boost-chrono:x86-windows@1.89.0
+  * boost-cmake:x86-windows@1.89.0
+  * boost-concept-check:x86-windows@1.89.0
+  * boost-config:x86-windows@1.89.0
+  * boost-container:x86-windows@1.89.0
+  * boost-container-hash:x86-windows@1.89.0
+  * boost-context:x86-windows@1.89.0
+  * boost-conversion:x86-windows@1.89.0
+  * boost-core:x86-windows@1.89.0
+  * boost-date-time:x86-windows@1.89.0
+  * boost-describe:x86-windows@1.89.0
+  * boost-detail:x86-windows@1.89.0
+  * boost-dynamic-bitset:x86-windows@1.89.0
+  * boost-endian:x86-windows@1.89.0
+  * boost-exception:x86-windows@1.89.0
+  * boost-function:x86-windows@1.89.0
+  * boost-function-types:x86-windows@1.89.0
+  * boost-functional:x86-windows@1.89.0
+  * boost-fusion:x86-windows@1.89.0
+  * boost-headers:x86-windows@1.89.0
+  * boost-integer:x86-windows@1.89.0
+  * boost-intrusive:x86-windows@1.89.0
+  * boost-io:x86-windows@1.89.0
+  * boost-iterator:x86-windows@1.89.0
+  * boost-lexical-cast:x86-windows@1.89.0
+  * boost-logic:x86-windows@1.89.0
+  * boost-move:x86-windows@1.89.0
+  * boost-mp11:x86-windows@1.89.0
+  * boost-mpl:x86-windows@1.89.0
+  * boost-numeric-conversion:x86-windows@1.89.0
+  * boost-optional:x86-windows@1.89.0
+  * boost-pool:x86-windows@1.89.0
+  * boost-predef:x86-windows@1.89.0
+  * boost-preprocessor:x86-windows@1.89.0
+    boost-random:x86-windows@1.89.0
+  * boost-range:x86-windows@1.89.0
+  * boost-ratio:x86-windows@1.89.0
+    boost-regex:x86-windows@1.89.0
+  * boost-smart-ptr:x86-windows@1.89.0
+  * boost-static-assert:x86-windows@1.89.0
+  * boost-static-string:x86-windows@1.89.0
+    boost-system:x86-windows@1.89.0
+  * boost-throw-exception:x86-windows@1.89.0
+  * boost-tokenizer:x86-windows@1.89.0
+  * boost-tuple:x86-windows@1.89.0
+  * boost-type-index:x86-windows@1.89.0
+  * boost-type-traits:x86-windows@1.89.0
+  * boost-typeof:x86-windows@1.89.0
+  * boost-uninstall:x86-windows@1.89.0
+  * boost-unordered:x86-windows@1.89.0
+  * boost-utility:x86-windows@1.89.0
+  * boost-variant2:x86-windows@1.89.0
+  * boost-winapi:x86-windows@1.89.0
+  * brotli:x86-windows@1.2.0
+    cpp-httplib[brotli,core]:x86-windows@0.27.0
+    detours:x86-windows@4.0.1#8
+  * fmt:x86-windows@12.1.0
+    gtest:x64-windows@1.17.0#2
+    libdatachannel[core,ws]:x86-windows@0.23.2
+  * libjuice:x86-windows@1.6.1
+    libsodium:x86-windows@1.0.20#3
+    lz4:x86-windows@1.10.0
+    msquic:x86-windows@2.4.8#1
+    nlohmann-json:x86-windows@3.12.0#1
+    openssl:x86-windows@3.6.0#3
+  * pkgconf:x64-windows@2.5.1#4
+  * plog:x86-windows@1.1.11
+    spdlog:x86-windows@1.16.0
+  * usrsctp:x86-windows@0.9.5.0#4
+  * vcpkg-boost:x64-windows@2025-03-29
+  * vcpkg-cmake:x64-windows@2024-04-23
+  * vcpkg-cmake-config:x64-windows@2024-05-23
+  * vcpkg-cmake-get-vars:x64-windows@2025-05-29
+  * vcpkg-msbuild:x64-windows@2023-08-08
+  * vcpkg-pkgconfig-get-modules:x64-windows@2024-04-03
+  * vcpkg-tool-meson:x64-windows@1.9.0#3
+    zlib:x86-windows@1.3.1
+boost-regex provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_regex CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::regex)
+
+boost-system provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_system CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::system)
+
+boost-asio provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_asio CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::asio)
+
+  find_package(boost_asio_core CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::asio_core)
+
+  find_package(boost_asio_deadline_timer CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::asio_deadline_timer)
+
+  find_package(boost_asio_spawn CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::asio_spawn)
+
+boost-beast provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_beast CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::beast)
+
+boost-chrono provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_chrono CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::chrono)
+
+boost-random provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(boost_random CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Boost::random)
+
+cpp-httplib provides CMake targets:
+
+    find_package(httplib CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE httplib::httplib)
+
+detours can be used from CMake via:
+
+    find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
+    find_library(DETOURS_LIBRARY detours REQUIRED)
+
+    target_include_directories(main PRIVATE ${DETOURS_INCLUDE_DIRS})
+    target_link_libraries(main PRIVATE ${DETOURS_LIBRARY})
+
+The package gtest is compatible with built-in CMake targets:
+
+    enable_testing()
+    
+    find_package(GTest CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+    
+    add_test(AllTestsInMain main)
+
+openssl is compatible with built-in CMake targets:
+
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(main PRIVATE OpenSSL::SSL)
+  target_link_libraries(main PRIVATE OpenSSL::Crypto)
+
+The package nlohmann-json provides CMake targets:
+
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
+
+The package nlohmann-json can be configured to not provide implicit conversions via a custom triplet file:
+
+    set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
+
+For more information, see the docs here:
+    
+    https://json.nlohmann.me/api/macros/json_use_implicit_conversions/
+
+libdatachannel provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(LibDataChannel CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE LibDataChannel::LibDataChannel)
+
+libsodium provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(unofficial-sodium CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE unofficial-sodium::sodium)
+
+libsodium provides pkg-config modules:
+
+  # A modern and easy-to-use crypto library
+  libsodium
+
+lz4 provides CMake targets:
+
+  find_package(lz4 CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE lz4::lz4)
+
+lz4 provides pkg-config modules:
+
+  liblz4
+
+msquic provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(msquic CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE msquic)
+
+The package spdlog provides CMake targets:
+
+    find_package(spdlog CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE spdlog::spdlog)
+
+    # Or use the header-only version
+    find_package(spdlog CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE spdlog::spdlog_header_only)
+
+The package zlib is compatible with built-in CMake targets:
+
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(main PRIVATE ZLIB::ZLIB)
+
+All requested installations completed successfully in: 7.09 ms
+-- Running vcpkg install - done
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.22631.
+-- CMAKE_PREFIX_PATH: D:/RO/patcher/WARP-p2p-client/P2P-DLL/build_x86_manifest/vcpkg_installed/x86-windows;D:/RO/patcher/WARP-p2p-client/P2P-DLL/build_x86_manifest/vcpkg_installed/x86-windows/debug
+-- VCPKG_TARGET_TRIPLET: x86-windows
+CMake Error at D:/vcpkg/scripts/buildsystems/vcpkg.cmake:908 (_find_package):
+  Could not find a configuration file for package "spdlog" that is compatible
+  with requested version "".
+
+  The following configuration files were considered but not accepted:
+
+    D:/RO/patcher/WARP-p2p-client/P2P-DLL/build_x86_manifest/vcpkg_installed/x86-windows/share/spdlog/spdlogConfig.cmake, version: 1.16.0 (32bit)
+
+Call Stack (most recent call first):
+  CMakeLists.txt:31 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
+MSBuild version 17.14.23+b0019275e for .NET Framework
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: ALL_BUILD.vcxproj
+

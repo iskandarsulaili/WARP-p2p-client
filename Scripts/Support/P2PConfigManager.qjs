@@ -1,0 +1,88 @@
+// P2PConfigManager.qjs
+// Patch-side config manager for P2P DLL patching and injection
+// Provides UI/config toggles for P2P, mesh, fallback, and server compatibility
+// Handles config generation, error logging, and user feedback
+
+(function(global) {
+    const PATCHER_LOG = "patcher.log";
+    const CONFIG_PATH = "../../client/config/p2p_config.json";
+
+    // Default config templates for legacy and new server
+    const CONFIG_TEMPLATES = {
+        legacy: {
+            coordinator: {
+                rest_api_url: "http://legacy-coordinator:8001/api/v1",
+                websocket_url: "ws://legacy-coordinator:8001/api/v1/signaling/ws",
+                timeout_seconds: 30,
+                reconnect_max_attempts: 5,
+                reconnect_backoff_ms: 1000
+            },
+            // ... rest as in current template
+        },
+        modern: {
+            coordinator: {
+                rest_api_url: "https://new-coordinator.example.com/api/v1",
+                websocket_url: "wss://new-coordinator.example.com/api/v1/signaling/ws",
+                timeout_seconds: 30,
+                reconnect_max_attempts: 5,
+                reconnect_backoff_ms: 1000
+            },
+            // ... rest as in current template
+        }
+    };
+
+    // UI: Present options to user
+    function showConfigUI() {
+        const p2pEnabled = Exe.GetUserInput("Enable P2P Networking?", D_YesNo, "P2P", "Enable P2P (WebRTC) for this client?", true);
+        const meshPeers = Exe.GetUserInput("Max Mesh Peers", D_Int, "Mesh", "Maximum number of mesh peers", 50);
+        const fallback = Exe.GetUserInput("Enable Fallback to Server?", D_YesNo, "Fallback", "Fallback to server if P2P fails?", true);
+        const serverType = Exe.GetUserInput("Server Type", D_Combo, "Server", "Select server deployment type", "modern", {items: ["modern", "legacy"]});
+        return { p2pEnabled, meshPeers, fallback, serverType };
+    }
+
+    // Generate config based on user input
+    function generateConfig(opts) {
+        const base = JSON.parse(JSON.stringify(CONFIG_TEMPLATES[opts.serverType]));
+        base.p2p = base.p2p || {};
+        base.p2p.enabled = !!opts.p2pEnabled;
+        base.p2p.max_peers = opts.meshPeers;
+        base.zones = base.zones || {};
+        base.zones.fallback_on_failure = !!opts.fallback;
+        return base;
+    }
+
+    // Write config to file
+    function writeConfig(config) {
+        try {
+            const json = JSON.stringify(config, null, 2);
+            Exe.WriteFile(CONFIG_PATH, json);
+            logInfo("Wrote config to " + CONFIG_PATH);
+        } catch (e) {
+            logError("Failed to write config: " + e.message);
+            throw e;
+        }
+    }
+
+    // Error logging
+    function logError(msg) {
+        Exe.AppendFile(PATCHER_LOG, "[ERROR] " + msg + "\n");
+        Exe.ShowMessage("Patch Error: " + msg, "P2P Patch Error");
+    }
+    function logInfo(msg) {
+        Exe.AppendFile(PATCHER_LOG, "[INFO] " + msg + "\n");
+    }
+
+    // Main entry point
+    global.P2PConfigManager = function(_) {
+        try {
+            const opts = showConfigUI();
+            const config = generateConfig(opts);
+            writeConfig(config);
+            logInfo("P2P config updated for " + opts.serverType + " server.");
+        } catch (e) {
+            logError("P2PConfigManager failed: " + e.message);
+            throw e;
+        }
+        return true;
+    };
+})(this);

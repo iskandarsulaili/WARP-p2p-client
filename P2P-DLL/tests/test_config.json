@@ -8,7 +8,9 @@
   },
   "webrtc": {
     "stun_servers": ["stun:test.stun.server:19302"],
-    "turn_servers": [],
+    "turn_servers": ["turn:test.turn.server:3478"],
+    "turn_username": "testuser",
+    "turn_credential": "testpassword",
     "ice_transport_policy": "all",
     "bundle_policy": "balanced",
     "rtcp_mux_policy": "require",

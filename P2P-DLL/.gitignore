@@ -1,0 +1,126 @@
+# C++/CMake/Visual Studio Build Artifacts and Binaries
+
+# Build directories
+build/
+build_vs2022/
+build_x86_manifest/
+build_x64_manifest/
+CMakeFiles/
+cmake-build-*/
+out/
+bin/
+lib/
+Release/
+Debug/
+x64/
+x86/
+*.dir/
+
+# Visual Studio files
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.vcxproj.*.user
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.ncb
+*.log
+*.tlog
+*.ipch
+*.pdb
+*.idb
+*.ilk
+*.obj
+*.pch
+*.vspscc
+*.vssscc
+*.cache
+*.db
+*.VC.db
+*.VC.opendb
+
+# Binary files
+*.dll
+*.exe
+*.lib
+*.so
+*.a
+*.out
+
+# Dependency directories
+vcpkg_installed/
+vcpkg/
+external/
+third_party/
+deps/
+dependencies/
+*.nuget/
+*.packages/
+*.vs/
+
+# Downloaded libraries
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Temporary and log files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.log
+*.trace
+*.pid
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test/coverage artifacts
+*.gcno
+*.gcda
+*.gcov
+*.coverage
+*.profraw
+*.profdata
+
+# Ignore generated documentation
+docs/
+doc/
+*.dox
+*.chm
+
+# Ignore any other build/system specific files
+*.manifest
+*.rsp
+*.exp
+*.map
+
+# Ignore by pattern for any build output
+**/build/
+**/bin/
+**/lib/
+**/Release/
+**/Debug/
+**/CMakeFiles/
+**/out/
+**/x64/
+**/x86/
+
+# End of .gitignore
+# End of .gitignore
+P2P_Patcher.exe
+!Patcher.exe
+*.dll

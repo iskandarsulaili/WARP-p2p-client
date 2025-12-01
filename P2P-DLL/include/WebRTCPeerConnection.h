@@ -21,6 +21,21 @@ public:
     explicit WebRTCPeerConnection(const std::string& peer_id);
     ~WebRTCPeerConnection();
 
+    // AOI/mesh: Set and get peer position (for AOI/interest-based mesh)
+    void SetPeerPosition(float x, float y, float z);
+    void GetPeerPosition(float& x, float& y, float& z) const;
+
+    // AOI/mesh: Check if peer is within AOI radius
+    bool IsWithinAOI(float x, float y, float z, float radius) const;
+
+    // Protocol: Set packet handler callback
+    using OnPacketCallback = std::function<void(const uint8_t*, size_t)>;
+    void SetOnPacketCallback(OnPacketCallback callback);
+
+    // Mesh: Set/get peer score
+    void SetPeerScore(float score);
+    float GetPeerScore() const;
+
     // Disable copy and move
     WebRTCPeerConnection(const WebRTCPeerConnection&) = delete;
     WebRTCPeerConnection& operator=(const WebRTCPeerConnection&) = delete;
@@ -33,7 +48,8 @@ public:
      * @param turn TURN server URLs
      * @return true if initialization succeeded
      */
-    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn);
+    bool Initialize(const std::vector<std::string>& stun, const std::vector<std::string>& turn,
+                   const std::string& turn_username, const std::string& turn_credential);
 
     /**
      * Close the peer connection
@@ -106,10 +122,30 @@ public:
      */
     void SetOnIceCandidateCallback(OnIceCandidateCallback callback);
 
+    /**
+     * Set SecurityManager for encryption key exchange
+     * @param security_manager The SecurityManager instance
+     */
+    void SetSecurityManager(class SecurityManager* security_manager);
+
+    /**
+     * Check if encryption is ready (key exchange completed)
+     * @return true if encryption key has been exchanged and derived
+     */
+    bool IsEncryptionReady() const;
+
 private:
     // Pimpl idiom for implementation details
+    // Forward declarations for libwebrtc types
+    // (These should be in the .cpp, not in the header, and not as a namespace block)
+
     struct Impl;
     std::unique_ptr<Impl> impl_;
+
+    // ECDHE Key Exchange helper methods
+    void InitiateKeyExchange();
+    void HandleReceivedData(const uint8_t* data, size_t size);
+    void HandleKeyExchangePacket(const uint8_t* data, size_t size);
 };
 
 } // namespace P2P

@@ -1,0 +1,5 @@
+MSBuild version 17.14.23+b0019275e for .NET Framework
+
+  QuicTransport.cpp
+D:\RO\patcher\WARP-p2p-client\P2P-DLL\src\network\QuicTransport.cpp(272,16): error C2220: the following warning is treated as an error [D:\RO\patcher\WARP-p2p-client\P2P-DLL\build\p2p_network.vcxproj]
+D:\RO\patcher\WARP-p2p-client\P2P-DLL\src\network\QuicTransport.cpp(272,16): warning C4100: 'Stream': unreferenced parameter [D:\RO\patcher\WARP-p2p-client\P2P-DLL\build\p2p_network.vcxproj]

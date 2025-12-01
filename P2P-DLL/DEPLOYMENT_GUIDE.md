@@ -102,65 +102,53 @@ This guide covers two deployment methods:
 
 ## Deployment Methods
 
-### Step 1: Prepare NEMO Patch Script
+### Step 1: Configure P2P Patch Options (WARP Patch UI)
 
-The P2P DLL injection is handled by the `LoadP2PDLL.qs` patch script.
+The WARP patcher now provides a user interface for configuring P2P and server compatibility options before patching or injection:
 
-**Location:** `Patches/LoadP2PDLL.qs`
+- **Enable/Disable P2P Networking:** Toggle P2P (WebRTC) support for the client.
+- **Mesh Parameters:** Set the maximum number of mesh peers.
+- **Fallback:** Enable or disable fallback to server if P2P fails.
+- **Server Compatibility:** Select between legacy and new (hybrid) server/coordinator endpoints.
 
-**Script Overview:**
+When you start a patch session (e.g., using `P2P_Session.yml`), the patcher will prompt you for these options. Your selections will be written to `p2p_config.json` and used for the patch/injection process.
 
-```javascript
-function LoadP2PDLL() {
-  // Finds RO client entry point
-  // Injects LoadLibrary("p2p_network.dll") call
-  // Stores DLL handle for later use
-}
-```
+All errors and important actions are logged to `patcher.log` and surfaced in the patcher UI.
 
-### Step 2: Add Patch to NEMO
+### Step 2: Patch RO Client
 
-1. **Copy patch script** to NEMO's `Patches/` directory:
-
-   ```
-   NEMO/
-   ├── Patches/
-   │   └── LoadP2PDLL.qs  ← Copy here
-   ```
-
-2. **Register patch** in NEMO's patch list (if not auto-detected)
-
-3. **Verify patch appears** in NEMO's patch selection UI
-
-### Step 3: Patch RO Client
-
-1. **Launch NEMO Patcher**
+1. **Launch WARP Patcher**
 
    ```powershell
-   cd NEMO
-   .\Nemo.exe
+   cd patcher/WARP-p2p-client/win32
+   .\WARP.exe
    ```
 
 2. **Load RO client executable**
 
    - Click "Load Client"
-   - Select your RO client (e.g., `Ragnarok.exe`, `2018-06-20aRagexe.exe`)
+   - Select your RO client (e.g., `Ragnarok.exe`, `2025-06-04_Speedrun_P2P.exe`)
 
-3. **Select patches**
+3. **Configure P2P Options**
 
-   - ✅ Enable "Load P2P Network DLL"
-   - ✅ Enable other desired patches (e.g., "Disable 1rag1 type parameters", "Enable Multiple GRFs")
+   - The patcher will prompt for P2P, mesh, fallback, and server type.
+   - Confirm your selections.
 
-4. **Apply patches**
+4. **Select patches**
+
+   - ✅ Enable "CustomDLL" (loads P2P DLL)
+   - ✅ Enable other desired patches
+
+5. **Apply patches**
 
    - Click "Apply Selected Patches"
    - Save patched client (e.g., `Ragnarok_P2P.exe`)
 
-5. **Verify patch**
-   - Check NEMO output for success message
-   - Patched client should be created
+6. **Verify patch**
+   - Check patcher UI and `patcher.log` for success or error messages.
+   - Patched client should be created.
 
-### Step 4: Deploy Patched Client
+### Step 3: Deploy Patched Client
 
 **Directory Structure:**
 
@@ -232,15 +220,39 @@ vc_redist.x64.exe /install /quiet /norestart
 
 ## Configuration Setup
 
-### Production Configuration Template
+### Development Configuration (Default)
 
-Create `config/p2p_config.json` in the RO client directory:
+The default configuration uses `localhost` for local development:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws",
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws",
+    "timeout_ms": 5000
+  },
+  "webrtc": {
+    "stun_servers": [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302"
+    ]
+  },
+  "p2p": {
+    "enabled": true,
+    "max_peers": 50
+  }
+}
+```
+
+### Production Configuration Template
+
+For production deployment, create `config/p2p_config.json` in the RO client directory using the template from [`p2p_config.production.example.json`](config/p2p_config.production.example.json):
+
+```json
+{
+  "coordinator": {
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws",
     "timeout_ms": 5000,
     "reconnect_max_attempts": 5,
     "reconnect_backoff_ms": 1000
@@ -262,18 +274,21 @@ Create `config/p2p_config.json` in the RO client directory:
     "api_key": "YOUR_API_KEY_HERE"
   },
   "logging": {
-    "level": "INFO",
-    "file": "logs/p2p_network.log",
+    "level": "info",
+    "file": "p2p_dll.log",
     "max_file_size_mb": 10,
     "max_files": 5,
-    "console_output": false
-  },
-  "zones": {
-    "p2p_enabled_zones": ["prontera", "geffen", "payon", "alberta"],
-    "fallback_on_failure": true
+    "console_output": false,
+    "async_logging": true
   }
 }
 ```
+
+**Important Notes:**
+- Replace `YOUR_COORDINATOR_DOMAIN` with your actual production domain
+- Replace `YOUR_API_KEY_HERE` with a secure API key
+- Replace `YOUR_TURN_SERVER_HERE` with your TURN server address if using one
+- Always use HTTPS/WSS in production for security
 
 ### Configuration Security
 
@@ -545,8 +560,8 @@ sudo ufw allow 49152:65535/udp  # TURN relay ports
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1", // ✅ HTTPS
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws" // ✅ WSS
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1", // ✅ HTTPS
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws" // ✅ WSS
   }
 }
 ```
@@ -556,8 +571,8 @@ sudo ufw allow 49152:65535/udp  # TURN relay ports
 ```json
 {
   "coordinator": {
-    "rest_api_url": "http://your-server.com/api/v1", // ❌ Insecure!
-    "websocket_url": "ws://your-server.com/api/v1/signaling/ws" // ❌ Insecure!
+    "rest_api_url": "http://YOUR_COORDINATOR_DOMAIN/api/v1", // ❌ Insecure!
+    "websocket_url": "ws://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws" // ❌ Insecure!
   }
 }
 ```
@@ -767,6 +782,12 @@ See [Troubleshooting](#troubleshooting) section below.
 
 ## Troubleshooting
 
+### Patch/Injection Error Handling and User Feedback
+
+- All patcher errors (e.g., missing DLL, config write failure, admin rights) are logged to `patcher.log` in the patcher directory.
+- The patcher UI will display error messages and guidance if patching or injection fails.
+- If you encounter issues, check both the patcher UI and `patcher.log` for details.
+
 ### Issue 1: DLL Not Loading
 
 **Symptoms:**
@@ -819,8 +840,8 @@ See [Troubleshooting](#troubleshooting) section below.
    ```json
    {
      "coordinator": {
-       "rest_api_url": "https://your-server.com/api/v1", // Check URL
-       "websocket_url": "wss://your-server.com/api/v1/signaling/ws"
+       "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1", // Check URL
+       "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws"
      }
    }
    ```
@@ -828,14 +849,17 @@ See [Troubleshooting](#troubleshooting) section below.
 2. **Test Coordinator Connectivity:**
 
    ```powershell
-   # Test HTTPS
-   curl https://your-server.com/api/v1/health
+   # Test HTTPS (production)
+   curl https://YOUR_COORDINATOR_DOMAIN/api/v1/health
+
+   # Test HTTP (development/localhost)
+   curl http://localhost:8001/api/v1/health
 
    # Test DNS resolution
-   nslookup your-server.com
+   nslookup YOUR_COORDINATOR_DOMAIN
 
    # Test port connectivity
-   Test-NetConnection -ComputerName your-server.com -Port 443
+   Test-NetConnection -ComputerName YOUR_COORDINATOR_DOMAIN -Port 443
    ```
 
 3. **Check Firewall:**
@@ -986,8 +1010,11 @@ See [Troubleshooting](#troubleshooting) section below.
 
 3. **Test Authentication:**
    ```powershell
-   # Test API key
-   curl -H "X-API-Key: your-api-key" https://your-server.com/api/v1/auth/login
+   # Test API key (production)
+   curl -H "X-API-Key: your-api-key" https://YOUR_COORDINATOR_DOMAIN/api/v1/auth/login
+   
+   # Test localhost (development)
+   curl -H "X-API-Key: your-api-key" http://localhost:8001/api/v1/auth/login
    ```
 
 ---

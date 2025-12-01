@@ -1,13 +1,38 @@
 #include "../../include/PacketRouter.h"
 #include "../../include/Logger.h"
-#include "../../include/ConfigManager.h"
+#include "../../include/bandwidth/BandwidthManager.h"
+#include "../../include/WebRTCManager.h"
+#include "../../include/SecurityManager.h"
+#include <thread>
+#include <chrono>
+#include <algorithm>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <detours/detours.h>
+#include <typeinfo>
 
 namespace P2P {
 
 struct PacketRouter::Impl {
     bool p2p_enabled = false;
     std::string current_zone;
-    RouteDecision default_route = RouteDecision::SERVER;
+    WebRTCManager* webrtc_manager = nullptr;
+    BandwidthManager* bandwidth_manager = nullptr;
+    SecurityManager* security_manager = nullptr;
+    std::function<bool(const Packet&)> server_send_func;
+
+    // New: Active transport (QUIC or WebRTC)
+    ITransport* transport = nullptr;
+
+    // Statistics
+    uint64_t packets_routed_to_server = 0;
+    uint64_t packets_routed_to_p2p = 0;
+    uint64_t packets_dropped = 0;
+
+    // Configuration
+    bool bandwidth_management_enabled = true;
+    bool qos_enabled = true;
 };
 
 PacketRouter::PacketRouter() : impl_(std::make_unique<Impl>()) {
@@ -15,67 +40,72 @@ PacketRouter::PacketRouter() : impl_(std::make_unique<Impl>()) {
 }
 
 PacketRouter::~PacketRouter() {
-    LOG_DEBUG("PacketRouter destroyed");
+    Shutdown();
 }
 
 bool PacketRouter::Initialize(bool p2p_enabled) {
     impl_->p2p_enabled = p2p_enabled;
-    LOG_INFO("PacketRouter initialized (P2P " + std::string(p2p_enabled ? "enabled" : "disabled") + ")");
+    LOG_INFO("PacketRouter initialized with P2P " + std::string(p2p_enabled ? "enabled" : "disabled"));
     return true;
 }
 
 void PacketRouter::Shutdown() {
-    impl_->p2p_enabled = false;
+    LOG_DEBUG("PacketRouter shutdown");
 }
 
 RouteDecision PacketRouter::DecideRoute(const Packet& packet) {
-    // If P2P is disabled globally, always route to server
     if (!impl_->p2p_enabled) {
         return RouteDecision::SERVER;
     }
-    
-    // Check if current zone supports P2P
-    auto& config = ConfigManager::GetInstance();
-    if (!config.IsZoneP2PEnabled(impl_->current_zone)) {
-        return RouteDecision::SERVER;
+
+    // Critical packets always use best available route
+    if (packet.type <= static_cast<uint16_t>(PacketPriority::CRITICAL)) {
+        return RouteDecision::P2P;
     }
-    
-    // Route based on packet type
-    // Movement, chat, and item pickup can go P2P
-    // Everything else goes to server for validation
+
+    // Use P2P for packets that benefit from low latency
     switch (packet.type) {
         case 0x0089: // Movement
-        case 0x008C: // Chat
+        case 0x0090: // Attack
+        case 0x0091: // Skill use
         case 0x009F: // Item pickup
             return RouteDecision::P2P;
+
         default:
+            // For other packets, use server routing
             return RouteDecision::SERVER;
     }
 }
 
 bool PacketRouter::RoutePacket(const Packet& packet, RouteDecision decision) {
-    if (decision == RouteDecision::SERVER) {
-        return RouteToServer(packet);
-    } else {
-        return RouteToP2P(packet);
+    LOG_DEBUG("Routing packet: id=" + std::to_string(packet.packet_id) +
+              " type=0x" + std::to_string(packet.type) +
+              " length=" + std::to_string(packet.length) +
+              " decision=" + std::to_string(static_cast<int>(decision)));
+    switch (decision) {
+        case RouteDecision::P2P:
+            LOG_INFO("Routing to P2P: packet_id=" + std::to_string(packet.packet_id));
+            return RouteToP2P(packet);
+        case RouteDecision::SERVER:
+            LOG_INFO("Routing to server: packet_id=" + std::to_string(packet.packet_id));
+            return RouteToServer(packet);
+        case RouteDecision::BROADCAST:
+            // Broadcast: send to both P2P and server, return true if both succeed
+            LOG_INFO("Broadcast routing: packet_id=" + std::to_string(packet.packet_id));
+            return RouteToP2P(packet) & RouteToServer(packet);
+        case RouteDecision::DROP:
+            impl_->packets_dropped++;
+            LOG_WARN("Packet dropped: packet_id=" + std::to_string(packet.packet_id));
+            return true;
+        default:
+            LOG_ERROR("Unknown routing decision: packet_id=" + std::to_string(packet.packet_id));
+            return false;
     }
-}
-
-bool PacketRouter::RouteToServer(const Packet& packet) {
-    LOG_DEBUG("Routing packet to server (type: 0x" + std::to_string(packet.type) + ")");
-    // TODO: Send to server via original network stack
-    return true;
-}
-
-bool PacketRouter::RouteToP2P(const Packet& packet) {
-    LOG_DEBUG("Routing packet to P2P (type: 0x" + std::to_string(packet.type) + ")");
-    // TODO: Send to P2P peers via WebRTC data channels
-    return true;
 }
 
 void PacketRouter::SetCurrentZone(const std::string& zone) {
     impl_->current_zone = zone;
-    LOG_INFO("Zone changed to: " + zone);
+    LOG_DEBUG("Current zone set to: " + zone);
 }
 
 std::string PacketRouter::GetCurrentZone() const {
@@ -84,11 +114,110 @@ std::string PacketRouter::GetCurrentZone() const {
 
 void PacketRouter::EnableP2P(bool enabled) {
     impl_->p2p_enabled = enabled;
-    LOG_INFO("P2P " + std::string(enabled ? "enabled" : "disabled"));
+    LOG_INFO("P2P routing " + std::string(enabled ? "enabled" : "disabled"));
 }
 
 bool PacketRouter::IsP2PEnabled() const {
     return impl_->p2p_enabled;
+}
+
+void PacketRouter::SetWebRTCManager(WebRTCManager* webrtc_manager) {
+    impl_->webrtc_manager = webrtc_manager;
+}
+
+void PacketRouter::SetTransport(ITransport* transport) {
+    impl_->transport = transport;
+    LOG_INFO("PacketRouter: Active transport set to " + std::string(transport ? typeid(*transport).name() : "nullptr"));
+}
+
+void PacketRouter::SetBandwidthManager(BandwidthManager* bandwidth_manager) {
+    impl_->bandwidth_manager = bandwidth_manager;
+}
+
+bool PacketRouter::RouteToServer(const Packet& packet) {
+    if (packet.data.empty() || packet.length == 0) {
+        LOG_ERROR("Invalid packet data for server routing");
+        return false;
+    }
+    if (!impl_->server_send_func) {
+        LOG_ERROR("No server send function set for PacketRouter");
+        return false;
+    }
+    bool result = impl_->server_send_func(packet);
+    if (result) {
+        impl_->packets_routed_to_server++;
+        LOG_DEBUG("Packet routed to server: type=0x" +
+                 std::to_string(packet.type) + ", size=" + std::to_string(packet.length));
+    } else {
+        LOG_ERROR("Failed to send packet to server: type=0x" + std::to_string(packet.type));
+    }
+    return result;
+}
+
+bool PacketRouter::RouteToP2P(const Packet& packet) {
+    if (packet.data.empty() || packet.length == 0) {
+        LOG_ERROR("Invalid packet data for P2P routing");
+        return false;
+    }
+
+    // ED25519 signature (outbound)
+    std::vector<uint8_t> signed_packet;
+    std::vector<uint8_t> signature(64, 0);
+    bool signature_ok = false;
+    SecurityManager* sec_mgr = impl_->security_manager;
+    if (sec_mgr && sec_mgr->IsSignatureEnabled()) {
+        signature_ok = sec_mgr->SignPacketED25519(packet.data.data(), packet.length, signature);
+        if (signature_ok) {
+            signed_packet.reserve(packet.length + signature.size());
+            signed_packet.insert(signed_packet.end(), packet.data.begin(), packet.data.end());
+            signed_packet.insert(signed_packet.end(), signature.begin(), signature.end());
+            LOG_DEBUG("ED25519 signature appended to outbound P2P packet");
+        } else {
+            LOG_WARN("Failed to generate ED25519 signature for outbound P2P packet, sending unsigned");
+            signed_packet = packet.data;
+        }
+    } else {
+        signed_packet = packet.data;
+    }
+
+    // Use selected transport (QUIC or WebRTC) for P2P routing
+    if (impl_->transport && impl_->transport->IsConnected()) {
+        if (impl_->transport->SendData(signed_packet.data(), signed_packet.size())) {
+            impl_->packets_routed_to_p2p++;
+            LOG_DEBUG("Packet routed to P2P via transport: type=0x" +
+                     std::to_string(packet.type) + ", size=" + std::to_string(signed_packet.size()));
+            return true;
+        } else {
+            LOG_ERROR("Failed to send packet via selected transport, falling back to server");
+            return RouteToServer(packet);
+        }
+    }
+
+    // Fallback: Use WebRTCManager if available and connected (legacy)
+    if (impl_->webrtc_manager && impl_->webrtc_manager->IsConnected()) {
+        if (impl_->webrtc_manager->SendData(signed_packet.data(), signed_packet.size())) {
+            impl_->packets_routed_to_p2p++;
+            LOG_DEBUG("Packet routed to P2P via WebRTCManager (fallback): type=0x" +
+                     std::to_string(packet.type) + ", size=" + std::to_string(signed_packet.size()));
+            return true;
+        } else {
+            LOG_ERROR("Failed to send packet via WebRTCManager, falling back to server");
+            return RouteToServer(packet);
+        }
+    }
+
+    LOG_WARN("No active P2P transport, falling back to server-only mode");
+    impl_->p2p_enabled = false;
+    LOG_INFO("Switched to server-only mode due to P2P failure or disconnect");
+    return RouteToServer(packet);
+}
+
+void PacketRouter::SetSecurityManager(SecurityManager* security_manager) {
+    impl_->security_manager = security_manager;
+}
+
+void PacketRouter::SetServerSendFunction(std::function<bool(const Packet&)> send_func) {
+    impl_->server_send_func = std::move(send_func);
 }
 
 } // namespace P2P

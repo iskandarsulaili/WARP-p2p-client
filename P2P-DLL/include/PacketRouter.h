@@ -3,6 +3,15 @@
 #include "Types.h"
 #include <memory>
 #include <string>
+#include <functional>
+#include "ITransport.h"
+#include "SecurityManager.h"
+
+// Forward declaration
+namespace P2P {
+class WebRTCManager;
+class BandwidthManager;
+}
 
 namespace P2P {
 
@@ -70,6 +79,35 @@ public:
      * @return true if P2P is enabled
      */
     bool IsP2PEnabled() const;
+
+    /**
+     * Set the WebRTC manager for P2P routing
+     * @param webrtc_manager The WebRTC manager instance
+     */
+    void SetWebRTCManager(WebRTCManager* webrtc_manager);
+
+    /**
+     * Set BandwidthManager for bandwidth control
+     * @param bandwidth_manager The BandwidthManager instance
+     */
+    void SetBandwidthManager(BandwidthManager* bandwidth_manager);
+    /**
+     * Set the active transport (QUIC or WebRTC).
+     * @param transport Pointer to ITransport implementation.
+     */
+    void SetTransport(ITransport* transport);
+
+public:
+    /**
+     * Set the SecurityManager for signing/encryption
+     */
+    void SetSecurityManager(SecurityManager* security_manager);
+
+    /**
+     * Set the server send function (for actual server routing)
+     * The function should return true if the packet was sent successfully.
+     */
+    void SetServerSendFunction(std::function<bool(const Packet&)> send_func);
 
 private:
     /**

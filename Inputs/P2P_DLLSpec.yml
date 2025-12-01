@@ -1,13 +1,17 @@
 ############################################################################
 #                                                                          #
-#   P2P Network DLL Specification for WARP Patcher                         #
+#   P2P Network DLL Import Specification for WARP CustomDLL Patch         #
 #                                                                          #
-#   This file tells WARP to inject p2p_network.dll into the RO client     #
+#   This file specifies the DLL and exported functions to be added        #
+#   to the Ragnarok Online client's Import Table.                         #
+#                                                                          #
+#   The CustomDLL patch will modify the client to load p2p_network.dll    #
+#   and resolve the P2P_Initialize function at runtime.                   #
 #                                                                          #
 ############################################################################
 
--
-  Name: p2p_network.dll
+# P2P Network DLL - Main networking library for peer-to-peer functionality
+- Name: p2p_network.dll
   Funcs:
-    - Name: "InitializeP2P"
-
+    # Primary initialization function called by the RO client on startup
+    - Name: P2P_Initialize

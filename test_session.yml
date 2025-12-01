@@ -1,0 +1,8 @@
+from: "input.exe"
+to: "output.exe"
+
+patches:
+  CustomDLL:
+    state: true
+    inputs:
+      $customDLL: Inputs/P2P_DLLSpec.yml

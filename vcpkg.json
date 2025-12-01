@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "p2p-network-dll",
+  "version": "1.0.0",
+  "description": "P2P Network DLL for Ragnarok Online",
+  "homepage": "hhttps://github.com/iskandarsulaili/WARP-p2p-client",
+  "dependencies": [
+    "nlohmann-json",
+    "spdlog",
+    "openssl",
+    "cpp-httplib",
+    "libdatachannel",
+    "boost-system",
+    "boost-regex",
+    "boost-asio",
+    "boost-chrono",
+    "boost-random",
+    {
+      "name": "gtest",
+      "host": true
+    },
+    "detours",
+    "zlib",
+    "msquic",
+    "libsodium",
+    "lz4",
+    "boost-beast"
+  ],
+  "builtin-baseline": "195276f71622bc41392db5c5c5c5141c95ff9a36"
+}

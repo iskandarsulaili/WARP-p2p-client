@@ -75,6 +75,7 @@ This P2P DLL is part of the **WARP-p2p-client** package, which includes:
 | **Security Manager**         | AES-256-GCM encryption for P2P packets                  | ✅ Complete |
 | **HTTP Client**              | REST API client for coordinator communication           | ✅ Complete |
 | **DLL Loading**              | Compatible with WARP patcher and manual injection       | ✅ Complete |
+| **In-Game Overlay**          | DirectX 9 overlay showing P2P status with F9 toggle     | ✅ Complete |
 
 ### 🚧 In Progress
 
@@ -191,6 +192,7 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instr
 | **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**           | Full deployment guide with multiple methods      |
 | **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)**                   | WebRTC implementation details and usage examples |
 | **[API_REFERENCE.md](API_REFERENCE.md)**                 | Complete API documentation for all classes       |
+| **[OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)**                 | In-game P2P status overlay documentation         |
 | **[INTEGRATION_TEST_PLAN.md](INTEGRATION_TEST_PLAN.md)** | Integration testing procedures                   |
 
 ---
@@ -218,7 +220,10 @@ P2P-DLL/
 │   ├── ConfigManager.h         # Configuration management
 │   ├── HttpClient.h            # HTTP REST client
 │   ├── Logger.h                # Logging utilities
-│   └── Types.h                 # Common type definitions
+│   ├── Types.h                 # Common type definitions
+│   └── overlay/                # Overlay system headers
+│       ├── OverlayRenderer.h   # DirectX 9 overlay renderer
+│       └── KeyboardHook.h      # F9 hotkey handling
 ├── src/                        # Implementation files
 │   ├── core/
 │   │   ├── NetworkManager.cpp
@@ -233,6 +238,9 @@ P2P-DLL/
 │   ├── security/
 │   │   ├── SecurityManager.cpp
 │   │   └── AuthManager.cpp
+│   ├── overlay/                # In-game overlay system
+│   │   ├── OverlayRenderer.cpp # DirectX 9 rendering
+│   │   └── KeyboardHook.cpp    # F9 hotkey implementation
 │   ├── utils/
 │   │   └── Logger.cpp
 │   └── DllMain.cpp             # DLL entry point and exports
@@ -253,13 +261,15 @@ P2P-DLL/
 
 The DLL is configured via `p2p_config.json` located in the same directory as the RO client executable.
 
-### Example Configuration
+### Development Configuration (Default)
+
+The default configuration uses `localhost` for local development:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws",
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws",
     "timeout_ms": 5000
   },
   "webrtc": {
@@ -267,46 +277,60 @@ The DLL is configured via `p2p_config.json` located in the same directory as the
       "stun:stun.l.google.com:19302",
       "stun:stun1.l.google.com:19302"
     ],
-    "turn_servers": ["turn:your-turn-server.com:3478"],
     "max_peers": 50
   },
   "p2p": {
+    "enabled": true
+  }
+}
+```
+
+### Production Configuration
+
+For production deployment, copy and customize [`p2p_config.production.example.json`](config/p2p_config.production.example.json):
+
+```json
+{
+  "coordinator": {
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN_HERE/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN_HERE/api/v1/signaling/ws",
+    "timeout_ms": 5000
+  },
+  "webrtc": {
+    "stun_servers": [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302"
+    ],
+    "turn_servers": ["turn:username:password@YOUR_TURN_SERVER_HERE:3478"]
+  },
+  "p2p": {
     "enabled": true,
-    "fallback_to_server": true,
-    "packet_types": {
-      "movement": true,
-      "chat": true,
-      "emotes": true,
-      "skills": false
-    }
+    "max_peers": 50
   },
   "security": {
-    "encryption_enabled": true,
-    "algorithm": "AES-256-GCM"
-  },
-  "logging": {
-    "level": "INFO",
-    "file": "logs/p2p_dll.log",
-    "max_file_size_mb": 10,
-    "max_files": 5
+    "enable_encryption": true,
+    "enable_authentication": true,
+    "api_key": "YOUR_API_KEY_HERE"
   }
 }
 ```
 
 ### Configuration Options
 
-| Section                       | Option | Description                       | Default     |
-| ----------------------------- | ------ | --------------------------------- | ----------- |
-| `coordinator.rest_api_url`    | string | Coordinator REST API endpoint     | Required    |
-| `coordinator.websocket_url`   | string | Signaling WebSocket endpoint      | Required    |
-| `coordinator.timeout_ms`      | int    | HTTP request timeout              | 5000        |
-| `webrtc.stun_servers`         | array  | STUN servers for NAT traversal    | Google STUN |
-| `webrtc.turn_servers`         | array  | TURN servers for relay            | []          |
-| `webrtc.max_peers`            | int    | Maximum concurrent peers          | 50          |
-| `p2p.enabled`                 | bool   | Enable/disable P2P networking     | true        |
-| `p2p.fallback_to_server`      | bool   | Fallback to server if P2P fails   | true        |
-| `security.encryption_enabled` | bool   | Enable packet encryption          | true        |
-| `logging.level`               | string | Log level (DEBUG/INFO/WARN/ERROR) | INFO        |
+| Section                         | Option | Description                            | Default                    |
+| ------------------------------- | ------ | -------------------------------------- | -------------------------- |
+| `coordinator.rest_api_url`      | string | Coordinator REST API endpoint          | `http://localhost:8001/api/v1` (dev)<br>`https://YOUR_DOMAIN/api/v1` (prod) |
+| `coordinator.websocket_url`     | string | Signaling WebSocket endpoint           | `ws://localhost:8001/api/v1/signaling/ws` (dev)<br>`wss://YOUR_DOMAIN/api/v1/signaling/ws` (prod) |
+| `coordinator.timeout_seconds`   | int    | HTTP request timeout in seconds        | 30          |
+| `webrtc.stun_servers`           | array  | STUN servers for NAT traversal         | Google STUN |
+| `webrtc.turn_servers`           | array  | TURN servers for relay                 | []          |
+| `p2p.max_peers`                 | int    | Maximum concurrent peers               | 50          |
+| `p2p.enabled`                   | bool   | Enable/disable P2P networking          | true        |
+| `security.enable_encryption`    | bool   | Enable packet encryption               | true        |
+| `security.enable_authentication`| bool   | Enable authentication                  | true        |
+| `logging.level`                 | string | Log level (debug/info/warn/error)      | info        |
+
+**Note:** For production deployments, always use HTTPS/WSS instead of HTTP/WS for security.
 
 ---
 
@@ -334,6 +358,7 @@ The DLL is configured via `p2p_config.json` located in the same directory as the
 | **DLL Loading**           | ✅ Complete | WARP patcher compatible      |
 | **Unit Tests**            | ✅ Complete | 13/13 tests passing          |
 | **Integration Tests**     | 📋 Planned  | See INTEGRATION_TEST_PLAN.md |
+| **In-Game Overlay**       | ✅ Complete | DirectX 9 status display     |
 | **Documentation**         | ✅ Complete | All guides written           |
 
 ### Known Limitations
@@ -409,7 +434,16 @@ Test project C:/Users/.../P2P-DLL/build
 
 ## 📦 Deployment
 
-✅ **Everything is already deployed and patched!**
+### Patch and Configuration Workflow
+
+1. **Start a patch session using WARP patcher (e.g., with `P2P_Session.yml`).**
+2. **The patcher will prompt you to:**
+   - Enable/disable P2P networking
+   - Set mesh parameters (max peers)
+   - Enable/disable fallback to server
+   - Select legacy or new server endpoints
+3. **Your selections are written to `p2p_config.json` and used for patching/injection.**
+4. **All errors and important actions are logged to `patcher.log` and shown in the patcher UI.**
 
 ### Just Run Your Patched Client
 
@@ -451,16 +485,29 @@ Get-Content d:\RO\client\p2p_dll.log -Tail 20
 
 ### Configure Coordinator
 
-Edit `p2p_config.json` to point to your coordinator server:
+**Development (default):**
+```json
+{
+  "coordinator": {
+    "rest_api_url": "http://localhost:8001/api/v1",
+    "websocket_url": "ws://localhost:8001/api/v1/signaling/ws"
+  }
+}
+```
+
+**Production:**
+Edit `p2p_config.json` to point to your production coordinator server:
 
 ```json
 {
   "coordinator": {
-    "rest_api_url": "https://your-server.com/api/v1",
-    "websocket_url": "wss://your-server.com/api/v1/signaling/ws"
+    "rest_api_url": "https://YOUR_COORDINATOR_DOMAIN/api/v1",
+    "websocket_url": "wss://YOUR_COORDINATOR_DOMAIN/api/v1/signaling/ws"
   }
 }
 ```
+
+See [`p2p_config.production.example.json`](config/p2p_config.production.example.json) for a complete production configuration template.
 
 ### 4. Launch and Verify
 
@@ -474,6 +521,55 @@ Get-Content logs\p2p_dll.log -Tail 50
 ```
 
 See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete deployment instructions.
+
+---
+
+## 🖥️ In-Game Overlay
+
+The P2P DLL includes an **in-game overlay** that displays real-time P2P connection status directly in the game window.
+
+### Features
+
+- **Three display modes**: Basic, Connection, and Debug
+- **F9 hotkey** to cycle through modes
+- **DirectX 9 integration** with EndScene hooking
+- **API control** for programmatic enable/disable
+
+### Quick Start
+
+1. **Launch the game** - The overlay appears automatically in the top-left corner
+2. **Press F9** - Cycle through display modes
+3. **Basic mode** shows: `P2P: Connected` or `P2P: Disconnected`
+4. **Connection mode** shows: Status, Peers, Ping, Loss
+5. **Debug mode** shows: Full technical details including bandwidth
+
+### Display Modes Preview
+
+```
+Basic Mode:           Connection Mode:         Debug Mode:
+┌────────────────┐   ┌──────────────────┐     ┌─────────────────────────┐
+│P2P: Connected  │   │=== P2P Status ===│     │=== P2P Debug Info ===   │
+└────────────────┘   │Status: Connected │     │Status: Connected        │
+                     │Peers: 5          │     │Sent: 1.23 MB            │
+                     │Ping: 45ms        │     │Recv: 2.45 MB            │
+                     │Loss: 0.5%        │     │Pkts Sent: 1234          │
+                     └──────────────────┘     │Latency: 45.0ms          │
+                                              │Bitrate: 2048.0 kbps     │
+                                              └─────────────────────────┘
+```
+
+### API Functions
+
+```cpp
+// Enable/disable overlay
+P2P_SetOverlayEnabled(1);  // Enable
+P2P_SetOverlayEnabled(0);  // Disable
+
+// Cycle to next mode (same as pressing F9)
+P2P_CycleOverlayMode();
+```
+
+📖 **For detailed documentation, see [OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)**
 
 ---
 
@@ -507,11 +603,18 @@ Licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
 ## 🆘 Support
 
+### Patch/Injection Error Handling
+
+- All patcher errors (e.g., missing DLL, config write failure, admin rights) are logged to `patcher.log` in the patcher directory.
+- The patcher UI will display error messages and guidance if patching or injection fails.
+- If you encounter issues, check both the patcher UI and `patcher.log` for details.
+
 ### Documentation
 
 - **[BUILD_GUIDE.md](BUILD_GUIDE.md)** - Build troubleshooting
 - **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)** - WebRTC usage and examples
 - **[API_REFERENCE.md](API_REFERENCE.md)** - API documentation
+- **[OVERLAY_GUIDE.md](OVERLAY_GUIDE.md)** - In-game overlay documentation
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment help
 
 ### Logs
@@ -530,6 +633,8 @@ Get-Content "C:\Program Files (x86)\Gravity\RO\logs\p2p_dll.log" -Tail 100
 | WebRTC connection fails | Verify STUN/TURN server configuration              |
 | Signaling timeout       | Check coordinator server is running and accessible |
 | Encryption errors       | Verify OpenSSL DLLs are present                    |
+| Overlay not showing     | Check DirectX 9 compatibility; see [OVERLAY_GUIDE.md](OVERLAY_GUIDE.md) |
+| F9 not working          | Verify keyboard hook installed; check logs         |
 
 ---
 

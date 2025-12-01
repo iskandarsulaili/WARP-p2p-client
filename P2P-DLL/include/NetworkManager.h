@@ -3,6 +3,8 @@
 #include "Types.h"
 #include <memory>
 #include <string>
+#include "ITransport.h"
+#include "CompressionManager.h"
 
 namespace P2P {
 
@@ -11,7 +13,12 @@ class SignalingClient;
 class WebRTCManager;
 class PacketRouter;
 class SecurityManager;
+class BandwidthManager;
+class CompressionManager;
 
+// Forward declaration for QUIC transport
+class QuicTransport;
+class ITransport;
 /**
  * Network Manager
  * 
@@ -70,11 +77,43 @@ public:
      */
     bool SendPacket(const Packet& packet);
 
+    /**
+     * Get BandwidthManager instance
+     *
+     * @return Reference to BandwidthManager
+     */
+    BandwidthManager& GetBandwidthManager();
+
+    /**
+     * Get CompressionManager instance
+     *
+    /**
+     * Select transport protocol (QUIC or WebRTC) based on configuration and server capabilities.
+     * @param prefer_quic If true, prefer QUIC over WebRTC.
+     */
+    void SelectTransport(bool prefer_quic);
+
+    /**
+     * Get current transport (ITransport).
+     */
+    ITransport* GetTransport() const;
+    CompressionManager& GetCompressionManager();
+
 private:
     NetworkManager();
     ~NetworkManager();
     NetworkManager(const NetworkManager&) = delete;
     NetworkManager& operator=(const NetworkManager&) = delete;
+
+    /**
+     * Handle signaling messages from coordinator
+     */
+    void HandleSignalingMessage(const std::string& message);
+
+    /**
+     * Send session request to coordinator
+     */
+    void SendSessionRequest();
 
     struct Impl;
     std::unique_ptr<Impl> impl_;

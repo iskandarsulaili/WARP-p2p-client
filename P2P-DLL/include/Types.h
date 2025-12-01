@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <chrono>
+#include <map>
 
 namespace P2P {
 
@@ -59,11 +61,16 @@ struct CoordinatorConfig {
     int timeout_ms;  // Timeout in milliseconds (for compatibility)
     int reconnect_max_attempts;
     int reconnect_backoff_ms;
+    // QUIC support
+    std::string quic_address;
+    uint16_t quic_port = 0;
 };
 
 struct WebRTCConfig {
     std::vector<std::string> stun_servers;
     std::vector<std::string> turn_servers;
+    std::string turn_username;
+    std::string turn_credential;
     std::string ice_transport_policy;
     std::string bundle_policy;
     std::string rtcp_mux_policy;
@@ -79,6 +86,39 @@ struct P2PConfig {
     int target_bitrate_kbps;
     bool enable_congestion_control;
     int packet_queue_size;
+    // QUIC support
+    bool prefer_quic = false;
+    bool quic_enabled = false;
+    // Mesh/AOI extensions
+    float aoi_radius = 100.0f; // Area of interest radius (meters)
+    int mesh_refresh_interval_ms = 5000; // Mesh refresh interval
+    float peer_score_threshold = 0.5f; // Minimum score to keep peer
+    int prune_interval_ms = 10000; // Peer pruning interval
+};
+
+/**
+ * Bandwidth optimization configuration
+ */
+struct BandwidthConfig {
+    int bandwidth_update_interval_ms = 1000;
+    float congestion_threshold_percent = 70.0f;
+    float min_bitrate_kbps = 100.0f;
+    float max_bitrate_kbps = 10000.0f;
+    float target_bitrate_kbps = 2000.0f;
+    bool enable_adaptive_bitrate = true;
+    bool packet_priority_enabled = true;
+};
+
+/**
+ * Compression configuration
+ */
+struct CompressionConfig {
+    bool enabled = true;
+    std::string algorithm = "lz4";  // "lz4" or "zlib"
+    int compression_level = 6;  // Default compression level (0-9 for zlib, 0-12 for lz4)
+    int min_size_for_compression = 100;  // Minimum packet size to compress (bytes)
+    float compression_ratio_threshold = 0.8f;  // Only compress if ratio < threshold
+    bool enable_metrics = true;  // Track compression statistics
 };
 
 struct SecurityConfig {
@@ -89,6 +129,9 @@ struct SecurityConfig {
     std::string jwt_token;
     bool certificate_validation;
     std::string tls_version;
+    // ED25519 signature extensions
+    std::string ed25519_private_key_path;
+    bool enable_signature = true;
 };
 
 struct LoggingConfig {
@@ -98,12 +141,16 @@ struct LoggingConfig {
     int max_files;
     bool console_output;
     bool async_logging;
+    bool debug_enabled = false; // Runtime debug toggle
+    std::string correlation_id; // Optional correlation/request/session ID
 };
 
 struct ZonesConfig {
     std::vector<std::string> p2p_enabled_zones;
     bool fallback_on_failure;
     int zone_transition_timeout_ms;
+    // Per-zone max peers
+    std::map<std::string, int> max_peers_per_zone;
 };
 
 struct PerformanceConfig {
@@ -129,6 +176,8 @@ struct Config {
     CoordinatorConfig coordinator;
     WebRTCConfig webrtc;
     P2PConfig p2p;
+    BandwidthConfig bandwidth;
+    CompressionConfig compression;
     SecurityConfig security;
     LoggingConfig logging;
     ZonesConfig zones;
@@ -147,6 +196,32 @@ struct Packet {
 };
 
 /**
+ * Bandwidth metrics for monitoring network performance
+ */
+struct BandwidthMetrics {
+    uint64_t bytes_sent = 0;
+    uint64_t bytes_received = 0;
+    uint64_t packets_sent = 0;
+    uint64_t packets_received = 0;
+    uint64_t packets_lost = 0;
+    float current_bitrate_kbps = 0;
+    float average_latency_ms = 0;
+    float packet_loss_percent = 0;
+    std::chrono::steady_clock::time_point last_update;
+};
+
+/**
+ * Packet priority levels
+ */
+enum class PacketPriority {
+    CRITICAL,    // Movement, combat, critical game state
+    HIGH,        // Chat, important events
+    NORMAL,      // Regular game events
+    LOW,         // Background updates, non-critical
+    BACKGROUND   // Bulk data, least critical
+};
+
+/**
  * Peer information
  */
 struct PeerInfo {
@@ -155,6 +230,10 @@ struct PeerInfo {
     ConnectionState state;
     float latency_ms;
     float packet_loss_percent;
+    BandwidthMetrics bandwidth;
+    // Peer scoring extensions
+    float score = 1.0f;
+    std::chrono::steady_clock::time_point last_score_update;
 };
 
 /**

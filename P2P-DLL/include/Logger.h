@@ -35,32 +35,20 @@ public:
     /**
      * Log trace message
      */
-    void Trace(const std::string& message);
+    void Trace(const std::string& message, const std::string& correlation_id = "");
+    void Debug(const std::string& message, const std::string& correlation_id = "");
+    void Info(const std::string& message, const std::string& correlation_id = "");
+    void Warn(const std::string& message, const std::string& correlation_id = "");
+    void Error(const std::string& message, const std::string& correlation_id = "");
+    void Fatal(const std::string& message, const std::string& correlation_id = "");
 
-    /**
-     * Log debug message
-     */
-    void Debug(const std::string& message);
+    // Runtime debug toggle
+    void SetDebugEnabled(bool enabled);
+    bool IsDebugEnabled() const;
 
-    /**
-     * Log info message
-     */
-    void Info(const std::string& message);
-
-    /**
-     * Log warning message
-     */
-    void Warn(const std::string& message);
-
-    /**
-     * Log error message
-     */
-    void Error(const std::string& message);
-
-    /**
-     * Log fatal message
-     */
-    void Fatal(const std::string& message);
+    // Set correlation ID for context
+    void SetCorrelationId(const std::string& id);
+    std::string GetCorrelationId() const;
 
 private:
     Logger() = default;
@@ -72,13 +60,12 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-// Convenience macros
-#define LOG_TRACE(msg) P2P::Logger::GetInstance().Trace(msg)
-#define LOG_DEBUG(msg) P2P::Logger::GetInstance().Debug(msg)
-#define LOG_INFO(msg) P2P::Logger::GetInstance().Info(msg)
-#define LOG_WARN(msg) P2P::Logger::GetInstance().Warn(msg)
-#define LOG_ERROR(msg) P2P::Logger::GetInstance().Error(msg)
-#define LOG_FATAL(msg) P2P::Logger::GetInstance().Fatal(msg)
+#define LOG_TRACE(msg) P2P::Logger::GetInstance().Trace(msg, P2P::Logger::GetInstance().GetCorrelationId())
+#define LOG_DEBUG(msg) P2P::Logger::GetInstance().Debug(msg, P2P::Logger::GetInstance().GetCorrelationId())
+#define LOG_INFO(msg) P2P::Logger::GetInstance().Info(msg, P2P::Logger::GetInstance().GetCorrelationId())
+#define LOG_WARN(msg) P2P::Logger::GetInstance().Warn(msg, P2P::Logger::GetInstance().GetCorrelationId())
+#define LOG_ERROR(msg) P2P::Logger::GetInstance().Error(msg, P2P::Logger::GetInstance().GetCorrelationId())
+#define LOG_FATAL(msg) P2P::Logger::GetInstance().Fatal(msg, P2P::Logger::GetInstance().GetCorrelationId())
 
 } // namespace P2P
 
